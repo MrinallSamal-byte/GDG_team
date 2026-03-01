@@ -1,0 +1,1163 @@
+================================================================================
+              COLLEGE EVENTS PLATFORM — PROJECT SPECIFICATION
+                    (Unstop-Style for College Use)
+================================================================================
+
+PROJECT NAME:    CampusArena — College Events & Hackathon Platform
+DESCRIPTION:     A full-stack, real-time college events management platform
+                 inspired by Unstop (formerly Dare2Compete). Enables event
+                 creation, team formation, real-time registration tracking,
+                 in-team messaging, and smart tech-stack-based team matching.
+DATABASE:        MySQL
+LAST UPDATED:    2026-02-24
+
+================================================================================
+                          TABLE OF CONTENTS
+================================================================================
+
+  1.  PROJECT OVERVIEW
+  2.  USER ROLES & PERMISSIONS
+  3.  FEATURE BREAKDOWN (Module-Wise)
+  4.  PAGE-BY-PAGE UI SPECIFICATION
+  5.  DATABASE SCHEMA (MySQL)
+  6.  REAL-TIME FEATURES
+  7.  API ENDPOINTS
+  8.  TECH STACK RECOMMENDATION
+  9.  SECURITY CONSIDERATIONS
+  10. DEPLOYMENT PLAN
+  11. FUTURE ENHANCEMENTS
+
+================================================================================
+  1. PROJECT OVERVIEW
+================================================================================
+
+CampusArena is a web application for college students and faculty to:
+
+  • Browse and discover all college events (hackathons, workshops, coding
+    contests, design jams, quizzes, paper presentations, etc.)
+
+  • Register for events — individually or as a team.
+
+  • Form teams with smart tech-stack matching — when registering for team
+    events, users specify their tech skills (Frontend, Backend, ML/AI,
+    DevOps, UI/UX, Mobile, etc.), ensuring diverse skill sets in teams.
+
+  • Create teams & manage join requests — team creators can approve or
+    decline incoming join requests from other students.
+
+  • Real-time updates — see registered participants, team openings,
+    and live stats update in real time (no page refresh needed).
+
+  • In-team messaging — team members can chat in real time to coordinate
+    and collaborate before, during, and after events.
+
+  • Event details — each event shows: description, rules, timeline,
+    prizes, eligibility, participation certificate availability, judges,
+    sponsors, FAQs, and more.
+
+================================================================================
+  2. USER ROLES & PERMISSIONS
+================================================================================
+
+ROLE              │ PERMISSIONS
+──────────────────┼──────────────────────────────────────────────────────────
+SUPER ADMIN       │ • Full platform control
+                  │ • Manage all events, users, and settings
+                  │ • View analytics dashboard
+──────────────────┼──────────────────────────────────────────────────────────
+EVENT ORGANIZER   │ • Create & manage their own events
+                  │ • Define custom registration form fields
+                  │ • Set team size limits & rules
+                  │ • View registrations & team details
+                  │ • Send announcements to registrants
+                  │ • Approve/reject registrations (if moderation is on)
+──────────────────┼──────────────────────────────────────────────────────────
+PARTICIPANT       │ • Browse & search events
+(Registered User) │ • Register for events (solo or team)
+                  │ • Create teams & invite members
+                  │ • Send join requests to existing teams
+                  │ • Accept/decline join requests (if team creator)
+                  │ • Chat with team members
+                  │ • View personal dashboard (my events, my teams)
+──────────────────┼──────────────────────────────────────────────────────────
+GUEST (Visitor)   │ • Browse events (read-only)
+                  │ • View event details
+                  │ • Must register/login to participate
+
+================================================================================
+  3. FEATURE BREAKDOWN (Module-Wise)
+================================================================================
+
+─── MODULE 1: AUTHENTICATION & USER MANAGEMENT ───
+
+  [F1.1] User Registration
+         - Fields: Full Name, Email, Phone, College Name, Branch/Department,
+           Year of Study, Profile Picture (optional)
+         - Email verification via OTP or verification link
+         - Password strength validation
+
+  [F1.2] User Login
+         - Email + Password login
+         - "Remember Me" option
+         - Forgot Password / Reset Password flow
+
+  [F1.3] User Profile
+         - View & edit personal information
+         - Tech stack / skills selection (multi-select tags):
+           Examples: React, Node.js, Python, Django, Flutter, Figma,
+                     TensorFlow, Docker, AWS, MongoDB, Java, C++, etc.
+         - Profile visibility settings
+         - Social links (GitHub, LinkedIn, Portfolio)
+         - Bio / About section
+
+  [F1.4] User Dashboard
+         - "My Registered Events" — list of events user has registered for
+         - "My Teams" — list of teams user is part of
+         - "Pending Requests" — join requests sent/received
+         - Notification center
+
+─── MODULE 2: EVENT MANAGEMENT ───
+
+  [F2.1] Create Event (Organizer Only)
+         - Event Title
+         - Event Description (rich text editor with formatting)
+         - Event Category/Type:
+           □ Hackathon        □ Coding Contest     □ Workshop
+           □ Quiz/Competition □ Paper Presentation  □ Design Challenge
+           □ Ideathon         □ Case Study          □ Cultural
+           □ Sports           □ Other
+         - Event Banner/Cover Image
+         - Event Mode:
+           ○ Online    ○ Offline    ○ Hybrid
+         - Venue / Platform Link
+         - Timeline:
+           • Registration Start Date & Time
+           • Registration End Date & Time
+           • Event Start Date & Time
+           • Event End Date & Time
+           • Submission Deadline (if applicable)
+         - Participation Type:
+           ○ Individual (Solo)
+           ○ Team-Based
+           ○ Both (participant chooses)
+         - If Team-Based:
+           • Minimum Team Size
+           • Maximum Team Size
+           • Allow individuals to create own teams? (Yes/No)
+           • Allow join requests? (Yes/No)
+         - Eligibility Criteria (free text or structured):
+           • Open to all / Specific branches / Specific years
+         - Prize Pool:
+           • 1st Place: ₹______
+           • 2nd Place: ₹______
+           • 3rd Place: ₹______
+           • Special Prizes: ______
+           • Total Prize Pool: ₹______
+         - Participation Certificate: Yes/No
+         - Merit Certificate: Yes/No
+         - Maximum Participants / Teams (capacity limit)
+         - Registration Fee: Free / ₹______
+         - Contact Information for queries
+         - Rules & Guidelines (rich text)
+         - FAQs
+         - Judges / Mentors (names, designations, photos)
+         - Sponsors / Partners (logos, links)
+         - Rounds / Phases:
+           • Round 1: Name, Description, Date, Elimination criteria
+           • Round 2: Name, Description, Date, Elimination criteria
+           • ... (dynamic, add more rounds)
+
+  [F2.2] Custom Registration Form Builder
+         - Organizer can define CUSTOM fields for event registration:
+           • Text Input (short text, long text)
+           • Number Input
+           • Dropdown Select
+           • Multi-Select (checkboxes)
+           • Radio Buttons
+           • File Upload (resume, project link, etc.)
+           • Date Picker
+           • URL Input
+         - Each field can be marked as:
+           ○ Required / Optional
+         - Default fields always present:
+           • Participant Name (auto-filled from profile)
+           • Email (auto-filled from profile)
+           • Phone (auto-filled from profile)
+         - For team events, additional default fields:
+           • Team Name
+           • Tech Stack of each member (auto from profile, editable)
+           • Role in Team (e.g., Frontend Dev, Backend Dev, Designer)
+
+  [F2.3] Edit Event
+         - Organizer can edit event details before the event starts
+         - Cannot edit after event has started (or with warning)
+
+  [F2.4] Delete / Archive Event
+         - Soft delete (archive) — event hidden from public, data preserved
+         - Hard delete — with confirmation prompt
+
+  [F2.5] Event Announcements
+         - Organizer can post announcements visible to all registrants
+         - Push notification to registered participants
+
+─── MODULE 3: EVENT DISCOVERY & BROWSING ───
+
+  [F3.1] Home Page — Event Listings
+         - Hero banner / carousel with featured events
+         - Filter & Sort:
+           • By Category (Hackathon, Workshop, etc.)
+           • By Status: Open for Registration / Ongoing / Completed
+           • By Mode: Online / Offline / Hybrid
+           • By Fee: Free / Paid
+           • By Date: Upcoming / This Week / This Month
+           • Search by keyword
+         - Each event card shows:
+           • Event Banner Image (thumbnail)
+           • Event Title
+           • Category Tag(s)
+           • Date & Time
+           • Mode (Online/Offline/Hybrid)
+           • Team/Individual indicator
+           • Registration status (X/Y spots filled)
+           • Prize Pool amount
+           • Participation Certificate badge (if available)
+           • "Register Now" CTA button
+         - Infinite scroll or pagination
+
+  [F3.2] Event Detail Page
+         SECTIONS:
+         ┌─────────────────────────────────────────────────────────────┐
+         │  EVENT HEADER                                              │
+         │  ─ Banner Image, Title, Category, Mode Tags                │
+         │  ─ Registration Status Bar (e.g., 45/100 spots filled)     │
+         │  ─ Countdown Timer to registration deadline                │
+         │  ─ "Register Now" / "Already Registered" button            │
+         ├─────────────────────────────────────────────────────────────┤
+         │  TAB 1: ABOUT                                              │
+         │  ─ Full Description                                        │
+         │  ─ Eligibility                                             │
+         │  ─ Rules & Guidelines                                      │
+         ├─────────────────────────────────────────────────────────────┤
+         │  TAB 2: TIMELINE / ROUNDS                                  │
+         │  ─ Visual timeline showing all phases/rounds               │
+         │  ─ Each round: Name, Date, Description, Status             │
+         ├─────────────────────────────────────────────────────────────┤
+         │  TAB 3: PRIZES & CERTIFICATES                              │
+         │  ─ Prize breakdown (1st, 2nd, 3rd, Special)                │
+         │  ─ Participation Certificate availability                  │
+         │  ─ Merit Certificate availability                          │
+         ├─────────────────────────────────────────────────────────────┤
+         │  TAB 4: REGISTERED PARTICIPANTS (Real-Time)                │
+         │  ─ Live count of registered individuals/teams              │
+         │  ─ List of registered participants (name, college)         │
+         │  ─ For team events: list of teams with members             │
+         │  ─ "Looking for Team" section — users without a team       │
+         │  ─ "Teams with Open Spots" — teams accepting members       │
+         │  ─ Updates in real-time via WebSockets                     │
+         ├─────────────────────────────────────────────────────────────┤
+         │  TAB 5: JUDGES & SPONSORS                                  │
+         │  ─ Judge profiles with photos                              │
+         │  ─ Sponsor logos & links                                   │
+         ├─────────────────────────────────────────────────────────────┤
+         │  TAB 6: FAQs                                               │
+         │  ─ Accordion-style FAQs                                    │
+         ├─────────────────────────────────────────────────────────────┤
+         │  TAB 7: CONTACT                                            │
+         │  ─ Organizer contact info                                  │
+         │  ─ "Ask a Question" form                                   │
+         └─────────────────────────────────────────────────────────────┘
+
+─── MODULE 4: REGISTRATION SYSTEM ───
+
+  [F4.1] Solo Registration
+         - User clicks "Register Now" on event
+         - Fills the custom registration form defined by organizer
+         - Confirms registration
+         - Receives confirmation email
+         - Appears in event's participant list in real time
+
+  [F4.2] Team Registration
+         - Two flows:
+
+         FLOW A: "Create a Team"
+           1. User enters Team Name
+           2. Fills registration form (personal fields)
+           3. Selects their tech stack / role in team
+           4. Team is created — user becomes TEAM LEADER
+           5. Team appears in "Teams with Open Spots" (if spots remain)
+           6. Other users can send "Join Request" to this team
+           7. Team Leader sees incoming requests with:
+              • Requester's name, profile, tech stack, skills
+              • "Approve" / "Decline" buttons
+           8. When team is full (max members reached), it auto-closes
+              for new requests
+
+         FLOW B: "Join an Existing Team"
+           1. User browses "Teams with Open Spots" in the event
+           2. Each team card shows:
+              • Team Name
+              • Current Members (count & names)
+              • Tech Stacks already in team
+              • Tech Stacks needed (calculated: max_size - current_size)
+              • Team Leader name
+           3. User clicks "Request to Join"
+           4. Fills registration form (personal fields)
+           5. Selects their tech stack / role
+           6. Request sent to Team Leader for approval
+           7. If approved → user added to team, appears in members list
+           8. If declined → user notified, can try other teams
+
+         FLOW C: "Register as Individual, Find Team Later"
+           1. User registers individually with "Looking for Team" flag
+           2. Appears in "Looking for Team" section on event page
+           3. Team leaders can invite these users
+           4. User can send join requests to teams
+
+  [F4.3] Tech Stack Selection (Critical for Team Events)
+         - During registration for team events, each member MUST select:
+           • Primary Tech Stack (1-3 technologies they are best at)
+           • Secondary Tech Stack (additional skills)
+           • Preferred Role:
+             □ Frontend Developer
+             □ Backend Developer
+             □ Full Stack Developer
+             □ Mobile Developer
+             □ UI/UX Designer
+             □ ML/AI Engineer
+             □ Data Scientist
+             □ DevOps Engineer
+             □ Project Manager
+             □ Other: ________
+         - This ensures teams have DIVERSE skill sets
+         - Team view shows tech stack distribution:
+           e.g., "Team Alpha: React ✓ | Node.js ✓ | ML ✗ | Design ✗"
+         - Helps build a real, balanced product team
+
+  [F4.4] Registration Confirmation
+         - On-screen confirmation with animation
+         - Email confirmation with event details
+         - Add to Calendar option (.ics file download)
+         - Unique Registration ID generated
+
+─── MODULE 5: TEAM MANAGEMENT ───
+
+  [F5.1] Team Dashboard (for Team Leader)
+         - View all team members
+         - View pending join requests
+         - Approve / Decline requests
+         - Remove a member (with confirmation)
+         - Edit Team Name
+         - Set team as "Open" or "Closed" for new members
+         - View team's tech stack coverage
+
+  [F5.2] Team Member View
+         - See team members & their roles/tech stacks
+         - Access team chat
+         - Leave team option (with confirmation)
+
+  [F5.3] Team Matching Suggestions (Smart Feature)
+         - System suggests users to team leaders based on:
+           • Missing tech stacks in the team
+           • User's tech stack matches team's needs
+         - "Suggested Members" panel on team dashboard
+
+─── MODULE 6: REAL-TIME IN-TEAM MESSAGING ───
+
+  [F6.1] Team Chat Room
+         - Each team gets a dedicated chat room
+         - Real-time messaging via WebSockets (Django Channels)
+         - Features:
+           • Text messages
+           • Timestamps
+           • Sender avatar & name
+           • Message read receipts (optional)
+           • "Typing..." indicator
+           • Scroll to latest message
+           • Message history persistence (stored in DB)
+         - Only team members can access the chat
+         - Chat is event-specific (different chat per event-team)
+
+  [F6.2] Notifications
+         - In-app notifications for:
+           • New join request received
+           • Join request approved/declined
+           • New team message
+           • Event announcement
+           • Registration confirmation
+           • Event reminder (1 day before, 1 hour before)
+         - Optional email notifications
+
+─── MODULE 7: ADMIN / ORGANIZER DASHBOARD ───
+
+  [F7.1] Event Analytics
+         - Total registrations (real-time counter)
+         - Registration trend over time (graph)
+         - Team vs. Solo registration breakdown
+         - Tech stack distribution (pie chart)
+         - Export registrations to CSV/Excel
+
+  [F7.2] Participant Management
+         - View all registered participants
+         - Search & filter participants
+         - Approve / reject registrations (if moderation enabled)
+         - Send bulk emails to participants
+         - Download participant data
+
+  [F7.3] Event Settings
+         - Toggle registration open/closed
+         - Update event status
+         - Extend deadlines
+
+================================================================================
+  4. PAGE-BY-PAGE UI SPECIFICATION
+================================================================================
+
+─── PAGE 1: LANDING / HOME PAGE ───
+
+  LAYOUT:
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  NAVBAR: Logo | Events | About | Login/Register | Profile Icon  │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  HERO SECTION:                                                   │
+  │    Animated banner with tagline:                                 │
+  │    "Discover. Compete. Build. — Your Campus, Your Arena."        │
+  │    Search bar for events                                         │
+  │    Quick stats: 50+ Events | 2000+ Participants | 100+ Teams    │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  FEATURED EVENTS CAROUSEL (top events, auto-scroll)             │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  FILTER BAR:                                                     │
+  │    [All] [Hackathons] [Workshops] [Quizzes] [Competitions] ...  │
+  │    Sort by: [Newest] [Deadline Soon] [Most Popular]             │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  EVENT CARDS GRID (3 per row on desktop, 1 on mobile):          │
+  │  ┌──────────┐ ┌──────────┐ ┌──────────┐                        │
+  │  │ Event 1  │ │ Event 2  │ │ Event 3  │                        │
+  │  │ Banner   │ │ Banner   │ │ Banner   │                        │
+  │  │ Title    │ │ Title    │ │ Title    │                        │
+  │  │ Date     │ │ Date     │ │ Date     │                        │
+  │  │ Prize ₹  │ │ Prize ₹  │ │ Prize ₹  │                        │
+  │  │ [Open]   │ │ [Open]   │ │ [Closed] │                        │
+  │  └──────────┘ └──────────┘ └──────────┘                        │
+  │  ... more cards ...                                              │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  FOOTER: Links | Social Media | Contact | © 2026 CampusArena   │
+  └──────────────────────────────────────────────────────────────────┘
+
+─── PAGE 2: EVENT DETAIL PAGE ───
+
+  (See Section F3.2 above for detailed tab breakdown)
+
+─── PAGE 3: REGISTRATION PAGE ───
+
+  LAYOUT:
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  EVENT TITLE & SUMMARY (mini header)                            │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  STEP 1: Choose Participation Type                              │
+  │    ○ Register as Individual                                     │
+  │    ○ Create a New Team                                          │
+  │    ○ Join an Existing Team                                      │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  STEP 2: Personal Information (auto-filled from profile)        │
+  │    • Name, Email, Phone, College, Branch, Year                  │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  STEP 3: Tech Stack & Role (for team events)                    │
+  │    • Select Primary Skills (tags)                               │
+  │    • Select Preferred Role (dropdown)                           │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  STEP 4: Custom Fields (defined by organizer)                   │
+  │    • Dynamic form fields render here                            │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  STEP 5: Team Details (if "Create Team" selected)               │
+  │    • Team Name                                                  │
+  │    • Max Members (within event limits)                          │
+  │    • Open for Join Requests? [Yes/No]                           │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  [SUBMIT REGISTRATION]                                          │
+  └──────────────────────────────────────────────────────────────────┘
+
+─── PAGE 4: USER DASHBOARD ───
+
+  LAYOUT:
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  SIDEBAR:                        │ MAIN CONTENT:                │
+  │    • My Profile                  │ (Based on sidebar selection)  │
+  │    • My Events                   │                              │
+  │    • My Teams                    │ MY EVENTS:                   │
+  │    • Pending Requests            │ ┌──────────────────────────┐ │
+  │    • Notifications               │ │  Event 1 — Registered    │ │
+  │    • Settings                    │ │  Event 2 — Team Pending  │ │
+  │                                  │ │  Event 3 — Completed     │ │
+  │                                  │ └──────────────────────────┘ │
+  └──────────────────────────────────────────────────────────────────┘
+
+─── PAGE 5: TEAM MANAGEMENT PAGE ───
+
+  LAYOUT:
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  TEAM NAME: "Team Alpha" | Event: "HackFest 2026"              │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  MEMBERS (3/4):                                                 │
+  │  ┌──────────────────────────────────────────────────────────────┐│
+  │  │  👤 John (Leader) — React, Node.js — Frontend Dev           ││
+  │  │  👤 Jane          — Python, Django  — Backend Dev            ││
+  │  │  👤 Alex          — Figma, CSS     — UI/UX Designer         ││
+  │  │  🔲 1 spot open   — Need: ML/AI                             ││
+  │  └──────────────────────────────────────────────────────────────┘│
+  ├──────────────────────────────────────────────────────────────────┤
+  │  TECH STACK COVERAGE:                                           │
+  │  ✅ Frontend  ✅ Backend  ✅ Design  ❌ ML/AI  ❌ DevOps       │
+  ├──────────────────────────────────────────────────────────────────┤
+  │  PENDING JOIN REQUESTS:                                         │
+  │  ┌──────────────────────────────────────────────────────────────┐│
+  │  │  👤 Sara — TensorFlow, PyTorch — ML/AI Engineer             ││
+  │  │  [✔ Approve] [✖ Decline]                                    ││
+  │  └──────────────────────────────────────────────────────────────┘│
+  ├──────────────────────────────────────────────────────────────────┤
+  │  TEAM CHAT (see Module 6)                                       │
+  └──────────────────────────────────────────────────────────────────┘
+
+─── PAGE 6: ORGANIZER DASHBOARD ───
+
+  (See Module 7 for feature details)
+  - Event creation wizard
+  - Registration form builder (drag & drop)
+  - Participant list with export
+  - Analytics graphs
+
+─── PAGE 7: AUTH PAGES ───
+
+  - Login Page (email + password, clean design)
+  - Register Page (multi-step form)
+  - Forgot Password Page
+  - Email Verification Page
+
+================================================================================
+  5. DATABASE SCHEMA (MySQL)
+================================================================================
+
+NOTE: All tables use InnoDB engine, UTF-8 charset, and appropriate indexes.
+
+─── TABLE: users ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │ Primary key              │
+  │ full_name          │ VARCHAR(100)     │ NOT NULL                 │
+  │ email              │ VARCHAR(255)     │ UNIQUE, NOT NULL         │
+  │ password_hash      │ VARCHAR(255)     │ Bcrypt hashed            │
+  │ phone              │ VARCHAR(15)      │                          │
+  │ college_name       │ VARCHAR(200)     │                          │
+  │ branch             │ VARCHAR(100)     │ Department/Branch        │
+  │ year_of_study      │ TINYINT          │ 1-5                      │
+  │ bio                │ TEXT             │                          │
+  │ profile_picture    │ VARCHAR(500)     │ URL/path to image        │
+  │ github_url         │ VARCHAR(500)     │                          │
+  │ linkedin_url       │ VARCHAR(500)     │                          │
+  │ portfolio_url      │ VARCHAR(500)     │                          │
+  │ role               │ ENUM             │ 'admin','organizer',     │
+  │                    │                  │ 'participant'            │
+  │ email_verified     │ BOOLEAN          │ DEFAULT FALSE            │
+  │ created_at         │ DATETIME         │ DEFAULT CURRENT_TIMESTAMP│
+  │ updated_at         │ DATETIME         │ ON UPDATE CURRENT_TIME..│
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: user_tech_stacks ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ user_id            │ INT (FK → users) │                          │
+  │ tech_name          │ VARCHAR(50)      │ e.g., "React", "Python"  │
+  │ proficiency        │ ENUM             │ 'beginner','intermediate'│
+  │                    │                  │ 'advanced','expert'      │
+  │ is_primary         │ BOOLEAN          │ Primary or secondary     │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: events ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ organizer_id       │ INT (FK → users) │ Event creator            │
+  │ title              │ VARCHAR(200)     │ NOT NULL                 │
+  │ description        │ LONGTEXT         │ Rich text (HTML/MD)      │
+  │ category           │ ENUM             │ 'hackathon','workshop',  │
+  │                    │                  │ 'quiz','coding_contest', │
+  │                    │                  │ 'design','ideathon',     │
+  │                    │                  │ 'paper_presentation',    │
+  │                    │                  │ 'case_study','cultural', │
+  │                    │                  │ 'sports','other'         │
+  │ banner_image       │ VARCHAR(500)     │ URL/path                 │
+  │ mode               │ ENUM             │ 'online','offline',      │
+  │                    │                  │ 'hybrid'                 │
+  │ venue              │ VARCHAR(300)     │ Physical location        │
+  │ platform_link      │ VARCHAR(500)     │ Online meeting link      │
+  │ registration_start │ DATETIME         │                          │
+  │ registration_end   │ DATETIME         │                          │
+  │ event_start        │ DATETIME         │                          │
+  │ event_end          │ DATETIME         │                          │
+  │ submission_deadline│ DATETIME         │ Nullable                 │
+  │ participation_type │ ENUM             │ 'individual','team',     │
+  │                    │                  │ 'both'                   │
+  │ min_team_size      │ INT              │ NULL if individual       │
+  │ max_team_size      │ INT              │ NULL if individual       │
+  │ allow_team_creation│ BOOLEAN          │ DEFAULT TRUE             │
+  │ allow_join_requests│ BOOLEAN          │ DEFAULT TRUE             │
+  │ eligibility        │ TEXT             │                          │
+  │ prize_pool_total   │ DECIMAL(10,2)    │                          │
+  │ has_participation  │ BOOLEAN          │ Participation cert?      │
+  │ _certificate       │                  │                          │
+  │ has_merit          │ BOOLEAN          │ Merit cert?              │
+  │ _certificate       │                  │                          │
+  │ max_participants   │ INT              │ Capacity limit           │
+  │ registration_fee   │ DECIMAL(10,2)    │ 0 for free events        │
+  │ contact_email      │ VARCHAR(255)     │                          │
+  │ contact_phone      │ VARCHAR(15)      │                          │
+  │ rules              │ LONGTEXT         │ Rich text                │
+  │ status             │ ENUM             │ 'draft','published',     │
+  │                    │                  │ 'ongoing','completed',   │
+  │                    │                  │ 'cancelled'              │
+  │ is_featured        │ BOOLEAN          │ Show in featured carousel│
+  │ created_at         │ DATETIME         │                          │
+  │ updated_at         │ DATETIME         │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: event_prizes ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ event_id           │ INT (FK → events)│                          │
+  │ position           │ VARCHAR(50)      │ "1st","2nd","Special"    │
+  │ prize_amount       │ DECIMAL(10,2)    │                          │
+  │ prize_description  │ VARCHAR(500)     │ e.g., "Cash + Goodies"   │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: event_rounds ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ event_id           │ INT (FK → events)│                          │
+  │ round_number       │ INT              │ Order of the round       │
+  │ round_name         │ VARCHAR(100)     │                          │
+  │ description        │ TEXT             │                          │
+  │ start_date         │ DATETIME         │                          │
+  │ end_date           │ DATETIME         │                          │
+  │ elimination_criteria│ TEXT            │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: event_faqs ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ event_id           │ INT (FK → events)│                          │
+  │ question           │ TEXT             │                          │
+  │ answer             │ TEXT             │                          │
+  │ display_order      │ INT              │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: event_judges ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ event_id           │ INT (FK → events)│                          │
+  │ name               │ VARCHAR(100)     │                          │
+  │ designation        │ VARCHAR(200)     │                          │
+  │ photo              │ VARCHAR(500)     │ URL/path                 │
+  │ bio                │ TEXT             │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: event_sponsors ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ event_id           │ INT (FK → events)│                          │
+  │ name               │ VARCHAR(100)     │                          │
+  │ logo               │ VARCHAR(500)     │ URL/path                 │
+  │ website_url        │ VARCHAR(500)     │                          │
+  │ sponsor_type       │ ENUM             │ 'title','gold','silver', │
+  │                    │                  │ 'bronze','partner'       │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: custom_form_fields ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ event_id           │ INT (FK → events)│                          │
+  │ field_label        │ VARCHAR(200)     │ Display label            │
+  │ field_type         │ ENUM             │ 'text','textarea',       │
+  │                    │                  │ 'number','dropdown',     │
+  │                    │                  │ 'multi_select','radio',  │
+  │                    │                  │ 'file','date','url'      │
+  │ field_options      │ JSON             │ Options for dropdown etc │
+  │ is_required        │ BOOLEAN          │                          │
+  │ display_order      │ INT              │                          │
+  │ placeholder        │ VARCHAR(200)     │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: registrations ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ event_id           │ INT (FK → events)│                          │
+  │ user_id            │ INT (FK → users) │                          │
+  │ team_id            │ INT (FK → teams) │ NULL if solo             │
+  │ registration_type  │ ENUM             │ 'individual','team'      │
+  │ status             │ ENUM             │ 'pending','confirmed',   │
+  │                    │                  │ 'cancelled','rejected'   │
+  │ registration_id    │ VARCHAR(20)      │ Unique readable ID       │
+  │                    │                  │ e.g., "EVT-2026-00123"   │
+  │ looking_for_team   │ BOOLEAN          │ DEFAULT FALSE            │
+  │ preferred_role     │ VARCHAR(50)      │ Role in team             │
+  │ created_at         │ DATETIME         │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: registration_responses ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ registration_id    │ INT (FK → reg..) │                          │
+  │ field_id           │ INT (FK → fields)│                          │
+  │ response_value     │ TEXT             │ User's answer            │
+  │ file_url           │ VARCHAR(500)     │ If file upload field     │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: registration_tech_stacks ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ registration_id    │ INT (FK → reg..) │                          │
+  │ tech_name          │ VARCHAR(50)      │                          │
+  │ is_primary         │ BOOLEAN          │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: teams ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ event_id           │ INT (FK → events)│                          │
+  │ team_name          │ VARCHAR(100)     │ NOT NULL                 │
+  │ leader_id          │ INT (FK → users) │ Team creator             │
+  │ max_members        │ INT              │ Within event limits      │
+  │ is_open            │ BOOLEAN          │ Accepting join requests? │
+  │ created_at         │ DATETIME         │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: team_members ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ team_id            │ INT (FK → teams) │                          │
+  │ user_id            │ INT (FK → users) │                          │
+  │ role_in_team       │ VARCHAR(50)      │ "Frontend Dev", etc.     │
+  │ joined_at          │ DATETIME         │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: team_join_requests ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ team_id            │ INT (FK → teams) │                          │
+  │ user_id            │ INT (FK → users) │ Requester                │
+  │ message            │ TEXT             │ Optional intro message   │
+  │ status             │ ENUM             │ 'pending','approved',    │
+  │                    │                  │ 'declined'               │
+  │ created_at         │ DATETIME         │                          │
+  │ responded_at       │ DATETIME         │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: messages ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ team_id            │ INT (FK → teams) │ Chat room = team         │
+  │ sender_id          │ INT (FK → users) │                          │
+  │ content            │ TEXT             │ Message text             │
+  │ message_type       │ ENUM             │ 'text','system'          │
+  │                    │                  │ (system = join/leave msg)│
+  │ created_at         │ DATETIME         │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: notifications ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ user_id            │ INT (FK → users) │ Recipient                │
+  │ title              │ VARCHAR(200)     │                          │
+  │ message            │ TEXT             │                          │
+  │ type               │ ENUM             │ 'join_request',          │
+  │                    │                  │ 'request_approved',      │
+  │                    │                  │ 'request_declined',      │
+  │                    │                  │ 'new_message',           │
+  │                    │                  │ 'announcement',          │
+  │                    │                  │ 'registration',          │
+  │                    │                  │ 'reminder'               │
+  │ reference_id       │ INT              │ Related entity ID        │
+  │ reference_type     │ VARCHAR(50)      │ 'event','team','message' │
+  │ is_read            │ BOOLEAN          │ DEFAULT FALSE            │
+  │ created_at         │ DATETIME         │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: event_announcements ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ INT (PK, AUTO)   │                          │
+  │ event_id           │ INT (FK → events)│                          │
+  │ title              │ VARCHAR(200)     │                          │
+  │ content            │ TEXT             │                          │
+  │ created_at         │ DATETIME         │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+─── TABLE: sessions (for auth) ───
+  ┌────────────────────┬──────────────────┬──────────────────────────┐
+  │ COLUMN             │ TYPE             │ NOTES                    │
+  ├────────────────────┼──────────────────┼──────────────────────────┤
+  │ id                 │ VARCHAR(128) PK  │ Session token            │
+  │ user_id            │ INT (FK → users) │                          │
+  │ expires_at         │ DATETIME         │                          │
+  │ created_at         │ DATETIME         │                          │
+  └────────────────────┴──────────────────┴──────────────────────────┘
+
+================================================================================
+  6. REAL-TIME FEATURES (WebSocket Architecture)
+================================================================================
+
+Technology: Django Channels (ASGI) + WebSockets
+Channel Layer: Redis (via channels_redis)
+Server: Daphne (ASGI server for Django Channels)
+
+Django Channels uses "Consumers" (similar to Django views but for
+WebSocket connections) and "Groups" (for broadcasting to multiple
+connections). Each consumer handles connect, disconnect, and receive
+events.
+
+─── REAL-TIME EVENT 1: REGISTRATION UPDATES ───
+  Group: `event_{eventId}_registrations`
+  Consumer: RegistrationConsumer (channels routing)
+  Triggered when: A new user registers for an event
+  Payload: {
+    registrationCount: 45,
+    newParticipant: { name, college, type: 'individual'|'team' },
+    teamUpdate: { teamId, teamName, memberCount } (if team reg)
+  }
+  Listeners: Event detail page (Tab 4: Registered Participants)
+
+─── REAL-TIME EVENT 2: TEAM UPDATES ───
+  Group: `event_{eventId}_teams`
+  Consumer: TeamConsumer
+  Triggered when: Team created, member joins/leaves, team opens/closes
+  Payload: {
+    action: 'team_created' | 'member_joined' | 'member_left' |
+            'team_closed' | 'team_opened',
+    team: { id, name, memberCount, maxMembers, isOpen, techStacks }
+  }
+
+─── REAL-TIME EVENT 3: JOIN REQUESTS ───
+  Group: `team_{teamId}_requests`
+  Consumer: JoinRequestConsumer
+  Triggered when: Join request sent, approved, or declined
+  Payload: {
+    action: 'new_request' | 'approved' | 'declined',
+    request: { userId, userName, techStacks, role, message }
+  }
+  Listeners: Team leader's dashboard
+
+─── REAL-TIME EVENT 4: TEAM CHAT ───
+  Group: `team_{teamId}_chat`
+  Consumer: ChatConsumer
+  Triggered when: Team member sends a message
+  Payload: {
+    messageId, senderId, senderName, senderAvatar,
+    content, timestamp, messageType
+  }
+  Additional groups:
+    `team_{teamId}_typing` — typing indicator
+    `team_{teamId}_read`   — read receipts
+
+─── REAL-TIME EVENT 5: NOTIFICATIONS ───
+  Group: `user_{userId}_notifications`
+  Consumer: NotificationConsumer
+  Triggered when: Any notification triggers
+  Payload: { notification object }
+
+================================================================================
+  7. API ENDPOINTS (RESTful)
+================================================================================
+
+IMPLEMENTATION: Django URL routing + views (class-based views preferred).
+For AJAX/JS calls from the frontend, use Django REST Framework (DRF)
+with serializers and viewsets. Server-rendered pages use standard
+Django views with templates.
+
+BASE URL: /api/v1
+
+─── AUTHENTICATION ───
+  POST   /auth/register              — Register new user
+  POST   /auth/login                 — Login user
+  POST   /auth/logout                — Logout user
+  POST   /auth/forgot-password       — Send password reset email
+  POST   /auth/reset-password        — Reset password with token
+  GET    /auth/verify-email/:token   — Verify email address
+  GET    /auth/me                    — Get current user profile
+
+─── USER PROFILE ───
+  GET    /users/:id                  — Get user profile
+  PUT    /users/:id                  — Update user profile
+  PUT    /users/:id/tech-stacks      — Update tech stacks
+  POST   /users/:id/avatar           — Upload profile picture
+
+─── EVENTS ───
+  GET    /events                     — List all events (with filters)
+  GET    /events/featured            — Get featured events
+  GET    /events/:id                 — Get event details
+  POST   /events                     — Create event (organizer)
+  PUT    /events/:id                 — Update event (organizer)
+  DELETE /events/:id                 — Delete/archive event (organizer)
+  GET    /events/:id/stats           — Get event statistics
+
+─── EVENT SUB-RESOURCES ───
+  GET    /events/:id/rounds          — Get event rounds
+  POST   /events/:id/rounds          — Add round
+  GET    /events/:id/faqs            — Get FAQs
+  POST   /events/:id/faqs            — Add FAQ
+  GET    /events/:id/judges          — Get judges
+  POST   /events/:id/judges          — Add judge
+  GET    /events/:id/sponsors        — Get sponsors
+  POST   /events/:id/sponsors        — Add sponsor
+  GET    /events/:id/prizes          — Get prizes
+  POST   /events/:id/prizes          — Add prize
+  GET    /events/:id/announcements   — Get announcements
+  POST   /events/:id/announcements   — Post announcement
+
+─── CUSTOM FORM FIELDS ───
+  GET    /events/:id/form-fields     — Get event's custom fields
+  POST   /events/:id/form-fields     — Create custom field
+  PUT    /events/:id/form-fields/:fid— Update custom field
+  DELETE /events/:id/form-fields/:fid— Delete custom field
+
+─── REGISTRATIONS ───
+  GET    /events/:id/registrations   — Get all registrations for event
+  POST   /events/:id/register        — Register for event
+  GET    /registrations/:id          — Get registration details
+  DELETE /registrations/:id          — Cancel registration
+
+─── TEAMS ───
+  GET    /events/:id/teams           — Get all teams for event
+  POST   /events/:id/teams           — Create team
+  GET    /teams/:id                  — Get team details
+  PUT    /teams/:id                  — Update team settings
+  DELETE /teams/:id                  — Delete team
+
+─── TEAM MEMBERS ───
+  GET    /teams/:id/members          — Get team members
+  DELETE /teams/:id/members/:uid     — Remove team member
+
+─── JOIN REQUESTS ───
+  POST   /teams/:id/join-requests    — Send join request
+  GET    /teams/:id/join-requests    — Get pending requests (leader)
+  PUT    /join-requests/:id/approve  — Approve join request
+  PUT    /join-requests/:id/decline  — Decline join request
+
+─── MESSAGES ───
+  GET    /teams/:id/messages         — Get chat history
+  POST   /teams/:id/messages         — Send message (also via WebSocket)
+
+─── NOTIFICATIONS ───
+  GET    /notifications              — Get user's notifications
+  PUT    /notifications/:id/read     — Mark as read
+  PUT    /notifications/read-all     — Mark all as read
+
+─── USER DASHBOARD ───
+  GET    /dashboard/my-events        — Get user's registered events
+  GET    /dashboard/my-teams         — Get user's teams
+  GET    /dashboard/pending-requests — Get user's pending requests
+
+================================================================================
+  8. TECH STACK RECOMMENDATION
+================================================================================
+
+LAYER             │ TECHNOLOGY              │ REASON
+──────────────────┼─────────────────────────┼──────────────────────────
+Backend Framework │ Django 5.x (Python)     │ Batteries-included:
+                  │                         │ ORM, admin, auth, forms,
+                  │                         │ URL routing, middleware
+──────────────────┼─────────────────────────┼──────────────────────────
+Frontend          │ HTML + CSS + JavaScript │ Server-rendered via
+                  │ (Django Templates)      │ Django template engine,
+                  │                         │ progressive JS for
+                  │                         │ interactivity (AJAX)
+──────────────────┼─────────────────────────┼──────────────────────────
+API Layer         │ Django REST Framework   │ Serializers, viewsets,
+                  │ (DRF) — optional        │ for JSON API endpoints
+                  │                         │ consumed by JS/AJAX
+──────────────────┼─────────────────────────┼──────────────────────────
+Database          │ MySQL 8.0+              │ As specified by user
+──────────────────┼─────────────────────────┼──────────────────────────
+ORM               │ Django ORM              │ Built-in models, query
+                  │ (mysqlclient driver)    │ builder, migrations
+──────────────────┼─────────────────────────┼──────────────────────────
+Real-Time         │ Django Channels +       │ ASGI WebSocket support,
+                  │ channels_redis          │ groups, consumers
+──────────────────┼─────────────────────────┼──────────────────────────
+ASGI Server       │ Daphne                  │ Production ASGI server
+                  │                         │ for Django Channels
+──────────────────┼─────────────────────────┼──────────────────────────
+Authentication    │ Django built-in auth +  │ Session-based auth,
+                  │ django-allauth          │ social/OAuth login ready
+──────────────────┼─────────────────────────┼──────────────────────────
+File Uploads      │ Django FileField +      │ Local dev uploads,
+                  │ django-storages         │ S3/Cloudinary in prod
+──────────────────┼─────────────────────────┼──────────────────────────
+Email Service     │ Django send_mail +      │ Built-in email support,
+                  │ SMTP backend            │ OTP, confirmations
+──────────────────┼─────────────────────────┼──────────────────────────
+Form Handling     │ Django Forms + Crispy   │ Server-side validation,
+                  │ Forms                   │ dynamic custom forms
+──────────────────┼─────────────────────────┼──────────────────────────
+Rich Text Editor  │ django-ckeditor or      │ Event descriptions
+                  │ TinyMCE                 │
+──────────────────┼─────────────────────────┼──────────────────────────
+Charts/Analytics  │ Chart.js (via JS)       │ Organizer dashboard
+──────────────────┼─────────────────────────┼──────────────────────────
+Image Processing  │ Pillow                  │ Profile pictures, event
+                  │                         │ banners, image resizing
+──────────────────┼─────────────────────────┼──────────────────────────
+CSV/Excel Export  │ openpyxl + Python csv   │ Export registrations,
+                  │                         │ participant data
+──────────────────┼─────────────────────────┼──────────────────────────
+Calendar (.ics)   │ icalendar (Python)      │ Add-to-calendar downloads
+                  │                         │ for event registrations
+──────────────────┼─────────────────────────┼──────────────────────────
+HTML Sanitization  │ bleach                  │ Sanitize rich text input
+                  │                         │ to prevent XSS
+──────────────────┼─────────────────────────┼──────────────────────────
+Search & Filtering│ django-filter           │ Event listing filters,
+                  │                         │ participant search
+──────────────────┼─────────────────────────┼──────────────────────────
+Admin Panel       │ Django Admin            │ Built-in admin for
+                  │                         │ super admin management
+──────────────────┼─────────────────────────┼──────────────────────────
+Deployment        │ Gunicorn + Nginx +      │ Production-grade Django
+                  │ Daphne (ASGI) +         │ deployment with WSGI
+                  │ MySQL on VPS/Cloud      │ and ASGI servers
+
+================================================================================
+  9. SECURITY CONSIDERATIONS
+================================================================================
+
+  [S1] Password Hashing: Django's PBKDF2 hasher (default); can add
+       bcrypt via Django's PASSWORD_HASHERS setting
+  [S2] Input Validation: Django Forms + DRF serializers for server-side;
+       HTML5 + JS for client-side validation
+  [S3] SQL Injection: Django ORM (parameterized queries by default)
+  [S4] XSS Prevention: Django templates auto-escape by default;
+       sanitize rich text content (e.g., bleach library)
+  [S5] CSRF Protection: Django's built-in CsrfViewMiddleware +
+       {% csrf_token %} template tag in all forms
+  [S6] Rate Limiting: django-ratelimit or DRF throttling classes
+  [S7] File Upload Security: Validate file types & sizes via Django
+       FileField validators; scan for malware in production
+  [S8] Session Security: Django sessions (server-side), secure &
+       HTTP-only session cookies, SESSION_COOKIE_AGE configuration
+  [S9] CORS: django-cors-headers package for allowed origins
+  [S10] HTTPS: Enforce via SECURE_SSL_REDIRECT, SECURE_HSTS_SECONDS
+       and Nginx configuration in production
+  [S11] Role-Based Access Control: Django's built-in permissions +
+       groups system, custom decorators / mixins for views
+  [S12] Data Privacy: Careful serializer field selection in DRF;
+       Django's @login_required and permission decorators
+
+================================================================================
+  10. DEPLOYMENT PLAN
+================================================================================
+
+PHASE 1: MVP (Minimum Viable Product) — 4-6 Weeks
+  - User auth (register, login, profile)
+  - Event creation & listing
+  - Solo registration
+  - Event detail page with all tabs
+  - Basic UI inspired by Unstop
+
+PHASE 2: Team Features — 3-4 Weeks
+  - Team creation & join requests
+  - Tech stack selection & matching
+  - Team management dashboard
+  - Real-time registration updates
+
+PHASE 3: Real-Time & Messaging — 2-3 Weeks
+  - Django Channels integration
+  - Team chat
+  - Real-time participant list
+  - Notifications
+
+PHASE 4: Polish & Admin — 2-3 Weeks
+  - Organizer analytics dashboard
+  - Custom form builder
+  - Email notifications
+  - CSV export
+  - Performance optimization
+  - Mobile responsiveness
+
+DEPLOYMENT TOOLING (Django-Specific):
+  - WSGI Server: Gunicorn (for standard HTTP requests)
+  - ASGI Server: Daphne (for WebSocket / Django Channels)
+  - Reverse Proxy: Nginx (serves static files, proxies to Gunicorn/Daphne)
+  - Static Files: django-collectstatic → served by Nginx or CDN
+  - Database: MySQL 8.0+ on the same server or managed cloud DB
+  - Channel Layer: Redis (for Django Channels group messaging)
+  - Process Manager: systemd or supervisord for Gunicorn + Daphne
+
+PHASE 5: Launch & Iterate — Ongoing
+  - Bug fixes
+  - User feedback
+  - Feature enhancements
+  - Scale infrastructure
+
+================================================================================
+  11. FUTURE ENHANCEMENTS (Post-Launch)
+================================================================================
+
+  [E1]  Payment Integration (Razorpay/Stripe) for paid events
+  [E2]  Certificate Generation — auto-generate PDFs with participant names
+  [E3]  Leaderboard System — for coding contests & quizzes
+  [E4]  Submission System — file/link submission for hackathons
+  [E5]  Judging System — judges can rate submissions from dashboard
+  [E6]  OAuth Login — Google, GitHub login
+  [E7]  PWA Support — installable on mobile devices
+  [E8]  Dark/Light Theme Toggle
+  [E9]  Multi-Language Support (i18n)
+  [E10] Event Cloning — duplicate events for recurring ones
+  [E11] QR Code Check-in — for offline events
+  [E12] Calendar Integration — sync events with Google Calendar
+  [E13] Discussion Forum — per-event discussion threads
+  [E14] Portfolio Builder — auto-generate from participated events
+  [E15] AI-Powered Team Recommendations — ML-based team matching
+  [E16] Event Templates — pre-built templates for common event types
+  [E17] Attendance Tracking — mark present/absent
+  [E18] WhatsApp/Telegram Bot — event reminders and updates
+
+================================================================================
+                          END OF SPECIFICATION
+================================================================================
+
+Document prepared for: GDG College Events Platform
+Version: 1.0
+Date: February 24, 2026
+
+================================================================================
