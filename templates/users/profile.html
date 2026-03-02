@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile_user.display_name }} — CampusArena{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:40px; padding-bottom:80px;">
+    <div class="card">
+        <div class="card-body" style="padding:40px;">
+            <div class="flex gap-3 items-center flex-wrap">
+                <div class="avatar avatar-xl">
+                    {% if profile_user.profile_picture %}
+                    <img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.display_name }}">
+                    {% else %}
+                    {{ profile_user.initials }}
+                    {% endif %}
+                </div>
+                <div class="flex-1">
+                    <h2>{{ profile_user.display_name }}</h2>
+                    <p class="text-secondary">{{ profile_user.college_name|default:"" }}{% if profile_user.branch %} ·
+                        {{ profile_user.branch }}{% endif %}{% if profile_user.year_of_study %} · {{
+                        profile_user.get_year_of_study_display }}{% endif %}</p>
+                    {% if profile_user.bio %}<p class="mt-1 text-secondary">{{ profile_user.bio }}</p>{% endif %}
+                </div>
+                {% if user == profile_user %}
+                <a href="{% url 'users:profile_edit' pk=user.pk %}" class="btn btn-secondary">Edit profile</a>
+                {% endif %}
+            </div>
+
+            {% if profile_user.tech_stacks.exists %}
+            <div class="mt-4">
+                <h4 class="mb-2">Tech Stack</h4>
+                <div class="flex gap-1 flex-wrap">
+                    {% for ts in profile_user.tech_stacks.all %}
+                    <span class="tag {% if ts.is_primary %}tag-accent{% else %}tag-neutral{% endif %}">{{ ts.tech_name
+                        }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mt-4 flex gap-2 flex-wrap">
+                {% if profile_user.github_url %}<a href="{{ profile_user.github_url }}" target="_blank"
+                    class="btn btn-outline btn-sm">GitHub</a>{% endif %}
+                {% if profile_user.linkedin_url %}<a href="{{ profile_user.linkedin_url }}" target="_blank"
+                    class="btn btn-outline btn-sm">LinkedIn</a>{% endif %}
+                {% if profile_user.portfolio_url %}<a href="{{ profile_user.portfolio_url }}" target="_blank"
+                    class="btn btn-outline btn-sm">Portfolio</a>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

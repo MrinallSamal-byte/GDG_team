@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — CampusArena{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <ul class="sidebar-nav">
+            <li><a href="{% url 'dashboard:user_dashboard' %}"
+                    class="{% if request.resolver_match.url_name == 'user_dashboard' %}active{% endif %}">📊
+                    Overview</a></li>
+            <li><a href="{% url 'dashboard:my_events' %}"
+                    class="{% if request.resolver_match.url_name == 'my_events' %}active{% endif %}">📅 My Events</a>
+            </li>
+            <li><a href="{% url 'dashboard:my_teams' %}"
+                    class="{% if request.resolver_match.url_name == 'my_teams' %}active{% endif %}">👥 My Teams</a></li>
+            <li><a href="{% url 'dashboard:pending_requests' %}"
+                    class="{% if request.resolver_match.url_name == 'pending_requests' %}active{% endif %}">📬
+                    Requests</a></li>
+            {% if user.is_organizer %}
+            <li><a href="{% url 'dashboard:organizer_dashboard' %}"
+                    class="{% if request.resolver_match.url_name == 'organizer_dashboard' %}active{% endif %}">⚡
+                    Organizer</a></li>
+            {% endif %}
+        </ul>
+    </aside>
+    <div class="dashboard-content">
+        <h2 class="mb-3">Welcome back, {{ user.first_name|default:user.username }}!</h2>
+
+        <div class="grid grid-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="text-2xl font-semibold">{{ my_registrations|length }}</div>
+                    <div class="text-sm text-muted">Active Registrations</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="text-2xl font-semibold">{{ my_teams|length }}</div>
+                    <div class="text-sm text-muted">Teams</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="text-2xl font-semibold">{{ unread_count }}</div>
+                    <div class="text-sm text-muted">Unread Notifications</div>
+                </div>
+            </div>
+        </div>
+
+        {% if pending_received %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h3 class="mb-2">Pending Join Requests</h3>
+                {% for req in pending_received %}
+                <div class="flex justify-between items-center p-2 mb-1"
+                    style="border-bottom:1px solid var(--border-light);">
+                    <span><strong>{{ req.user.display_name }}</strong> wants to join {{ req.team.team_name }}</span>
+                    <div class="flex gap-1">
+                        <form method="post" action="{% url 'teams:approve_request' pk=req.pk %}"
+                            style="display:inline;">{% csrf_token %}<button class="btn btn-success btn-sm">✓</button>
+                        </form>
+                        <form method="post" action="{% url 'teams:decline_request' pk=req.pk %}"
+                            style="display:inline;">{% csrf_token %}<button class="btn btn-outline btn-sm">✗</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-2">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-2">Recent Registrations</h3>
+                    {% for reg in my_registrations %}
+                    <div class="flex justify-between items-center p-2 mb-1"
+                        style="border-bottom:1px solid var(--border-light);">
+                        <div>
+                            <a href="{{ reg.event.get_absolute_url }}" class="font-medium text-sm">{{ reg.event.title
+                                }}</a>
+                            <div class="text-xs text-muted">{{ reg.registration_id }}</div>
+                        </div>
+                        <span class="tag tag-{{ reg.status }}">{{ reg.get_status_display }}</span>
+                    </div>
+                    {% empty %}<div class="empty-state">
+                        <p>No registrations yet. <a href="{% url 'events:home' %}">Browse events!</a></p>
+                    </div>{% endfor %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-2">Recent Notifications</h3>
+                    {% for notif in recent_notifications %}
+                    <div class="p-2 mb-1 {% if not notif.is_read %}{% endif %}"
+                        style="border-bottom:1px solid var(--border-light);{% if not notif.is_read %}background:var(--accent-light);border-radius:var(--radius-sm);{% endif %}">
+                        <div class="font-medium text-sm">{{ notif.title }}</div>
+                        <div class="text-xs text-muted">{{ notif.created_at|timesince }} ago</div>
+                    </div>
+                    {% empty %}<p class="text-muted text-sm">No notifications.</p>{% endfor %}
+                    <a href="{% url 'notifications:list' %}" class="btn btn-ghost btn-sm mt-2">View all →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

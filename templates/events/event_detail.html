@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+{% block title %}{{ event.title }} — CampusArena{% endblock %}
+{% block meta_description %}{{ event.description|truncatewords:30 }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 32px; padding-bottom: 80px;">
+
+    <!-- Event Header -->
+    <div class="card mb-4">
+        {% if event.banner_image %}
+        <img src="{{ event.banner_image.url }}" alt="{{ event.title }}"
+            style="width:100%;height:300px;object-fit:cover;">
+        {% else %}
+        <div
+            style="width:100%;height:200px;background:linear-gradient(135deg, var(--accent-light), var(--bg-tertiary));display:flex;align-items:center;justify-content:center;">
+            <span style="font-size:4rem;opacity:0.2;">🎯</span>
+        </div>
+        {% endif %}
+        <div class="card-body">
+            <div class="flex gap-1 flex-wrap mb-2">
+                <span class="tag tag-accent">{{ event.get_category_display }}</span>
+                <span class="tag tag-neutral">{{ event.get_mode_display }}</span>
+                {% if event.is_free %}<span class="tag tag-success">Free</span>{% endif %}
+                {% if event.has_participation_certificate %}<span class="tag tag-info">Certificate</span>{% endif %}
+                <span class="tag tag-{{ event.status }}">{{ event.get_status_display }}</span>
+            </div>
+
+            <h1 style="font-size: 2rem; margin-bottom: 8px;">{{ event.title }}</h1>
+            <p class="text-secondary">Organized by {{ event.organizer.display_name }} · {{ event.event_start|date:"M d,
+                Y" }}</p>
+
+            {% if event.max_participants %}
+            <div class="mt-2">
+                <div class="flex justify-between text-sm mb-1">
+                    <span>{{ event.registration_count }}/{{ event.max_participants }} registered</span>
+                    <span>{{ event.registration_percentage }}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" style="width: {{ event.registration_percentage }}%"></div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if event.is_registration_open %}
+            <div class="mt-3">
+                <div class="flex gap-2 items-center flex-wrap">
+                    {% if user_registration %}
+                    <span class="tag tag-success" style="padding: 8px 20px; font-size: 0.9rem;">✓ You're
+                        registered</span>
+                    <a href="{% url 'registrations:confirmation' pk=user_registration.pk %}"
+                        class="btn btn-secondary btn-sm">View registration</a>
+                    {% else %}
+                    <a href="{% url 'registrations:register_for_event' event_id=event.pk %}"
+                        class="btn btn-primary btn-lg">Register Now</a>
+                    {% endif %}
+
+                    <div class="countdown" data-countdown="{{ event.registration_end|date:'c' }}"></div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="about" role="tab" aria-selected="true">About</button>
+            <button class="tab" data-tab="timeline" role="tab">Timeline</button>
+            <button class="tab" data-tab="prizes" role="tab">Prizes</button>
+            <button class="tab" data-tab="participants" role="tab">Participants</button>
+            <button class="tab" data-tab="judges" role="tab">Judges & Sponsors</button>
+            <button class="tab" data-tab="faqs" role="tab">FAQs</button>
+            <button class="tab" data-tab="contact" role="tab">Contact</button>
+        </div>
+
+        <!-- About Tab -->
+        <div id="about" class="tab-content active" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-2">About This Event</h3>
+                    <div style="line-height: 1.8; color: var(--text-secondary);">{{ event.description|linebreaksbr }}
+                    </div>
+
+                    {% if event.eligibility %}
+                    <h4 class="mt-4 mb-1">Eligibility</h4>
+                    <p class="text-secondary">{{ event.eligibility|linebreaksbr }}</p>
+                    {% endif %}
+
+                    {% if event.rules %}
+                    <h4 class="mt-4 mb-1">Rules & Guidelines</h4>
+                    <div class="text-secondary" style="line-height: 1.8;">{{ event.rules|linebreaksbr }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Tab -->
+        <div id="timeline" class="tab-content" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-3">Event Timeline</h3>
+                    <div style="border-left: 2px solid var(--border); padding-left: 24px; margin-left: 12px;">
+                        <div class="mb-3">
+                            <div class="tag tag-info mb-1">Registration</div>
+                            <p class="font-medium">{{ event.registration_start|date:"M d, Y H:i" }} — {{
+                                event.registration_end|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <div class="tag tag-accent mb-1">Event</div>
+                            <p class="font-medium">{{ event.event_start|date:"M d, Y H:i" }} — {{
+                                event.event_end|date:"M d, Y H:i" }}</p>
+                        </div>
+                        {% if event.submission_deadline %}
+                        <div class="mb-3">
+                            <div class="tag tag-warning mb-1">Submission Deadline</div>
+                            <p class="font-medium">{{ event.submission_deadline|date:"M d, Y H:i" }}</p>
+                        </div>
+                        {% endif %}
+                        {% for round in rounds %}
+                        <div class="mb-3">
+                            <div class="tag tag-neutral mb-1">Round {{ round.round_number }}: {{ round.round_name }}
+                            </div>
+                            <p class="text-secondary text-sm">{{ round.description }}</p>
+                            {% if round.start_date %}<p class="text-sm text-muted">{{ round.start_date|date:"M d, Y H:i"
+                                }}</p>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prizes Tab -->
+        <div id="prizes" class="tab-content" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-3">Prizes & Certificates</h3>
+                    {% if event.prize_pool_total > 0 %}
+                    <p class="text-xl font-semibold mb-3">Total Prize Pool: ₹{{ event.prize_pool_total|floatformat:"0"
+                        }}</p>
+                    {% endif %}
+                    <div class="grid grid-3">
+                        {% for prize in prizes %}
+                        <div class="card" style="text-align:center;">
+                            <div class="card-body">
+                                <div style="font-size:2rem;margin-bottom:8px;">🏆</div>
+                                <h4>{{ prize.position }}</h4>
+                                {% if prize.prize_amount > 0 %}<p class="text-xl font-semibold text-accent">₹{{
+                                    prize.prize_amount|floatformat:"0" }}</p>{% endif %}
+                                {% if prize.prize_description %}<p class="text-sm text-muted">{{ prize.prize_description
+                                    }}</p>{% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Prize details will be announced soon.</p>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 flex gap-2">
+                        {% if event.has_participation_certificate %}<span class="tag tag-success">✓ Participation
+                            Certificate</span>{% endif %}
+                        {% if event.has_merit_certificate %}<span class="tag tag-info">✓ Merit Certificate</span>{%
+                        endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Participants Tab -->
+        <div id="participants" class="tab-content" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-2">Registered Participants <span class="tag tag-neutral">{{ event.registration_count
+                            }}</span></h3>
+
+                    {% if registrations %}
+                    <div class="table-container mt-3">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>College</th>
+                                    <th>Type</th>
+                                    <th>Team</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reg in registrations %}
+                                <tr>
+                                    <td class="flex items-center gap-1">
+                                        <div class="avatar avatar-sm">{{ reg.user.initials }}</div>
+                                        {{ reg.user.display_name }}
+                                    </td>
+                                    <td>{{ reg.user.college_name|default:"—" }}</td>
+                                    <td><span class="tag tag-neutral">{{ reg.get_registration_type_display }}</span>
+                                    </td>
+                                    <td>{% if reg.team %}<a href="{% url 'teams:team_detail' pk=reg.team.pk %}">{{
+                                            reg.team.team_name }}</a>{% else %}—{% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <p>No registrations yet. Be the first to sign up!</p>
+                    </div>
+                    {% endif %}
+
+                    {% if event.is_team_event %}
+                    <h4 class="mt-4 mb-2">Teams with Open Spots</h4>
+                    {% if open_teams %}
+                    <div class="grid grid-2">
+                        {% for team in open_teams %}
+                        <div class="team-card">
+                            <div class="team-card-header">
+                                <div>
+                                    <h5>{{ team.team_name }}</h5>
+                                    <span class="text-sm text-muted">Led by {{ team.leader.display_name }}</span>
+                                </div>
+                                <span class="tag tag-accent">{{ team.member_count }}/{{ team.max_members }}</span>
+                            </div>
+                            {% if user.is_authenticated %}
+                            <form method="post" action="{% url 'teams:join_request' pk=team.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline btn-sm">Request to Join</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No teams with open spots right now.</p>
+                    {% endif %}
+
+                    <h4 class="mt-4 mb-2">Looking for a Team</h4>
+                    {% if looking_for_team %}
+                    <div class="flex gap-2 flex-wrap">
+                        {% for reg in looking_for_team %}
+                        <div class="card" style="display:inline-flex;padding:12px 16px;gap:10px;align-items:center;">
+                            <div class="avatar avatar-sm">{{ reg.user.initials }}</div>
+                            <div>
+                                <div class="font-medium text-sm">{{ reg.user.display_name }}</div>
+                                <div class="text-xs text-muted">{{ reg.preferred_role|default:"Any role" }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Everyone has found a team!</p>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Judges & Sponsors Tab -->
+        <div id="judges" class="tab-content" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-3">Judges & Mentors</h3>
+                    {% if judges %}
+                    <div class="grid grid-3">
+                        {% for judge in judges %}
+                        <div style="text-align:center;">
+                            <div class="avatar avatar-xl" style="margin:0 auto 12px;">
+                                {% if judge.photo %}<img src="{{ judge.photo.url }}" alt="{{ judge.name }}">{% else %}{{
+                                judge.name|first }}{% endif %}
+                            </div>
+                            <h5>{{ judge.name }}</h5>
+                            <p class="text-sm text-muted">{{ judge.designation }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Judges will be announced soon.</p>
+                    {% endif %}
+
+                    <h3 class="mt-4 mb-3">Sponsors & Partners</h3>
+                    {% if sponsors %}
+                    <div class="flex gap-3 flex-wrap items-center">
+                        {% for sponsor in sponsors %}
+                        <div style="text-align:center;">
+                            {% if sponsor.logo %}<img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}"
+                                style="height:50px;object-fit:contain;">{% endif %}
+                            <p class="text-xs text-muted mt-1">{{ sponsor.name }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Sponsor announcements coming soon.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQs Tab -->
+        <div id="faqs" class="tab-content" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-3">Frequently Asked Questions</h3>
+                    {% if faqs %}
+                    <div class="accordion">
+                        {% for faq in faqs %}
+                        <div class="accordion-item">
+                            <button class="accordion-trigger" aria-expanded="false">
+                                {{ faq.question }}
+                                <span class="icon">▼</span>
+                            </button>
+                            <div class="accordion-content" role="region">
+                                <div class="accordion-content-inner">{{ faq.answer|linebreaksbr }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No FAQs added yet. Have a question? Reach out to the organizer.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Tab -->
+        <div id="contact" class="tab-content" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-3">Contact the Organizer</h3>
+                    {% if event.contact_email %}
+                    <p class="mb-1"><strong>Email:</strong> <a href="mailto:{{ event.contact_email }}">{{
+                            event.contact_email }}</a></p>
+                    {% endif %}
+                    {% if event.contact_phone %}
+                    <p class="mb-1"><strong>Phone:</strong> {{ event.contact_phone }}</p>
+                    {% endif %}
+                    {% if event.venue %}
+                    <p class="mb-1"><strong>Venue:</strong> {{ event.venue }}</p>
+                    {% endif %}
+                    {% if event.platform_link %}
+                    <p><strong>Platform:</strong> <a href="{{ event.platform_link }}" target="_blank" rel="noopener">{{
+                            event.platform_link }}</a></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Organizer Actions -->
+    {% if user == event.organizer or user.is_admin %}
+    <div class="card mt-4">
+        <div class="card-body flex gap-2 flex-wrap">
+            <a href="{% url 'events:event_edit' pk=event.pk %}" class="btn btn-secondary">Edit Event</a>
+            <a href="{% url 'events:event_announce' pk=event.pk %}" class="btn btn-secondary">Post Announcement</a>
+            <a href="{% url 'dashboard:event_management' event_id=event.pk %}" class="btn btn-secondary">Manage
+                Participants</a>
+            <a href="{% url 'dashboard:export_registrations' event_id=event.pk %}" class="btn btn-outline btn-sm">Export
+                CSV</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

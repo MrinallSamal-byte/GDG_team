@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Events — CampusArena{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:32px;padding-bottom:80px;">
+    <h1 class="mb-2">All Events</h1>
+
+    <form method="get" class="flex gap-2 flex-wrap mb-3">
+        <input type="text" name="q" value="{{ current_filters.q }}" placeholder="Search events..." class="form-input"
+            style="max-width:300px;">
+        <select name="category" class="form-select" style="max-width:200px;" onchange="this.form.submit()">
+            <option value="">All categories</option>
+            {% for value, label in categories %}
+            <option value="{{ value }}" {% if current_filters.category==value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="mode" class="form-select" style="max-width:150px;" onchange="this.form.submit()">
+            <option value="">All modes</option>
+            <option value="online" {% if current_filters.mode=='online' %}selected{% endif %}>Online</option>
+            <option value="offline" {% if current_filters.mode=='offline' %}selected{% endif %}>Offline</option>
+            <option value="hybrid" {% if current_filters.mode=='hybrid' %}selected{% endif %}>Hybrid</option>
+        </select>
+        <select name="fee" class="form-select" style="max-width:120px;" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="free" {% if current_filters.fee=='free' %}selected{% endif %}>Free</option>
+            <option value="paid" {% if current_filters.fee=='paid' %}selected{% endif %}>Paid</option>
+        </select>
+        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    </form>
+
+    {% if events %}
+    <div class="grid grid-3">
+        {% for event in events %}
+        {% include 'events/_event_card.html' %}
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}<a
+            href="?page={{ page_obj.previous_page_number }}{% for k, v in current_filters.items %}{% if v %}&{{ k }}={{ v }}{% endif %}{% endfor %}">←
+            Prev</a>{% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+        <span class="current">{{ num }}</span>
+        {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %} <a
+            href="?page={{ num }}{% for k, v in current_filters.items %}{% if v %}&{{ k }}={{ v }}{% endif %}{% endfor %}">
+            {{ num }}</a>
+            {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}<a
+                href="?page={{ page_obj.next_page_number }}{% for k, v in current_filters.items %}{% if v %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Next
+                →</a>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">🔍</div>
+        <p>No events match your criteria. Try adjusting your filters.</p>
+        <a href="{% url 'events:event_list' %}" class="btn btn-secondary">Clear filters</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

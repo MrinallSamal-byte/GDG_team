@@ -1,0 +1,60 @@
+{% extends 'base.html' %}{% block title %}Organizer Dashboard — CampusArena{% endblock %}
+{% block content %}<div class="container" style="padding:32px 24px 80px;">
+    <div class="flex justify-between items-center mb-3">
+        <h2>Organizer Dashboard</h2><a href="{% url 'events:event_create' %}" class="btn btn-primary">+ New Event</a>
+    </div>
+    <div class="grid grid-3 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="text-2xl font-semibold">{{ total_events }}</div>
+                <div class="text-sm text-muted">Your Events</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="text-2xl font-semibold">{{ total_registrations }}</div>
+                <div class="text-sm text-muted">Total Registrations</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="text-2xl font-semibold text-accent">Live</div>
+                <div class="text-sm text-muted">Platform Status</div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="mb-2">Your Events</h3>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Registrations</th>
+                            <th>Dates</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}<tr>
+                            <td><a href="{{ event.get_absolute_url }}" class="font-medium">{{ event.title }}</a></td>
+                            <td><span class="tag tag-neutral">{{ event.get_category_display }}</span></td>
+                            <td><span
+                                    class="tag tag-{% if event.status == 'published' %}success{% elif event.status == 'draft' %}warning{% else %}neutral{% endif %}">{{
+                                    event.get_status_display }}</span></td>
+                            <td>{{ event.reg_count }}</td>
+                            <td class="text-sm text-muted">{{ event.event_start|date:"M d" }} — {{
+                                event.event_end|date:"M d" }}</td>
+                            <td class="flex gap-1"><a href="{% url 'events:event_edit' pk=event.pk %}"
+                                    class="btn btn-ghost btn-sm">Edit</a><a
+                                    href="{% url 'dashboard:event_management' event_id=event.pk %}"
+                                    class="btn btn-ghost btn-sm">Manage</a></td>
+                        </tr>{% endfor %}</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>{% endblock %}

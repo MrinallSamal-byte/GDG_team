@@ -1,0 +1,25 @@
+{% extends 'base.html' %}{% block title %}My Teams — CampusArena{% endblock %}
+{% block content %}<div class="container" style="padding:32px 24px 80px;">
+    <h2 class="mb-3">My Teams</h2>
+    {% if teams %}<div class="grid grid-2">
+        {% for team in teams %}
+        <div class="team-card">
+            <div class="team-card-header">
+                <div>
+                    <h4><a href="{% url 'teams:team_detail' pk=team.pk %}">{{ team.team_name }}</a></h4>
+                    <p class="text-sm text-muted">{{ team.event.title }}</p>
+                </div>
+                <span class="tag tag-accent">{{ team.member_count }}/{{ team.max_members }}</span>
+            </div>
+            <div class="flex gap-1 mt-2">
+                <a href="{% url 'teams:team_chat' pk=team.pk %}" class="btn btn-ghost btn-sm">💬 Chat</a>
+                {% if team.leader == user %}<a href="{% url 'teams:team_dashboard' pk=team.pk %}"
+                    class="btn btn-ghost btn-sm">⚙ Manage</a>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}<div class="empty-state">
+        <p>No teams yet. Join or create one during event registration.</p>
+    </div>{% endif %}
+</div>{% endblock %}
