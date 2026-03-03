@@ -8,6 +8,9 @@ function setTheme(theme) {
     if (label) {
         label.textContent = theme === 'dark' ? 'Dark' : 'Light';
     }
+    if (toggle) {
+        toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+    }
 }
 
 function initTheme() {
