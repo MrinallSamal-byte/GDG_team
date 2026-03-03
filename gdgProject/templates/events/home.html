@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Discover Events{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div>
+        <p class="eyebrow">Discover. Compete. Build.</p>
+        <h1>Your Campus, Your Arena.</h1>
+        <p class="muted">Find hackathons, workshops, and challenges designed for student creators.</p>
+        <div class="search-wrap">
+            <input type="text" placeholder="Search events, tech stacks, or colleges">
+            <button>Search</button>
+        </div>
+        <div class="stats-row">
+            <div><strong>50+</strong><span>Events</span></div>
+            <div><strong>2000+</strong><span>Participants</span></div>
+            <div><strong>100+</strong><span>Teams</span></div>
+        </div>
+    </div>
+    <div class="hero-card">
+        <h3>Featured Event</h3>
+        <p>{{ featured_events.0.title }}</p>
+        <small>{{ featured_events.0.date }} • {{ featured_events.0.mode }}</small>
+        <a href="{% url 'events:event_detail' featured_events.0.id %}" class="btn-primary">View details</a>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-head">
+        <h2>Featured events</h2>
+        <div class="chip-row">
+            {% for event in featured_events %}
+                <a class="chip" href="{% url 'events:event_detail' event.id %}">{{ event.title }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-head split">
+        <h2>Browse all events</h2>
+        <div class="filters">
+            <button class="chip active">All</button>
+            <button class="chip">Hackathons</button>
+            <button class="chip">Workshops</button>
+            <button class="chip">Quizzes</button>
+            <button class="chip">Competitions</button>
+        </div>
+    </div>
+
+    <div class="card-grid">
+        {% for event in event_grid %}
+            <article class="event-card">
+                <div class="event-badge">{{ event.category }}</div>
+                <h3>{{ event.title }}</h3>
+                <p>{{ event.date }} • {{ event.mode }}</p>
+                <p>{{ event.type }} • Prize: {{ event.prize }}</p>
+                <span class="status {{ event.status|lower }}">{{ event.status }}</span>
+                <a class="btn-secondary" href="{% url 'events:event_detail' event.id %}">Register Now</a>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

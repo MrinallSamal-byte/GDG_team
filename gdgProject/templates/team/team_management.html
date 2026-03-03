@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Team Management{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="section-head split">
+        <h1>{{ team.name }} — {{ team.event }}</h1>
+        <span class="status open">Members {{ team.members_count }}</span>
+    </div>
+
+    <div class="two-col">
+        <article class="surface">
+            <h2>Members</h2>
+            <ul class="list">
+                {% for member in members %}
+                    <li>
+                        <strong>{{ member.name }}{% if member.leader %} (Leader){% endif %}</strong>
+                        <span>{{ member.stack }} • {{ member.role }}</span>
+                    </li>
+                {% endfor %}
+                <li><strong>1 spot open</strong><span>Need: ML/AI Engineer</span></li>
+            </ul>
+        </article>
+
+        <article class="surface">
+            <h2>Tech stack coverage</h2>
+            <div class="chip-row">
+                {% for item in coverage %}
+                    <span class="chip {% if item.ok %}ok{% else %}missing{% endif %}">
+                        {% if item.ok %}✓{% else %}✗{% endif %} {{ item.label }}
+                    </span>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="surface">
+            <h2>Pending join requests</h2>
+            <ul class="list">
+                {% for req in requests %}
+                    <li>
+                        <strong>{{ req.name }}</strong>
+                        <span>{{ req.stack }} • {{ req.role }}</span>
+                        <div class="inline-actions">
+                            <button class="btn-primary btn-small">Approve</button>
+                            <button class="btn-secondary btn-small">Decline</button>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </article>
+
+        <article class="surface">
+            <h2>Team chat</h2>
+            <div class="chat-box">
+                <p><strong>John:</strong> Let’s finalize the problem statement tonight.</p>
+                <p><strong>Jane:</strong> I’ll prepare backend architecture notes.</p>
+                <p><strong>Alex:</strong> Sharing wireframes in 20 mins.</p>
+            </div>
+        </article>
+    </div>
+</section>
+{% endblock %}

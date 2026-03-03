@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CampusArena{% endblock %}</title>
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('campusarena-theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container nav-wrap">
+            <a class="brand" href="{% url 'events:home' %}">CampusArena</a>
+            <nav class="main-nav">
+                <a href="{% url 'events:home' %}">Events</a>
+                <a href="{% url 'dashboard:user_dashboard' %}">Dashboard</a>
+                <a href="{% url 'eventManagement:organizer_dashboard' %}">Organizer</a>
+                <a href="{% url 'users:login' %}">Login</a>
+                <a href="{% url 'users:register' %}">Register</a>
+            </nav>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark and light mode">
+                <span class="theme-toggle-track"></span>
+                <span class="theme-toggle-thumb"></span>
+                <span id="theme-label">Light</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-wrap">
+            <p>© 2026 CampusArena</p>
+            <div class="footer-links">
+                <a href="{% url 'events:home' %}">Home</a>
+                <a href="{% url 'users:forgot_password' %}">Support</a>
+                <a href="{% url 'users:verify_email' %}">Verification</a>
+            </div>
+        </div>
+    </footer>
+    <script src="{% static 'js/theme.js' %}"></script>
+</body>
+</html>

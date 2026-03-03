@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Verify Email{% endblock %}
+
+{% block content %}
+<section class="auth-wrap">
+    <article class="surface auth-card">
+        <h1>Email verification</h1>
+        <p class="muted">A verification code has been sent to your email. Enter the code below.</p>
+        <div class="field-grid otp-grid">
+            <input type="text" maxlength="1"><input type="text" maxlength="1">
+            <input type="text" maxlength="1"><input type="text" maxlength="1">
+            <input type="text" maxlength="1"><input type="text" maxlength="1">
+        </div>
+        <button class="btn-primary full-btn">Verify email</button>
+        <button class="btn-secondary full-btn">Resend code</button>
+    </article>
+</section>
+{% endblock %}

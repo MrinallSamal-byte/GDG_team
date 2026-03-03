@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Register{% endblock %}
+
+{% block content %}
+<section class="auth-wrap">
+    <article class="surface auth-card wide">
+        <h1>Create your account</h1>
+        <p class="muted">Multi-step registration with profile and tech stack preferences.</p>
+
+        <div class="stepper">
+            <span class="step active">1. Basics</span>
+            <span class="step">2. Academic</span>
+            <span class="step">3. Skills</span>
+        </div>
+
+        <div class="field-grid">
+            <input type="text" placeholder="Full name">
+            <input type="email" placeholder="Email">
+            <input type="text" placeholder="Phone number">
+            <input type="text" placeholder="College name">
+            <select>
+                <option selected disabled>Branch</option>
+                {% for branch in branches %}
+                    <option>{{ branch }}</option>
+                {% endfor %}
+            </select>
+            <select>
+                <option selected disabled>Year of study</option>
+                {% for year in years %}
+                    <option>{{ year }}</option>
+                {% endfor %}
+            </select>
+            <input type="password" placeholder="Password">
+            <input type="password" placeholder="Confirm password">
+        </div>
+
+        <p class="muted">Choose primary skills</p>
+        <div class="chip-row">
+            <button class="chip">React</button><button class="chip">Python</button>
+            <button class="chip">Django</button><button class="chip">Figma</button>
+            <button class="chip">Flutter</button><button class="chip">AWS</button>
+        </div>
+
+        <button class="btn-primary full-btn">Register</button>
+    </article>
+</section>
+{% endblock %}

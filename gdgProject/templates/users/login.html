@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Login{% endblock %}
+
+{% block content %}
+<section class="auth-wrap">
+    <article class="surface auth-card">
+        <h1>Welcome back</h1>
+        <p class="muted">Sign in to manage your events, teams, and registrations.</p>
+        <div class="field-grid">
+            <input type="email" placeholder="Email">
+            <input type="password" placeholder="Password">
+        </div>
+        <label class="checkbox-row"><input type="checkbox"> Remember me</label>
+        <button class="btn-primary full-btn">Login</button>
+        <div class="auth-links">
+            <a href="{% url 'users:forgot_password' %}">Forgot password?</a>
+            <a href="{% url 'users:register' %}">Create account</a>
+        </div>
+    </article>
+</section>
+{% endblock %}

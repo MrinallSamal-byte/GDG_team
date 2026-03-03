@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Register for {{ event.title }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="section-head">
+        <h1>Registration — {{ event.title }}</h1>
+        <p class="muted">{{ event.summary }}</p>
+    </div>
+
+    <div class="form-layout">
+        <article class="surface">
+            <h2>Step 1: Participation type</h2>
+            <div class="radio-row">
+                <label><input type="radio" name="type" checked> Register as Individual</label>
+                <label><input type="radio" name="type"> Create a New Team</label>
+                <label><input type="radio" name="type"> Join an Existing Team</label>
+            </div>
+        </article>
+
+        <article class="surface">
+            <h2>Step 2: Personal information</h2>
+            <div class="field-grid">
+                <input type="text" placeholder="Full Name">
+                <input type="email" placeholder="Email">
+                <input type="text" placeholder="Phone">
+                <input type="text" placeholder="College">
+                <input type="text" placeholder="Branch">
+                <input type="text" placeholder="Year of study">
+            </div>
+        </article>
+
+        <article class="surface">
+            <h2>Step 3: Tech stack & role</h2>
+            <div class="chip-row">
+                {% for skill in skills %}
+                    <button class="chip">{{ skill }}</button>
+                {% endfor %}
+            </div>
+            <select>
+                <option selected disabled>Select preferred role</option>
+                {% for role in roles %}
+                    <option>{{ role }}</option>
+                {% endfor %}
+            </select>
+        </article>
+
+        <article class="surface">
+            <h2>Step 4: Custom fields</h2>
+            <div class="field-grid">
+                <input type="url" placeholder="Portfolio / Project URL">
+                <input type="text" placeholder="GitHub profile">
+                <textarea rows="3" placeholder="Why should your application be selected?"></textarea>
+            </div>
+        </article>
+
+        <article class="surface">
+            <h2>Step 5: Team details</h2>
+            <div class="field-grid">
+                <input type="text" placeholder="Team name">
+                <input type="number" placeholder="Max members">
+                <select>
+                    <option selected>Open for join requests? Yes</option>
+                    <option>Open for join requests? No</option>
+                </select>
+            </div>
+        </article>
+
+        <button class="btn-primary full-btn">Submit registration</button>
+    </div>
+</section>
+{% endblock %}

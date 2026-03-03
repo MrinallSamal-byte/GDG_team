@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | User Dashboard{% endblock %}
+
+{% block content %}
+<section class="dashboard-layout">
+    <aside class="surface sidebar">
+        <h3>My Workspace</h3>
+        <a class="sidebar-link active" href="#">My Profile</a>
+        <a class="sidebar-link" href="#">My Events</a>
+        <a class="sidebar-link" href="#">My Teams</a>
+        <a class="sidebar-link" href="#">Pending Requests</a>
+        <a class="sidebar-link" href="#">Notifications</a>
+        <a class="sidebar-link" href="#">Settings</a>
+    </aside>
+
+    <div class="dashboard-main">
+        <article class="surface">
+            <h2>My events</h2>
+            <ul class="list">
+                {% for event in my_events %}
+                    <li><strong>{{ event.title }}</strong><span>{{ event.status }}</span></li>
+                {% endfor %}
+            </ul>
+        </article>
+
+        <article class="surface">
+            <h2>My teams</h2>
+            <ul class="list">
+                {% for team in my_teams %}
+                    <li><strong>{{ team.name }}</strong><span>{{ team.event }} • {{ team.role }}</span></li>
+                {% endfor %}
+            </ul>
+        </article>
+
+        <article class="surface">
+            <h2>Notifications</h2>
+            <ul class="list compact">
+                {% for notice in notifications %}
+                    <li><span>{{ notice }}</span></li>
+                {% endfor %}
+            </ul>
+        </article>
+    </div>
+</section>
+{% endblock %}

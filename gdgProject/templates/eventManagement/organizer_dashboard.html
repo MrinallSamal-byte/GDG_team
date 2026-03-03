@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Organizer Dashboard{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="section-head split">
+        <h1>Organizer Dashboard</h1>
+        <button class="btn-primary">Create Event</button>
+    </div>
+
+    <div class="metric-grid">
+        <article class="surface metric"><p>Total registrations</p><strong>{{ analytics.total_registrations }}</strong></article>
+        <article class="surface metric"><p>Team vs Solo</p><strong>{{ analytics.team_vs_solo }}</strong></article>
+        <article class="surface metric"><p>Top tech stacks</p><strong>{{ analytics.top_stack }}</strong></article>
+        <article class="surface metric"><p>Active events</p><strong>{{ analytics.active_events }}</strong></article>
+    </div>
+
+    <div class="two-col">
+        <article class="surface">
+            <h2>Event creation wizard</h2>
+            <p>Multi-step builder for event basics, timeline, rules, prizes, and participation limits.</p>
+            <button class="btn-secondary">Open wizard</button>
+        </article>
+
+        <article class="surface">
+            <h2>Registration form builder</h2>
+            <p>Drag fields like text, dropdown, file upload, and URLs to design custom event forms.</p>
+            <button class="btn-secondary">Customize form</button>
+        </article>
+
+        <article class="surface">
+            <h2>Participants</h2>
+            <ul class="list">
+                {% for person in participants %}
+                    <li><strong>{{ person.name }}</strong><span>{{ person.event }} • {{ person.status }}</span></li>
+                {% endfor %}
+            </ul>
+            <button class="btn-secondary">Export CSV</button>
+        </article>
+
+        <article class="surface">
+            <h2>Analytics snapshot</h2>
+            <div class="chart-placeholder">Registration trend graph placeholder</div>
+            <div class="chart-placeholder">Tech stack pie chart placeholder</div>
+        </article>
+    </div>
+</section>
+{% endblock %}
