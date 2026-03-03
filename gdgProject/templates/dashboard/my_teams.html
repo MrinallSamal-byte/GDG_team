@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | My Teams{% endblock %}
+
+{% block content %}
+<section class="dashboard-layout">
+    {% include 'dashboard/_sidebar.html' with current_page='teams' %}
+
+    <div>
+        <div class="welcome-header reveal">
+            <h1><i data-lucide="users"></i> My Teams</h1>
+            <p>Teams you've created or joined across events.</p>
+        </div>
+
+        <div class="card-grid reveal">
+            {% for team in teams %}
+            <article class="surface">
+                <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:.8rem;">
+                    <div class="avatar avatar-md"
+                        style="background:linear-gradient(135deg, var(--primary), var(--primary-2));color:#fff;">{{
+                        team.name|first }}</div>
+                    <div>
+                        <h3 style="font-size:1.05rem;">{{ team.name }}</h3>
+                        <span class="muted" style="font-size:.85rem;">{{ team.event }}</span>
+                    </div>
+                </div>
+                <div style="margin-bottom:.7rem;">
+                    <span class="muted" style="font-size:.85rem;"><i data-lucide="user-check"
+                            style="width:14px;height:14px;vertical-align:middle;"></i> Your role: <strong>{{ team.role
+                            }}</strong></span>
+                </div>
+                <p class="muted" style="font-size:.88rem;margin-bottom:.8rem;">Members</p>
+                <div style="display:flex;flex-wrap:wrap;gap:.45rem;">
+                    {% for member in team.members %}
+                    <div class="chip">
+                        <span class="avatar avatar-xs" style="width:20px;height:20px;font-size:.65rem;">{{ member|first
+                            }}</span>
+                        {{ member }}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div style="display:flex;gap:.5rem;margin-top:1rem;">
+                    <button class="btn-secondary btn-small"><i data-lucide="message-circle"></i> Chat</button>
+                    <button class="btn-secondary btn-small"><i data-lucide="user-plus"></i> Invite</button>
+                </div>
+            </article>
+            {% empty %}
+            <article class="surface" style="grid-column:1/-1;">
+                <div class="empty-state"><i data-lucide="users"></i>
+                    <p>Not part of any team yet. Join an event and form your squad!</p>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

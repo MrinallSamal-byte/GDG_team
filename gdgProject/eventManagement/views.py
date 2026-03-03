@@ -20,3 +20,7 @@ def organizer_dashboard(request):
 			'participants': participants,
 		},
 	)
+
+
+def create_event(request):
+	return render(request, 'eventManagement/create_event.html')

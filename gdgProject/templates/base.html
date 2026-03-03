@@ -1,10 +1,12 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="CampusArena — Discover hackathons, workshops, and coding challenges designed for student creators.">
+    <meta name="description"
+        content="CampusArena — Discover hackathons, workshops, and coding challenges designed for student creators.">
     <title>{% block title %}CampusArena{% endblock %}</title>
     <script>
         (function () {
@@ -13,10 +15,15 @@
         })();
     </script>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script>document.addEventListener('DOMContentLoaded', () => { if (window.lucide) lucide.createIcons(); });</script>
 </head>
-<body>
+
+<body class="{% block body_class %}{% endblock %}">
+
+    <!-- Skip to content (a11y) -->
+    <a class="skip-link" href="#main-content">Skip to content</a>
 
     <!-- Header -->
     <header class="site-header">
@@ -25,10 +32,12 @@
                 <i data-lucide="trophy"></i> CampusArena
             </a>
 
-            <nav class="nav-center">
+            <nav class="nav-center" aria-label="Main navigation">
                 <a href="{% url 'events:home' %}"><i data-lucide="compass"></i> Events</a>
                 <a href="{% url 'dashboard:user_dashboard' %}"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+                {% if user.is_staff %}
                 <a href="{% url 'eventManagement:organizer_dashboard' %}"><i data-lucide="settings-2"></i> Organizer</a>
+                {% endif %}
             </nav>
 
             <div class="nav-right">
@@ -38,9 +47,32 @@
                     </span>
                     <span id="theme-label">Light</span>
                 </button>
+
+                {% if user.is_authenticated %}
+                <div class="user-menu">
+                    <button class="user-menu-toggle" id="user-menu-btn" aria-expanded="false" aria-haspopup="true">
+                        <div class="avatar">{{ user.first_name|first|default:"U" }}</div>
+                        <span>{{ user.first_name|default:"Account" }}</span>
+                        <i data-lucide="chevron-down" style="width:14px;height:14px;color:var(--muted);"></i>
+                    </button>
+                    <div class="user-dropdown" id="user-dropdown" role="menu">
+                        <a href="{% url 'dashboard:user_dashboard' %}" role="menuitem"><i data-lucide="user"></i> My
+                            Profile</a>
+                        <a href="{% url 'dashboard:user_dashboard' %}" role="menuitem"><i data-lucide="calendar"></i> My
+                            Events</a>
+                        <a href="{% url 'dashboard:user_dashboard' %}" role="menuitem"><i data-lucide="users"></i> My
+                            Teams</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{% url 'users:login' %}" role="menuitem"><i data-lucide="log-out"></i> Sign Out</a>
+                    </div>
+                </div>
+                {% else %}
                 <a href="{% url 'users:login' %}" class="btn-secondary btn-small"><i data-lucide="log-in"></i> Login</a>
-                <a href="{% url 'users:register' %}" class="btn-primary btn-small"><i data-lucide="user-plus"></i> Sign Up</a>
-                <button id="mobile-toggle" class="mobile-toggle" aria-label="Menu">
+                <a href="{% url 'users:register' %}" class="btn-primary btn-small"><i data-lucide="user-plus"></i> Sign
+                    Up</a>
+                {% endif %}
+
+                <button id="mobile-toggle" class="mobile-toggle" aria-label="Open menu">
                     <i data-lucide="menu"></i>
                 </button>
             </div>
@@ -49,20 +81,41 @@
 
     <!-- Mobile nav overlay -->
     <div id="nav-overlay" class="nav-overlay"></div>
-    <nav id="mobile-nav" class="mobile-nav">
+    <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile navigation">
         <div class="mobile-nav-header">
             <span class="brand">CampusArena</span>
-            <button id="mobile-close" class="mobile-nav-close"><i data-lucide="x"></i></button>
+            <button id="mobile-close" class="mobile-nav-close" aria-label="Close menu"><i data-lucide="x"></i></button>
         </div>
         <a href="{% url 'events:home' %}"><i data-lucide="compass"></i> Events</a>
         <a href="{% url 'dashboard:user_dashboard' %}"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+        {% if user.is_staff %}
         <a href="{% url 'eventManagement:organizer_dashboard' %}"><i data-lucide="settings-2"></i> Organizer</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <a href="{% url 'dashboard:user_dashboard' %}"><i data-lucide="user"></i> My Profile</a>
+        <a href="{% url 'users:login' %}"><i data-lucide="log-out"></i> Sign Out</a>
+        {% else %}
         <a href="{% url 'users:login' %}"><i data-lucide="log-in"></i> Login</a>
         <a href="{% url 'users:register' %}"><i data-lucide="user-plus"></i> Sign Up</a>
+        {% endif %}
     </nav>
 
+    <!-- Django Messages -->
+    {% if messages %}
+    <div class="container" style="padding-top:.75rem;">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
+            <i
+                data-lucide="{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}alert-circle{% elif message.tags == 'warning' %}alert-triangle{% else %}info{% endif %}"></i>
+            {{ message }}
+            <button class="alert-close" aria-label="Dismiss">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Main -->
-    <main class="container main-content">
+    <main id="main-content" class="container main-content">
         {% block content %}{% endblock %}
     </main>
 
@@ -72,7 +125,8 @@
             <div class="footer-grid">
                 <div>
                     <div class="footer-brand">CampusArena</div>
-                    <p class="footer-about">Discover, compete, and build with fellow students. Your campus, your arena — find hackathons, workshops, and challenges designed for student creators.</p>
+                    <p class="footer-about">Discover, compete, and build with fellow students. Your campus, your arena —
+                        find hackathons, workshops, and challenges designed for student creators.</p>
                 </div>
                 <div class="footer-col">
                     <h4>Platform</h4>
@@ -106,5 +160,7 @@
 
     <script src="{% static 'js/theme.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
+
 </html>

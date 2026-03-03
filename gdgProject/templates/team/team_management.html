@@ -124,10 +124,11 @@
                     </div>
                 </div>
             </div>
-            <div class="chat-input">
-                <input type="text" placeholder="Type a message...">
-                <button class="btn-primary btn-small"><i data-lucide="send"></i></button>
-            </div>
+            <form method="POST" action="" class="chat-input" id="chat-form">
+                {% csrf_token %}
+                <input type="text" name="message" placeholder="Type a message..." autocomplete="off">
+                <button type="submit" class="btn-primary btn-small"><i data-lucide="send"></i></button>
+            </form>
         </article>
     </div>
 </section>

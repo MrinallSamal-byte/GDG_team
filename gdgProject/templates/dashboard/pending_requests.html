@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Pending Requests{% endblock %}
+
+{% block content %}
+<section class="dashboard-layout">
+    {% include 'dashboard/_sidebar.html' with current_page='requests' %}
+
+    <div>
+        <div class="welcome-header reveal">
+            <h1><i data-lucide="inbox"></i> Pending Requests</h1>
+            <p>Manage incoming join requests and track your sent requests.</p>
+        </div>
+
+        <div class="two-col reveal">
+            <!-- Incoming -->
+            <article class="surface">
+                <h2><i data-lucide="download"></i> Incoming Requests</h2>
+                <ul class="list">
+                    {% for req in incoming %}
+                    <li>
+                        <div style="display:flex;align-items:center;gap:.55rem;">
+                            <div class="avatar avatar-sm">{{ req.from|first }}</div>
+                            <div style="flex:1;">
+                                <strong>{{ req.from }}</strong>
+                                <span style="display:block;color:var(--muted);font-size:.84rem;">wants to join
+                                    <strong>{{ req.team }}</strong> for {{ req.event }}</span>
+                            </div>
+                        </div>
+                        <div class="inline-actions" style="margin-top:.5rem;">
+                            <button class="btn-primary btn-small"><i data-lucide="check"></i> Accept</button>
+                            <button class="btn-secondary btn-small"><i data-lucide="x"></i> Decline</button>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <div class="empty-state"><i data-lucide="inbox"></i>
+                        <p>No incoming requests.</p>
+                    </div>
+                    {% endfor %}
+                </ul>
+            </article>
+
+            <!-- Outgoing -->
+            <article class="surface">
+                <h2><i data-lucide="upload"></i> Sent Requests</h2>
+                <ul class="list">
+                    {% for req in outgoing %}
+                    <li>
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <div>
+                                <strong>{{ req.team }}</strong>
+                                <span style="display:block;color:var(--muted);font-size:.84rem;">{{ req.event }}</span>
+                            </div>
+                            <span
+                                class="status {% if req.status == 'Accepted' %}open{% elif req.status == 'Declined' %}closed{% else %}closing{% endif %}">
+                                {% if req.status == 'Accepted' %}<i data-lucide="check-circle"></i>
+                                {% elif req.status == 'Declined' %}<i data-lucide="x-circle"></i>
+                                {% else %}<i data-lucide="clock"></i>
+                                {% endif %}
+                                {{ req.status }}
+                            </span>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <div class="empty-state"><i data-lucide="send"></i>
+                        <p>No sent requests.</p>
+                    </div>
+                    {% endfor %}
+                </ul>
+            </article>
+        </div>
+    </div>
+</section>
+{% endblock %}

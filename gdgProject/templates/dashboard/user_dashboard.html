@@ -4,22 +4,7 @@
 
 {% block content %}
 <section class="dashboard-layout">
-    <!-- Sidebar -->
-    <aside class="surface sidebar reveal">
-        <div class="sidebar-profile">
-            <div class="avatar avatar-lg">S</div>
-            <div>
-                <strong>Student User</strong>
-                <span>CSE · 3rd Year</span>
-            </div>
-        </div>
-        <a class="sidebar-link active" href="#"><i data-lucide="user"></i> My Profile</a>
-        <a class="sidebar-link" href="#"><i data-lucide="calendar"></i> My Events</a>
-        <a class="sidebar-link" href="#"><i data-lucide="users"></i> My Teams</a>
-        <a class="sidebar-link" href="#"><i data-lucide="inbox"></i> Pending Requests</a>
-        <a class="sidebar-link" href="#"><i data-lucide="bell"></i> Notifications</a>
-        <a class="sidebar-link" href="#"><i data-lucide="settings"></i> Settings</a>
-    </aside>
+    {% include 'dashboard/_sidebar.html' with current_page='overview' %}
 
     <!-- Main Content -->
     <div>
@@ -40,9 +25,10 @@
                             <strong>{{ event.title }}</strong>
                             <span
                                 class="status {% if event.status == 'Registered' %}open{% elif event.status == 'Completed' %}closed{% else %}closing{% endif %}">
-                                {% if event.status == 'Registered' %}<i data-lucide="check-circle"></i>{% elif
-                                event.status == 'Completed' %}<i data-lucide="flag"></i>{% else %}<i
-                                    data-lucide="clock"></i>{% endif %}
+                                {% if event.status == 'Registered' %}<i data-lucide="check-circle"></i>
+                                {% elif event.status == 'Completed' %}<i data-lucide="flag"></i>
+                                {% else %}<i data-lucide="clock"></i>
+                                {% endif %}
                                 {{ event.status }}
                             </span>
                         </div>

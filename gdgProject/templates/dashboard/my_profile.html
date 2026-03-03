@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | My Profile{% endblock %}
+
+{% block content %}
+<section class="dashboard-layout">
+    {% include 'dashboard/_sidebar.html' with current_page='profile' %}
+
+    <div>
+        <div class="welcome-header reveal">
+            <h1><i data-lucide="user"></i> My Profile</h1>
+            <p>View and manage your personal information.</p>
+        </div>
+
+        <div class="profile-content reveal">
+            <!-- Profile Card -->
+            <article class="surface profile-card">
+                <div class="profile-header">
+                    <div class="avatar avatar-xl">{{ profile.name|first }}</div>
+                    <div>
+                        <h2 style="margin-bottom:.15rem;">{{ profile.name }}</h2>
+                        <p class="muted">{{ profile.branch }} · {{ profile.year }}</p>
+                        <p class="muted" style="font-size:.88rem;">{{ profile.college }}</p>
+                    </div>
+                    <button class="btn-secondary btn-small" style="margin-left:auto;align-self:start;"><i
+                            data-lucide="edit-3"></i> Edit Profile</button>
+                </div>
+
+                <div class="profile-details">
+                    <div class="profile-info-grid">
+                        <div class="profile-info-item">
+                            <span class="profile-info-label"><i data-lucide="mail"></i> Email</span>
+                            <span>{{ profile.email }}</span>
+                        </div>
+                        <div class="profile-info-item">
+                            <span class="profile-info-label"><i data-lucide="phone"></i> Phone</span>
+                            <span>{{ profile.phone }}</span>
+                        </div>
+                        <div class="profile-info-item">
+                            <span class="profile-info-label"><i data-lucide="github"></i> GitHub</span>
+                            <span>{{ profile.github }}</span>
+                        </div>
+                        <div class="profile-info-item">
+                            <span class="profile-info-label"><i data-lucide="linkedin"></i> LinkedIn</span>
+                            <span>{{ profile.linkedin }}</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:1.2rem;">
+                        <h3 style="font-size:.95rem;margin-bottom:.5rem;"><i data-lucide="quote"></i> Bio</h3>
+                        <p class="text-soft">{{ profile.bio }}</p>
+                    </div>
+
+                    <div style="margin-top:1.2rem;">
+                        <h3 style="font-size:.95rem;margin-bottom:.5rem;"><i data-lucide="cpu"></i> Skills</h3>
+                        <div class="chip-row">
+                            {% for skill in profile.skills %}
+                            <span class="chip active">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Stats -->
+            <div class="stats-row" style="margin-top:1rem;">
+                <div class="surface">
+                    <strong>{{ stats.events_joined }}</strong>
+                    <span>Events Joined</span>
+                </div>
+                <div class="surface">
+                    <strong>{{ stats.teams }}</strong>
+                    <span>Teams</span>
+                </div>
+                <div class="surface">
+                    <strong>{{ stats.certificates }}</strong>
+                    <span>Certificates</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

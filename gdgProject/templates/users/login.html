@@ -14,22 +14,26 @@
             <h1>Sign In</h1>
             <p class="muted">Enter your credentials to access your account.</p>
 
-            <div class="form-field">
-                <i data-lucide="mail"></i>
-                <input type="email" placeholder="Email address" id="login-email">
-            </div>
-            <div class="form-field">
-                <i data-lucide="lock"></i>
-                <input type="password" placeholder="Password" id="login-password">
-            </div>
+            <form method="POST" action="" novalidate id="login-form">
+                {% csrf_token %}
 
-            <label class="checkbox-row"><input type="checkbox"> Remember me</label>
-            <button class="btn-primary full-btn"><i data-lucide="log-in"></i> Login</button>
+                <div class="form-field">
+                    <i data-lucide="mail"></i>
+                    <input type="email" name="email" id="login-email" placeholder="Email address" required>
+                </div>
+                <div class="form-field">
+                    <i data-lucide="lock"></i>
+                    <input type="password" name="password" id="login-password" placeholder="Password" required>
+                </div>
+
+                <label class="checkbox-row"><input type="checkbox" name="remember"> Remember me</label>
+                <button type="submit" class="btn-primary full-btn"><i data-lucide="log-in"></i> Login</button>
+            </form>
 
             <div class="auth-divider">or continue with</div>
             <div class="social-btns">
-                <button><i data-lucide="github"></i> GitHub</button>
-                <button><i data-lucide="chrome"></i> Google</button>
+                <button type="button"><i data-lucide="github"></i> GitHub</button>
+                <button type="button"><i data-lucide="chrome"></i> Google</button>
             </div>
 
             <div class="auth-links">

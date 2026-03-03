@@ -14,19 +14,32 @@
             <h1>Email Verification</h1>
             <p class="muted">A verification code has been sent to your email. Enter the code below.</p>
 
-            <div class="field-grid otp-grid">
-                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
-            </div>
+            <form method="POST" action="" novalidate id="verify-form">
+                {% csrf_token %}
 
-            <button class="btn-primary full-btn"><i data-lucide="check-circle"></i> Verify Email</button>
-            <button class="btn-secondary full-btn"><i data-lucide="refresh-cw"></i> Resend Code</button>
+                <div class="field-grid otp-grid">
+                    <input type="text" name="otp_1" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                        aria-label="Digit 1" required>
+                    <input type="text" name="otp_2" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                        aria-label="Digit 2" required>
+                    <input type="text" name="otp_3" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                        aria-label="Digit 3" required>
+                    <input type="text" name="otp_4" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                        aria-label="Digit 4" required>
+                    <input type="text" name="otp_5" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                        aria-label="Digit 5" required>
+                    <input type="text" name="otp_6" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                        aria-label="Digit 6" required>
+                </div>
 
-            <a class="auth-back" href="{% url 'users:login' %}"><i data-lucide="arrow-left"></i> Back to login</a>
+                <button type="submit" class="btn-primary full-btn" style="margin-top:.75rem;"><i
+                        data-lucide="check-circle"></i> Verify Email</button>
+                <button type="button" class="btn-secondary full-btn"><i data-lucide="refresh-cw"></i> Resend
+                    Code</button>
+            </form>
+
+            <a class="auth-back" href="{% url 'users:login' %}" style="margin-top:.5rem;"><i
+                    data-lucide="arrow-left"></i> Back to login</a>
         </div>
     </div>
 </section>

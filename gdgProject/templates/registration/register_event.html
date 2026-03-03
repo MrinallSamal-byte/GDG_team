@@ -23,7 +23,8 @@
         <div class="step"><span class="step-num">5</span> Team</div>
     </div>
 
-    <div class="form-layout">
+    <form method="POST" action="" novalidate id="event-register-form" class="form-layout">
+        {% csrf_token %}
         <!-- Step 1 -->
         <article class="surface reveal">
             <h2><i data-lucide="list-checks"></i> Step 1: Participation Type</h2>
@@ -39,13 +40,19 @@
         <article class="surface reveal">
             <h2><i data-lucide="user-circle"></i> Step 2: Personal Information</h2>
             <div class="field-grid">
-                <div class="form-field"><i data-lucide="user"></i><input type="text" placeholder="Full Name"></div>
-                <div class="form-field"><i data-lucide="mail"></i><input type="email" placeholder="Email"></div>
-                <div class="form-field"><i data-lucide="phone"></i><input type="text" placeholder="Phone"></div>
-                <div class="form-field"><i data-lucide="building-2"></i><input type="text" placeholder="College"></div>
-                <div class="form-field"><i data-lucide="graduation-cap"></i><input type="text" placeholder="Branch">
+                <div class="form-field"><i data-lucide="user"></i><input type="text" name="full_name"
+                        placeholder="Full Name" required></div>
+                <div class="form-field"><i data-lucide="mail"></i><input type="email" name="email" placeholder="Email"
+                        required></div>
+                <div class="form-field"><i data-lucide="phone"></i><input type="tel" name="phone" placeholder="Phone">
                 </div>
-                <div class="form-field"><i data-lucide="calendar"></i><input type="text" placeholder="Year of study">
+                <div class="form-field"><i data-lucide="building-2"></i><input type="text" name="college"
+                        placeholder="College"></div>
+                <div class="form-field"><i data-lucide="graduation-cap"></i><input type="text" name="branch"
+                        placeholder="Branch">
+                </div>
+                <div class="form-field"><i data-lucide="calendar"></i><input type="text" name="year"
+                        placeholder="Year of study">
                 </div>
             </div>
         </article>
@@ -56,12 +63,12 @@
             <p class="muted" style="margin-bottom:.5rem;">Select your primary skills:</p>
             <div class="chip-row chip-toggle">
                 {% for skill in skills %}
-                <button class="chip">{{ skill }}</button>
+                <button type="button" class="chip" data-skill="{{ skill }}">{{ skill }}</button>
                 {% endfor %}
             </div>
             <div class="form-field" style="margin-top:.75rem;">
                 <i data-lucide="briefcase"></i>
-                <select>
+                <select name="preferred_role">
                     <option selected disabled>Select preferred role</option>
                     {% for role in roles %}
                     <option>{{ role }}</option>
@@ -74,11 +81,12 @@
         <article class="surface reveal">
             <h2><i data-lucide="file-text"></i> Step 4: Custom Fields</h2>
             <div class="field-grid">
-                <div class="form-field"><i data-lucide="globe"></i><input type="url"
+                <div class="form-field"><i data-lucide="globe"></i><input type="url" name="portfolio_url"
                         placeholder="Portfolio / Project URL"></div>
-                <div class="form-field"><i data-lucide="github"></i><input type="text" placeholder="GitHub profile">
+                <div class="form-field"><i data-lucide="github"></i><input type="text" name="github_url"
+                        placeholder="GitHub profile">
                 </div>
-                <textarea rows="3" placeholder="Why should your application be selected?"></textarea>
+                <textarea name="motivation" rows="3" placeholder="Why should your application be selected?"></textarea>
             </div>
         </article>
 
@@ -86,11 +94,13 @@
         <article class="surface reveal">
             <h2><i data-lucide="users"></i> Step 5: Team Details</h2>
             <div class="field-grid">
-                <div class="form-field"><i data-lucide="flag"></i><input type="text" placeholder="Team name"></div>
-                <div class="form-field"><i data-lucide="hash"></i><input type="number" placeholder="Max members"></div>
+                <div class="form-field"><i data-lucide="flag"></i><input type="text" name="team_name"
+                        placeholder="Team name"></div>
+                <div class="form-field"><i data-lucide="hash"></i><input type="number" name="max_members"
+                        placeholder="Max members"></div>
                 <div class="form-field">
                     <i data-lucide="door-open"></i>
-                    <select>
+                    <select name="open_for_requests">
                         <option selected>Open for join requests? Yes</option>
                         <option>Open for join requests? No</option>
                     </select>
@@ -98,7 +108,8 @@
             </div>
         </article>
 
-        <button class="btn-primary full-btn reveal"><i data-lucide="check-circle"></i> Submit Registration</button>
-    </div>
+        <button type="submit" class="btn-primary full-btn reveal"><i data-lucide="check-circle"></i> Submit
+            Registration</button>
+    </form>
 </section>
 {% endblock %}

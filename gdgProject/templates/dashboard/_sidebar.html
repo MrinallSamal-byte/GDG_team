@@ -1,0 +1,22 @@
+{% load static %}
+<aside class="surface sidebar reveal">
+    <div class="sidebar-profile">
+        <div class="avatar avatar-lg">S</div>
+        <div>
+            <strong>Student User</strong>
+            <span>CSE · 3rd Year</span>
+        </div>
+    </div>
+    <a class="sidebar-link{% if current_page == 'profile' %} active{% endif %}"
+        href="{% url 'dashboard:my_profile' %}"><i data-lucide="user"></i> My Profile</a>
+    <a class="sidebar-link{% if current_page == 'events' %} active{% endif %}" href="{% url 'dashboard:my_events' %}"><i
+            data-lucide="calendar"></i> My Events</a>
+    <a class="sidebar-link{% if current_page == 'teams' %} active{% endif %}" href="{% url 'dashboard:my_teams' %}"><i
+            data-lucide="users"></i> My Teams</a>
+    <a class="sidebar-link{% if current_page == 'requests' %} active{% endif %}"
+        href="{% url 'dashboard:pending_requests' %}"><i data-lucide="inbox"></i> Pending Requests</a>
+    <a class="sidebar-link{% if current_page == 'notifications' %} active{% endif %}"
+        href="{% url 'dashboard:notifications' %}"><i data-lucide="bell"></i> Notifications</a>
+    <a class="sidebar-link{% if current_page == 'settings' %} active{% endif %}"
+        href="{% url 'dashboard:settings' %}"><i data-lucide="settings"></i> Settings</a>
+</aside>

@@ -38,18 +38,25 @@
 
 <!-- Tabs -->
 <div class="tab-container">
-    <div class="tab-bar reveal">
-        <button class="tab-btn active" data-tab="tab-about"><i data-lucide="info"></i> About</button>
-        <button class="tab-btn" data-tab="tab-timeline"><i data-lucide="milestone"></i> Timeline</button>
-        <button class="tab-btn" data-tab="tab-prizes"><i data-lucide="trophy"></i> Prizes</button>
-        <button class="tab-btn" data-tab="tab-participants"><i data-lucide="users"></i> Participants</button>
-        <button class="tab-btn" data-tab="tab-judges"><i data-lucide="award"></i> Judges & Sponsors</button>
-        <button class="tab-btn" data-tab="tab-faq"><i data-lucide="help-circle"></i> FAQs</button>
-        <button class="tab-btn" data-tab="tab-contact"><i data-lucide="mail"></i> Contact</button>
+    <div class="tab-bar reveal" role="tablist" aria-label="Event details">
+        <button class="tab-btn active" data-tab="tab-about" role="tab" aria-selected="true" aria-controls="tab-about"><i
+                data-lucide="info"></i> About</button>
+        <button class="tab-btn" data-tab="tab-timeline" role="tab" aria-selected="false" aria-controls="tab-timeline"><i
+                data-lucide="milestone"></i> Timeline</button>
+        <button class="tab-btn" data-tab="tab-prizes" role="tab" aria-selected="false" aria-controls="tab-prizes"><i
+                data-lucide="trophy"></i> Prizes</button>
+        <button class="tab-btn" data-tab="tab-participants" role="tab" aria-selected="false"
+            aria-controls="tab-participants"><i data-lucide="users"></i> Participants</button>
+        <button class="tab-btn" data-tab="tab-judges" role="tab" aria-selected="false" aria-controls="tab-judges"><i
+                data-lucide="award"></i> Judges & Sponsors</button>
+        <button class="tab-btn" data-tab="tab-faq" role="tab" aria-selected="false" aria-controls="tab-faq"><i
+                data-lucide="help-circle"></i> FAQs</button>
+        <button class="tab-btn" data-tab="tab-contact" role="tab" aria-selected="false" aria-controls="tab-contact"><i
+                data-lucide="mail"></i> Contact</button>
     </div>
 
     <!-- About -->
-    <div id="tab-about" class="tab-panel active">
+    <div id="tab-about" class="tab-panel active" role="tabpanel" aria-labelledby="tab-about">
         <article class="surface reveal">
             <h2><i data-lucide="info"></i> About This Event</h2>
             <p class="text-soft">Eligibility: Open to all branches. Team size 2-4. Bring your own idea or pick from
@@ -60,7 +67,7 @@
     </div>
 
     <!-- Timeline -->
-    <div id="tab-timeline" class="tab-panel">
+    <div id="tab-timeline" class="tab-panel" role="tabpanel" aria-labelledby="tab-timeline">
         <article class="surface reveal">
             <h2><i data-lucide="milestone"></i> Rounds & Timeline</h2>
             <div class="timeline">
@@ -79,7 +86,7 @@
     </div>
 
     <!-- Prizes -->
-    <div id="tab-prizes" class="tab-panel">
+    <div id="tab-prizes" class="tab-panel" role="tabpanel" aria-labelledby="tab-prizes">
         <article class="surface reveal">
             <h2><i data-lucide="trophy"></i> Prizes & Certificates</h2>
             <div class="prize-grid">
@@ -105,7 +112,7 @@
     </div>
 
     <!-- Participants -->
-    <div id="tab-participants" class="tab-panel">
+    <div id="tab-participants" class="tab-panel" role="tabpanel" aria-labelledby="tab-participants">
         <div class="two-col">
             <article class="surface reveal">
                 <h2><i data-lucide="users"></i> Registered Participants</h2>
@@ -151,7 +158,7 @@
     </div>
 
     <!-- Judges & Sponsors -->
-    <div id="tab-judges" class="tab-panel">
+    <div id="tab-judges" class="tab-panel" role="tabpanel" aria-labelledby="tab-judges">
         <article class="surface reveal">
             <h2><i data-lucide="award"></i> Judges & Sponsors</h2>
             <p class="text-soft"><strong>Judges:</strong> Product leaders, founders, and senior engineers from top
@@ -162,23 +169,25 @@
     </div>
 
     <!-- FAQs -->
-    <div id="tab-faq" class="tab-panel">
+    <div id="tab-faq" class="tab-panel" role="tabpanel" aria-labelledby="tab-faq">
         <article class="reveal" style="display:grid;gap:.5rem;">
             <div class="faq-item open">
-                <button class="faq-toggle">Can first-year students join? <i data-lucide="chevron-down"></i></button>
+                <button class="faq-toggle" aria-expanded="true">Can first-year students join? <i
+                        data-lucide="chevron-down"></i></button>
                 <div class="faq-body">
                     <p>Yes, absolutely. All are welcome regardless of year of study.</p>
                 </div>
             </div>
             <div class="faq-item">
-                <button class="faq-toggle">Is prior hackathon experience required? <i
+                <button class="faq-toggle" aria-expanded="false">Is prior hackathon experience required? <i
                         data-lucide="chevron-down"></i></button>
                 <div class="faq-body">
                     <p>No, beginner-friendly tracks are included alongside advanced challenges.</p>
                 </div>
             </div>
             <div class="faq-item">
-                <button class="faq-toggle">What tools can we use? <i data-lucide="chevron-down"></i></button>
+                <button class="faq-toggle" aria-expanded="false">What tools can we use? <i
+                        data-lucide="chevron-down"></i></button>
                 <div class="faq-body">
                     <p>Any programming language, framework, or tool. Open-source libraries are encouraged.</p>
                 </div>
@@ -187,7 +196,7 @@
     </div>
 
     <!-- Contact -->
-    <div id="tab-contact" class="tab-panel">
+    <div id="tab-contact" class="tab-panel" role="tabpanel" aria-labelledby="tab-contact">
         <article class="surface reveal">
             <h2><i data-lucide="mail"></i> Contact Organizers</h2>
             <div class="event-meta" style="margin-bottom:.8rem;">

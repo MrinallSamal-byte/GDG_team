@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         revealEls.forEach(el => el.classList.add('revealed'));
     }
 
-    /* ---------- Tabs ---------- */
+    /* ---------- Tabs (with ARIA) ---------- */
     document.querySelectorAll('.tab-bar').forEach(bar => {
         const btns = bar.querySelectorAll('.tab-btn');
         const container = bar.closest('.tab-container') || bar.parentElement;
@@ -60,27 +60,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
         btns.forEach(btn => {
             btn.addEventListener('click', () => {
-                btns.forEach(b => b.classList.remove('active'));
-                panels.forEach(p => p.classList.remove('active'));
+                btns.forEach(b => {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-selected', 'false');
+                });
+                panels.forEach(p => {
+                    p.classList.remove('active');
+                    p.setAttribute('aria-hidden', 'true');
+                });
                 btn.classList.add('active');
+                btn.setAttribute('aria-selected', 'true');
                 const target = container.querySelector('#' + btn.dataset.tab);
-                if (target) target.classList.add('active');
+                if (target) {
+                    target.classList.add('active');
+                    target.setAttribute('aria-hidden', 'false');
+                }
             });
         });
     });
 
-    /* ---------- FAQ accordion ---------- */
+    /* ---------- FAQ accordion (with ARIA) ---------- */
     document.querySelectorAll('.faq-toggle').forEach(toggle => {
         toggle.addEventListener('click', () => {
             const item = toggle.closest('.faq-item');
             if (!item) return;
             const wasOpen = item.classList.contains('open');
-            // close all sibling FAQs
             const parent = item.parentElement;
             if (parent) {
-                parent.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+                parent.querySelectorAll('.faq-item.open').forEach(i => {
+                    i.classList.remove('open');
+                    const btn = i.querySelector('.faq-toggle');
+                    if (btn) btn.setAttribute('aria-expanded', 'false');
+                });
             }
-            if (!wasOpen) item.classList.add('open');
+            if (!wasOpen) {
+                item.classList.add('open');
+                toggle.setAttribute('aria-expanded', 'true');
+            }
         });
     });
 
@@ -115,6 +131,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.chip-toggle .chip').forEach(chip => {
         chip.addEventListener('click', () => {
             chip.classList.toggle('active');
+            // Sync active chips to hidden input if present
+            const container = chip.closest('form');
+            if (container) {
+                const hidden = container.querySelector('input[name="skills"]');
+                if (hidden) {
+                    const active = container.querySelectorAll('.chip-toggle .chip.active');
+                    hidden.value = Array.from(active).map(c => c.dataset.skill || c.textContent.trim()).join(',');
+                }
+            }
         });
     });
 
@@ -172,4 +197,58 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
+
+    /* ---------- User dropdown menu ---------- */
+    const userMenuBtn = document.getElementById('user-menu-btn');
+    const userDropdown = document.getElementById('user-dropdown');
+
+    if (userMenuBtn && userDropdown) {
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = userDropdown.classList.toggle('open');
+            userMenuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!userDropdown.contains(e.target) && e.target !== userMenuBtn) {
+                userDropdown.classList.remove('open');
+                userMenuBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
+    /* ---------- Alert dismiss ---------- */
+    document.querySelectorAll('.alert-close').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const alert = btn.closest('.alert');
+            if (alert) {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-8px)';
+                setTimeout(() => alert.remove(), 200);
+            }
+        });
+    });
+
+    /* ---------- Password visibility toggle ---------- */
+    document.querySelectorAll('input[type="password"]').forEach(inp => {
+        const wrapper = inp.closest('.form-group, .form-field');
+        if (!wrapper) return;
+        wrapper.style.position = 'relative';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'password-toggle';
+        btn.setAttribute('aria-label', 'Toggle password visibility');
+        btn.innerHTML = '<i data-lucide="eye"></i>';
+        wrapper.appendChild(btn);
+
+        btn.addEventListener('click', () => {
+            const isPassword = inp.type === 'password';
+            inp.type = isPassword ? 'text' : 'password';
+            btn.innerHTML = isPassword ? '<i data-lucide="eye-off"></i>' : '<i data-lucide="eye"></i>';
+            if (window.lucide) lucide.createIcons();
+        });
+    });
+
+    /* ---------- Re-init lucide icons (for dynamic content) ---------- */
+    if (window.lucide) lucide.createIcons();
 });
