@@ -3,80 +3,202 @@
 {% block title %}CampusArena | {{ event.title }}{% endblock %}
 
 {% block content %}
-<section class="event-header">
+<!-- Event Header -->
+<section class="event-header reveal">
     <div>
-        <p class="eyebrow">{{ event.category }} • {{ event.mode }}</p>
+        <p class="eyebrow"><i data-lucide="tag"></i> {{ event.category }} · {{ event.mode }}</p>
         <h1>{{ event.title }}</h1>
-        <p class="muted">{{ event.description }}</p>
+        <p class="text-soft" style="max-width:600px;">{{ event.description }}</p>
         <div class="meta-row">
-            <span>{{ event.timeline }}</span>
-            <span>{{ event.registration }}</span>
-            <span>Deadline in {{ event.countdown }}</span>
+            <span><i data-lucide="calendar"></i> {{ event.timeline }}</span>
+            <span><i data-lucide="users"></i> {{ event.registration }}</span>
+            <span><i data-lucide="clock"></i> Deadline in {{ event.countdown }}</span>
+        </div>
+        <!-- Progress bar -->
+        <div style="margin-top:.8rem;max-width:400px;">
+            <div class="progress-track">
+                <div class="progress-fill" style="width:41%;"></div>
+            </div>
+            <div class="progress-label"><span>124 registered</span><span>300 max</span></div>
         </div>
     </div>
     <div class="event-actions">
-        <a href="{% url 'registration:register_event' event.id %}" class="btn-primary">Register now</a>
-        <button class="btn-secondary">Already registered</button>
+        <a href="{% url 'registration:register_event' event.id %}" class="btn-primary"><i data-lucide="pen-line"></i>
+            Register Now</a>
+        <button class="btn-secondary"><i data-lucide="check-circle"></i> Already Registered</button>
+        <!-- Countdown -->
+        <div class="countdown" data-deadline="2026-04-18T00:00:00">
+            <div class="countdown-unit"><strong data-days>12</strong><span>Days</span></div>
+            <div class="countdown-unit"><strong data-hours>05</strong><span>Hours</span></div>
+            <div class="countdown-unit"><strong data-mins>28</strong><span>Mins</span></div>
+            <div class="countdown-unit"><strong data-secs>00</strong><span>Secs</span></div>
+        </div>
     </div>
 </section>
 
-<section class="tabs-grid">
-    <article class="surface">
-        <h2>About</h2>
-        <p>Eligibility: Open to all branches. Team size 2-4. Bring your own idea or pick from challenge tracks.</p>
-        <p>Rules: Original work only, no plagiarism, all submissions before final deadline.</p>
-    </article>
-    <article class="surface">
-        <h2>Timeline / Rounds</h2>
-        <ul class="list">
-            {% for round in rounds %}
-                <li>
+<!-- Tabs -->
+<div class="tab-container">
+    <div class="tab-bar reveal">
+        <button class="tab-btn active" data-tab="tab-about"><i data-lucide="info"></i> About</button>
+        <button class="tab-btn" data-tab="tab-timeline"><i data-lucide="milestone"></i> Timeline</button>
+        <button class="tab-btn" data-tab="tab-prizes"><i data-lucide="trophy"></i> Prizes</button>
+        <button class="tab-btn" data-tab="tab-participants"><i data-lucide="users"></i> Participants</button>
+        <button class="tab-btn" data-tab="tab-judges"><i data-lucide="award"></i> Judges & Sponsors</button>
+        <button class="tab-btn" data-tab="tab-faq"><i data-lucide="help-circle"></i> FAQs</button>
+        <button class="tab-btn" data-tab="tab-contact"><i data-lucide="mail"></i> Contact</button>
+    </div>
+
+    <!-- About -->
+    <div id="tab-about" class="tab-panel active">
+        <article class="surface reveal">
+            <h2><i data-lucide="info"></i> About This Event</h2>
+            <p class="text-soft">Eligibility: Open to all branches. Team size 2-4. Bring your own idea or pick from
+                challenge tracks.</p>
+            <p class="text-soft" style="margin-top:.5rem;">Rules: Original work only, no plagiarism, all submissions
+                before final deadline.</p>
+        </article>
+    </div>
+
+    <!-- Timeline -->
+    <div id="tab-timeline" class="tab-panel">
+        <article class="surface reveal">
+            <h2><i data-lucide="milestone"></i> Rounds & Timeline</h2>
+            <div class="timeline">
+                {% for round in rounds %}
+                <div class="timeline-item{% if round.status == 'Completed' %} completed{% endif %}">
                     <strong>{{ round.name }}</strong>
-                    <span>{{ round.date }} • {{ round.status }}</span>
-                </li>
-            {% endfor %}
-        </ul>
-    </article>
-    <article class="surface">
-        <h2>Prizes & Certificates</h2>
-        <ul class="list">
-            <li><strong>1st Place</strong><span>₹1,50,000 + Internship Fast Track</span></li>
-            <li><strong>2nd Place</strong><span>₹70,000 + Cloud Credits</span></li>
-            <li><strong>3rd Place</strong><span>₹30,000 + Swag Kits</span></li>
-            <li><strong>Certificates</strong><span>Participation + Merit available</span></li>
-        </ul>
-    </article>
-    <article class="surface">
-        <h2>Registered Participants</h2>
-        <ul class="list">
-            {% for person in participants %}
-                <li><strong>{{ person.name }}</strong><span>{{ person.college }}</span></li>
-            {% endfor %}
-        </ul>
-        <h3>Teams with open spots</h3>
-        <ul class="list compact">
-            {% for team in teams_open %}
-                <li><strong>{{ team.name }}</strong><span>{{ team.members }} • Need {{ team.needs }}</span></li>
-            {% endfor %}
-        </ul>
-    </article>
-    <article class="surface">
-        <h2>Judges & Sponsors</h2>
-        <p>Judges: Product leaders, founders, and senior engineers from top startups.</p>
-        <p>Sponsors: Cloud partners, developer tools, and student communities.</p>
-    </article>
-    <article class="surface">
-        <h2>FAQs</h2>
-        <p><strong>Can first-year students join?</strong> Yes, absolutely.</p>
-        <p><strong>Is prior hackathon experience required?</strong> No, beginner-friendly tracks are included.</p>
-    </article>
-    <article class="surface full-width">
-        <h2>Contact</h2>
-        <p>Email: hackfest@campusarena.in • Phone: +91 98765 43210</p>
-        <div class="search-wrap">
-            <input type="text" placeholder="Ask a question to organizers">
-            <button>Send</button>
+                    <span><i data-lucide="calendar-days"></i> {{ round.date }} · {{ round.status }}</span>
+                </div>
+                {% empty %}
+                <div class="empty-state"><i data-lucide="calendar-x"></i>
+                    <p>Timeline coming soon</p>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+
+    <!-- Prizes -->
+    <div id="tab-prizes" class="tab-panel">
+        <article class="surface reveal">
+            <h2><i data-lucide="trophy"></i> Prizes & Certificates</h2>
+            <div class="prize-grid">
+                <div class="surface prize-card">
+                    <span class="prize-icon">🥇</span>
+                    <strong>1st Place</strong>
+                    <span>₹1,50,000 + Internship Fast Track</span>
+                </div>
+                <div class="surface prize-card">
+                    <span class="prize-icon">🥈</span>
+                    <strong>2nd Place</strong>
+                    <span>₹70,000 + Cloud Credits</span>
+                </div>
+                <div class="surface prize-card">
+                    <span class="prize-icon">🥉</span>
+                    <strong>3rd Place</strong>
+                    <span>₹30,000 + Swag Kits</span>
+                </div>
+            </div>
+            <p class="muted" style="margin-top:1rem;"><i data-lucide="badge-check"></i> Participation + Merit
+                certificates available for all participants.</p>
+        </article>
+    </div>
+
+    <!-- Participants -->
+    <div id="tab-participants" class="tab-panel">
+        <div class="two-col">
+            <article class="surface reveal">
+                <h2><i data-lucide="users"></i> Registered Participants</h2>
+                <ul class="list">
+                    {% for person in participants %}
+                    <li>
+                        <div style="display:flex;align-items:center;gap:.55rem;">
+                            <div class="avatar avatar-sm">{{ person.name|first }}</div>
+                            <div>
+                                <strong>{{ person.name }}</strong>
+                                <span style="display:block;">{{ person.college }}</span>
+                            </div>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <div class="empty-state"><i data-lucide="user-x"></i>
+                        <p>No participants yet. Be the first!</p>
+                    </div>
+                    {% endfor %}
+                </ul>
+            </article>
+
+            <article class="surface reveal">
+                <h2><i data-lucide="users-round"></i> Teams with Open Spots</h2>
+                <ul class="list">
+                    {% for team in teams_open %}
+                    <li>
+                        <strong>{{ team.name }}</strong>
+                        <span><i data-lucide="users"></i> {{ team.members }} · Need: {{ team.needs }}</span>
+                        <div class="inline-actions">
+                            <button class="btn-primary btn-small"><i data-lucide="user-plus"></i> Request to
+                                Join</button>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <div class="empty-state"><i data-lucide="users-round"></i>
+                        <p>No open teams yet</p>
+                    </div>
+                    {% endfor %}
+                </ul>
+            </article>
         </div>
-    </article>
-</section>
+    </div>
+
+    <!-- Judges & Sponsors -->
+    <div id="tab-judges" class="tab-panel">
+        <article class="surface reveal">
+            <h2><i data-lucide="award"></i> Judges & Sponsors</h2>
+            <p class="text-soft"><strong>Judges:</strong> Product leaders, founders, and senior engineers from top
+                startups.</p>
+            <p class="text-soft" style="margin-top:.5rem;"><strong>Sponsors:</strong> Cloud partners, developer tools,
+                and student communities.</p>
+        </article>
+    </div>
+
+    <!-- FAQs -->
+    <div id="tab-faq" class="tab-panel">
+        <article class="reveal" style="display:grid;gap:.5rem;">
+            <div class="faq-item open">
+                <button class="faq-toggle">Can first-year students join? <i data-lucide="chevron-down"></i></button>
+                <div class="faq-body">
+                    <p>Yes, absolutely. All are welcome regardless of year of study.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-toggle">Is prior hackathon experience required? <i
+                        data-lucide="chevron-down"></i></button>
+                <div class="faq-body">
+                    <p>No, beginner-friendly tracks are included alongside advanced challenges.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-toggle">What tools can we use? <i data-lucide="chevron-down"></i></button>
+                <div class="faq-body">
+                    <p>Any programming language, framework, or tool. Open-source libraries are encouraged.</p>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <!-- Contact -->
+    <div id="tab-contact" class="tab-panel">
+        <article class="surface reveal">
+            <h2><i data-lucide="mail"></i> Contact Organizers</h2>
+            <div class="event-meta" style="margin-bottom:.8rem;">
+                <span><i data-lucide="mail"></i> hackfest@campusarena.in</span>
+                <span><i data-lucide="phone"></i> +91 98765 43210</span>
+            </div>
+            <div class="search-wrap">
+                <input type="text" placeholder="Ask a question to organizers...">
+                <button class="btn-primary"><i data-lucide="send"></i> Send</button>
+            </div>
+        </article>
+    </div>
+</div>
 {% endblock %}

@@ -1,46 +1,102 @@
 {% extends 'base.html' %}
 
-{% block title %}CampusArena | User Dashboard{% endblock %}
+{% block title %}CampusArena | Dashboard{% endblock %}
 
 {% block content %}
 <section class="dashboard-layout">
-    <aside class="surface sidebar">
-        <h3>My Workspace</h3>
-        <a class="sidebar-link active" href="#">My Profile</a>
-        <a class="sidebar-link" href="#">My Events</a>
-        <a class="sidebar-link" href="#">My Teams</a>
-        <a class="sidebar-link" href="#">Pending Requests</a>
-        <a class="sidebar-link" href="#">Notifications</a>
-        <a class="sidebar-link" href="#">Settings</a>
+    <!-- Sidebar -->
+    <aside class="surface sidebar reveal">
+        <div class="sidebar-profile">
+            <div class="avatar avatar-lg">S</div>
+            <div>
+                <strong>Student User</strong>
+                <span>CSE · 3rd Year</span>
+            </div>
+        </div>
+        <a class="sidebar-link active" href="#"><i data-lucide="user"></i> My Profile</a>
+        <a class="sidebar-link" href="#"><i data-lucide="calendar"></i> My Events</a>
+        <a class="sidebar-link" href="#"><i data-lucide="users"></i> My Teams</a>
+        <a class="sidebar-link" href="#"><i data-lucide="inbox"></i> Pending Requests</a>
+        <a class="sidebar-link" href="#"><i data-lucide="bell"></i> Notifications</a>
+        <a class="sidebar-link" href="#"><i data-lucide="settings"></i> Settings</a>
     </aside>
 
-    <div class="dashboard-main">
-        <article class="surface">
-            <h2>My events</h2>
-            <ul class="list">
-                {% for event in my_events %}
-                    <li><strong>{{ event.title }}</strong><span>{{ event.status }}</span></li>
-                {% endfor %}
-            </ul>
-        </article>
+    <!-- Main Content -->
+    <div>
+        <!-- Welcome -->
+        <div class="welcome-header reveal">
+            <h1>👋 Welcome back!</h1>
+            <p>Here's an overview of your events, teams, and activity.</p>
+        </div>
 
-        <article class="surface">
-            <h2>My teams</h2>
-            <ul class="list">
-                {% for team in my_teams %}
-                    <li><strong>{{ team.name }}</strong><span>{{ team.event }} • {{ team.role }}</span></li>
-                {% endfor %}
-            </ul>
-        </article>
+        <div class="dashboard-main">
+            <!-- My Events -->
+            <article class="surface reveal">
+                <h2><i data-lucide="calendar"></i> My Events</h2>
+                <ul class="list">
+                    {% for event in my_events %}
+                    <li>
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <strong>{{ event.title }}</strong>
+                            <span
+                                class="status {% if event.status == 'Registered' %}open{% elif event.status == 'Completed' %}closed{% else %}closing{% endif %}">
+                                {% if event.status == 'Registered' %}<i data-lucide="check-circle"></i>{% elif
+                                event.status == 'Completed' %}<i data-lucide="flag"></i>{% else %}<i
+                                    data-lucide="clock"></i>{% endif %}
+                                {{ event.status }}
+                            </span>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <div class="empty-state"><i data-lucide="calendar-x"></i>
+                        <p>No events yet. Browse and register!</p>
+                    </div>
+                    {% endfor %}
+                </ul>
+            </article>
 
-        <article class="surface">
-            <h2>Notifications</h2>
-            <ul class="list compact">
-                {% for notice in notifications %}
-                    <li><span>{{ notice }}</span></li>
-                {% endfor %}
-            </ul>
-        </article>
+            <!-- My Teams -->
+            <article class="surface reveal">
+                <h2><i data-lucide="users"></i> My Teams</h2>
+                <ul class="list">
+                    {% for team in my_teams %}
+                    <li>
+                        <div style="display:flex;align-items:center;gap:.55rem;">
+                            <div class="avatar avatar-sm">{{ team.name|first }}</div>
+                            <div>
+                                <strong>{{ team.name }}</strong>
+                                <span>{{ team.event }} · {{ team.role }}</span>
+                            </div>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <div class="empty-state"><i data-lucide="users"></i>
+                        <p>Not part of any team yet.</p>
+                    </div>
+                    {% endfor %}
+                </ul>
+            </article>
+
+            <!-- Notifications -->
+            <article class="surface reveal" style="grid-column:1/-1;">
+                <h2><i data-lucide="bell"></i> Recent Notifications</h2>
+                <div style="display:grid;gap:.3rem;">
+                    {% for notice in notifications %}
+                    <div class="notif-item">
+                        <div class="notif-dot"></div>
+                        <div>
+                            <span>{{ notice }}</span>
+                            <br><small>Just now</small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state"><i data-lucide="bell-off"></i>
+                        <p>No new notifications.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </article>
+        </div>
     </div>
 </section>
 {% endblock %}

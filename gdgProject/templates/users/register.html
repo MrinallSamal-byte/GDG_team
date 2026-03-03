@@ -4,45 +4,88 @@
 
 {% block content %}
 <section class="auth-wrap">
-    <article class="surface auth-card wide">
-        <h1>Create your account</h1>
-        <p class="muted">Multi-step registration with profile and tech stack preferences.</p>
-
-        <div class="stepper">
-            <span class="step active">1. Basics</span>
-            <span class="step">2. Academic</span>
-            <span class="step">3. Skills</span>
+    <div class="auth-layout reveal">
+        <div class="auth-decor">
+            <div class="auth-decor-icon"><i data-lucide="user-plus"></i></div>
+            <h2>Join CampusArena</h2>
+            <p>Create your profile, showcase your skills, and discover events tailored for you.</p>
         </div>
+        <div class="auth-form">
+            <h1>Create Account</h1>
+            <p class="muted">Multi-step registration with profile and tech stack preferences.</p>
 
-        <div class="field-grid">
-            <input type="text" placeholder="Full name">
-            <input type="email" placeholder="Email">
-            <input type="text" placeholder="Phone number">
-            <input type="text" placeholder="College name">
-            <select>
-                <option selected disabled>Branch</option>
-                {% for branch in branches %}
-                    <option>{{ branch }}</option>
-                {% endfor %}
-            </select>
-            <select>
-                <option selected disabled>Year of study</option>
-                {% for year in years %}
-                    <option>{{ year }}</option>
-                {% endfor %}
-            </select>
-            <input type="password" placeholder="Password">
-            <input type="password" placeholder="Confirm password">
+            <!-- Stepper -->
+            <div class="stepper">
+                <div class="step active"><span class="step-num">1</span> Basics</div>
+                <div class="step-connector"></div>
+                <div class="step"><span class="step-num">2</span> Academic</div>
+                <div class="step-connector"></div>
+                <div class="step"><span class="step-num">3</span> Skills</div>
+            </div>
+
+            <div class="field-grid">
+                <div class="form-field">
+                    <i data-lucide="user"></i>
+                    <input type="text" placeholder="Full name">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="mail"></i>
+                    <input type="email" placeholder="Email">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="phone"></i>
+                    <input type="text" placeholder="Phone number">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="building-2"></i>
+                    <input type="text" placeholder="College name">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="graduation-cap"></i>
+                    <select>
+                        <option selected disabled>Branch</option>
+                        {% for branch in branches %}
+                        <option>{{ branch }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-field">
+                    <i data-lucide="calendar"></i>
+                    <select>
+                        <option selected disabled>Year of study</option>
+                        {% for year in years %}
+                        <option>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-field">
+                    <i data-lucide="lock"></i>
+                    <input type="password" placeholder="Password">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="shield-check"></i>
+                    <input type="password" placeholder="Confirm password">
+                </div>
+            </div>
+
+            <p class="muted" style="margin-top:.3rem;"><i data-lucide="cpu"></i> Choose your primary skills</p>
+            <div class="chip-row chip-toggle">
+                <button class="chip">React</button>
+                <button class="chip">Python</button>
+                <button class="chip">Django</button>
+                <button class="chip">Figma</button>
+                <button class="chip">Flutter</button>
+                <button class="chip">AWS</button>
+                <button class="chip">Node.js</button>
+                <button class="chip">TensorFlow</button>
+            </div>
+
+            <button class="btn-primary full-btn"><i data-lucide="user-plus"></i> Register</button>
+
+            <div class="auth-links">
+                <a href="{% url 'users:login' %}"><i data-lucide="log-in"></i> Already have an account? Sign in</a>
+            </div>
         </div>
-
-        <p class="muted">Choose primary skills</p>
-        <div class="chip-row">
-            <button class="chip">React</button><button class="chip">Python</button>
-            <button class="chip">Django</button><button class="chip">Figma</button>
-            <button class="chip">Flutter</button><button class="chip">AWS</button>
-        </div>
-
-        <button class="btn-primary full-btn">Register</button>
-    </article>
+    </div>
 </section>
 {% endblock %}

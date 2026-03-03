@@ -4,19 +4,39 @@
 
 {% block content %}
 <section class="auth-wrap">
-    <article class="surface auth-card">
-        <h1>Welcome back</h1>
-        <p class="muted">Sign in to manage your events, teams, and registrations.</p>
-        <div class="field-grid">
-            <input type="email" placeholder="Email">
-            <input type="password" placeholder="Password">
+    <div class="auth-layout reveal">
+        <div class="auth-decor">
+            <div class="auth-decor-icon"><i data-lucide="log-in"></i></div>
+            <h2>Welcome Back!</h2>
+            <p>Sign in to manage your events, teams, and registrations. Your campus journey continues here.</p>
         </div>
-        <label class="checkbox-row"><input type="checkbox"> Remember me</label>
-        <button class="btn-primary full-btn">Login</button>
-        <div class="auth-links">
-            <a href="{% url 'users:forgot_password' %}">Forgot password?</a>
-            <a href="{% url 'users:register' %}">Create account</a>
+        <div class="auth-form">
+            <h1>Sign In</h1>
+            <p class="muted">Enter your credentials to access your account.</p>
+
+            <div class="form-field">
+                <i data-lucide="mail"></i>
+                <input type="email" placeholder="Email address" id="login-email">
+            </div>
+            <div class="form-field">
+                <i data-lucide="lock"></i>
+                <input type="password" placeholder="Password" id="login-password">
+            </div>
+
+            <label class="checkbox-row"><input type="checkbox"> Remember me</label>
+            <button class="btn-primary full-btn"><i data-lucide="log-in"></i> Login</button>
+
+            <div class="auth-divider">or continue with</div>
+            <div class="social-btns">
+                <button><i data-lucide="github"></i> GitHub</button>
+                <button><i data-lucide="chrome"></i> Google</button>
+            </div>
+
+            <div class="auth-links">
+                <a href="{% url 'users:forgot_password' %}"><i data-lucide="key"></i> Forgot password?</a>
+                <a href="{% url 'users:register' %}"><i data-lucide="user-plus"></i> Create account</a>
+            </div>
         </div>
-    </article>
+    </div>
 </section>
 {% endblock %}

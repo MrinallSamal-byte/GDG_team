@@ -4,70 +4,101 @@
 
 {% block content %}
 <section class="section">
-    <div class="section-head">
-        <h1>Registration — {{ event.title }}</h1>
+    <div class="section-head reveal">
+        <p class="eyebrow"><i data-lucide="pen-line"></i> Event Registration</p>
+        <h1>{{ event.title }}</h1>
         <p class="muted">{{ event.summary }}</p>
     </div>
 
+    <!-- Connected stepper -->
+    <div class="stepper reveal" style="margin-bottom:1.2rem;">
+        <div class="step active"><span class="step-num">1</span> Type</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">2</span> Personal</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">3</span> Skills</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">4</span> Custom</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">5</span> Team</div>
+    </div>
+
     <div class="form-layout">
-        <article class="surface">
-            <h2>Step 1: Participation type</h2>
+        <!-- Step 1 -->
+        <article class="surface reveal">
+            <h2><i data-lucide="list-checks"></i> Step 1: Participation Type</h2>
             <div class="radio-row">
-                <label><input type="radio" name="type" checked> Register as Individual</label>
-                <label><input type="radio" name="type"> Create a New Team</label>
-                <label><input type="radio" name="type"> Join an Existing Team</label>
+                <label><input type="radio" name="type" checked> <i data-lucide="user"></i> Register as
+                    Individual</label>
+                <label><input type="radio" name="type"> <i data-lucide="users"></i> Create a New Team</label>
+                <label><input type="radio" name="type"> <i data-lucide="user-plus"></i> Join an Existing Team</label>
             </div>
         </article>
 
-        <article class="surface">
-            <h2>Step 2: Personal information</h2>
+        <!-- Step 2 -->
+        <article class="surface reveal">
+            <h2><i data-lucide="user-circle"></i> Step 2: Personal Information</h2>
             <div class="field-grid">
-                <input type="text" placeholder="Full Name">
-                <input type="email" placeholder="Email">
-                <input type="text" placeholder="Phone">
-                <input type="text" placeholder="College">
-                <input type="text" placeholder="Branch">
-                <input type="text" placeholder="Year of study">
+                <div class="form-field"><i data-lucide="user"></i><input type="text" placeholder="Full Name"></div>
+                <div class="form-field"><i data-lucide="mail"></i><input type="email" placeholder="Email"></div>
+                <div class="form-field"><i data-lucide="phone"></i><input type="text" placeholder="Phone"></div>
+                <div class="form-field"><i data-lucide="building-2"></i><input type="text" placeholder="College"></div>
+                <div class="form-field"><i data-lucide="graduation-cap"></i><input type="text" placeholder="Branch">
+                </div>
+                <div class="form-field"><i data-lucide="calendar"></i><input type="text" placeholder="Year of study">
+                </div>
             </div>
         </article>
 
-        <article class="surface">
-            <h2>Step 3: Tech stack & role</h2>
-            <div class="chip-row">
+        <!-- Step 3 -->
+        <article class="surface reveal">
+            <h2><i data-lucide="cpu"></i> Step 3: Tech Stack & Role</h2>
+            <p class="muted" style="margin-bottom:.5rem;">Select your primary skills:</p>
+            <div class="chip-row chip-toggle">
                 {% for skill in skills %}
-                    <button class="chip">{{ skill }}</button>
+                <button class="chip">{{ skill }}</button>
                 {% endfor %}
             </div>
-            <select>
-                <option selected disabled>Select preferred role</option>
-                {% for role in roles %}
-                    <option>{{ role }}</option>
-                {% endfor %}
-            </select>
-        </article>
-
-        <article class="surface">
-            <h2>Step 4: Custom fields</h2>
-            <div class="field-grid">
-                <input type="url" placeholder="Portfolio / Project URL">
-                <input type="text" placeholder="GitHub profile">
-                <textarea rows="3" placeholder="Why should your application be selected?"></textarea>
-            </div>
-        </article>
-
-        <article class="surface">
-            <h2>Step 5: Team details</h2>
-            <div class="field-grid">
-                <input type="text" placeholder="Team name">
-                <input type="number" placeholder="Max members">
+            <div class="form-field" style="margin-top:.75rem;">
+                <i data-lucide="briefcase"></i>
                 <select>
-                    <option selected>Open for join requests? Yes</option>
-                    <option>Open for join requests? No</option>
+                    <option selected disabled>Select preferred role</option>
+                    {% for role in roles %}
+                    <option>{{ role }}</option>
+                    {% endfor %}
                 </select>
             </div>
         </article>
 
-        <button class="btn-primary full-btn">Submit registration</button>
+        <!-- Step 4 -->
+        <article class="surface reveal">
+            <h2><i data-lucide="file-text"></i> Step 4: Custom Fields</h2>
+            <div class="field-grid">
+                <div class="form-field"><i data-lucide="globe"></i><input type="url"
+                        placeholder="Portfolio / Project URL"></div>
+                <div class="form-field"><i data-lucide="github"></i><input type="text" placeholder="GitHub profile">
+                </div>
+                <textarea rows="3" placeholder="Why should your application be selected?"></textarea>
+            </div>
+        </article>
+
+        <!-- Step 5 -->
+        <article class="surface reveal">
+            <h2><i data-lucide="users"></i> Step 5: Team Details</h2>
+            <div class="field-grid">
+                <div class="form-field"><i data-lucide="flag"></i><input type="text" placeholder="Team name"></div>
+                <div class="form-field"><i data-lucide="hash"></i><input type="number" placeholder="Max members"></div>
+                <div class="form-field">
+                    <i data-lucide="door-open"></i>
+                    <select>
+                        <option selected>Open for join requests? Yes</option>
+                        <option>Open for join requests? No</option>
+                    </select>
+                </div>
+            </div>
+        </article>
+
+        <button class="btn-primary full-btn reveal"><i data-lucide="check-circle"></i> Submit Registration</button>
     </div>
 </section>
 {% endblock %}

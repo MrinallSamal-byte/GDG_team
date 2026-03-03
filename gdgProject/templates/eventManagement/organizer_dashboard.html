@@ -4,45 +4,99 @@
 
 {% block content %}
 <section class="section">
-    <div class="section-head split">
-        <h1>Organizer Dashboard</h1>
-        <button class="btn-primary">Create Event</button>
+    <div class="section-head split reveal">
+        <div>
+            <p class="eyebrow"><i data-lucide="settings-2"></i> Organizer Panel</p>
+            <h1>Organizer Dashboard</h1>
+        </div>
+        <button class="btn-primary"><i data-lucide="plus"></i> Create Event</button>
     </div>
 
-    <div class="metric-grid">
-        <article class="surface metric"><p>Total registrations</p><strong>{{ analytics.total_registrations }}</strong></article>
-        <article class="surface metric"><p>Team vs Solo</p><strong>{{ analytics.team_vs_solo }}</strong></article>
-        <article class="surface metric"><p>Top tech stacks</p><strong>{{ analytics.top_stack }}</strong></article>
-        <article class="surface metric"><p>Active events</p><strong>{{ analytics.active_events }}</strong></article>
+    <!-- Metrics -->
+    <div class="metric-grid reveal">
+        <article class="surface metric">
+            <div class="metric-icon"><i data-lucide="users"></i></div>
+            <p>Total Registrations</p>
+            <strong data-counter>{{ analytics.total_registrations }}</strong>
+        </article>
+        <article class="surface metric">
+            <div class="metric-icon" style="background:var(--ok-soft);color:var(--ok);"><i data-lucide="git-branch"></i>
+            </div>
+            <p>Team vs Solo</p>
+            <strong>{{ analytics.team_vs_solo }}</strong>
+        </article>
+        <article class="surface metric">
+            <div class="metric-icon" style="background:var(--warn-soft);color:var(--warn);"><i data-lucide="cpu"></i>
+            </div>
+            <p>Top Tech Stacks</p>
+            <strong>{{ analytics.top_stack }}</strong>
+        </article>
+        <article class="surface metric">
+            <div class="metric-icon"
+                style="background:color-mix(in srgb, var(--primary-3), transparent 88%);color:var(--primary-3);"><i
+                    data-lucide="calendar-check"></i></div>
+            <p>Active Events</p>
+            <strong data-counter>{{ analytics.active_events }}</strong>
+        </article>
     </div>
 
     <div class="two-col">
-        <article class="surface">
-            <h2>Event creation wizard</h2>
-            <p>Multi-step builder for event basics, timeline, rules, prizes, and participation limits.</p>
-            <button class="btn-secondary">Open wizard</button>
+        <!-- Event Creation Wizard -->
+        <article class="surface reveal">
+            <h2><i data-lucide="wand-2"></i> Event Creation Wizard</h2>
+            <p class="text-soft">Multi-step builder for event basics, timeline, rules, prizes, and participation limits.
+            </p>
+            <button class="btn-secondary" style="margin-top:.7rem;"><i data-lucide="rocket"></i> Open Wizard</button>
         </article>
 
-        <article class="surface">
-            <h2>Registration form builder</h2>
-            <p>Drag fields like text, dropdown, file upload, and URLs to design custom event forms.</p>
-            <button class="btn-secondary">Customize form</button>
+        <!-- Form Builder -->
+        <article class="surface reveal">
+            <h2><i data-lucide="layout-template"></i> Registration Form Builder</h2>
+            <p class="text-soft">Drag fields like text, dropdown, file upload, and URLs to design custom event forms.
+            </p>
+            <button class="btn-secondary" style="margin-top:.7rem;"><i data-lucide="pencil-ruler"></i> Customize
+                Form</button>
         </article>
 
-        <article class="surface">
-            <h2>Participants</h2>
+        <!-- Participants -->
+        <article class="surface reveal">
+            <h2><i data-lucide="list"></i> Participants</h2>
             <ul class="list">
                 {% for person in participants %}
-                    <li><strong>{{ person.name }}</strong><span>{{ person.event }} • {{ person.status }}</span></li>
+                <li>
+                    <div style="display:flex;align-items:center;gap:.55rem;">
+                        <div class="avatar avatar-sm">{{ person.name|first }}</div>
+                        <div style="flex:1;">
+                            <strong>{{ person.name }}</strong>
+                            <span>{{ person.event }}</span>
+                        </div>
+                        <span class="status {% if person.status == 'Confirmed' %}open{% else %}closing{% endif %}">
+                            {% if person.status == 'Confirmed' %}<i data-lucide="check-circle"></i>{% else %}<i
+                                data-lucide="clock"></i>{% endif %}
+                            {{ person.status }}
+                        </span>
+                    </div>
+                </li>
+                {% empty %}
+                <div class="empty-state"><i data-lucide="user-x"></i>
+                    <p>No participants registered yet.</p>
+                </div>
                 {% endfor %}
             </ul>
-            <button class="btn-secondary">Export CSV</button>
+            <button class="btn-secondary" style="margin-top:.7rem;"><i data-lucide="download"></i> Export CSV</button>
         </article>
 
-        <article class="surface">
-            <h2>Analytics snapshot</h2>
-            <div class="chart-placeholder">Registration trend graph placeholder</div>
-            <div class="chart-placeholder">Tech stack pie chart placeholder</div>
+        <!-- Analytics -->
+        <article class="surface reveal">
+            <h2><i data-lucide="bar-chart-3"></i> Analytics Snapshot</h2>
+            <div class="chart-placeholder">
+                <i data-lucide="trending-up" style="display:block;margin:0 auto .5rem;"></i>
+                Registration trend graph — connect your data source
+            </div>
+            <div class="chart-placeholder">
+                <i data-lucide="pie-chart" style="display:block;margin:0 auto .5rem;"></i>
+                Tech stack distribution — connect your data source
+            </div>
         </article>
     </div>
 </section>

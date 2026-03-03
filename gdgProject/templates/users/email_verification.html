@@ -4,16 +4,30 @@
 
 {% block content %}
 <section class="auth-wrap">
-    <article class="surface auth-card">
-        <h1>Email verification</h1>
-        <p class="muted">A verification code has been sent to your email. Enter the code below.</p>
-        <div class="field-grid otp-grid">
-            <input type="text" maxlength="1"><input type="text" maxlength="1">
-            <input type="text" maxlength="1"><input type="text" maxlength="1">
-            <input type="text" maxlength="1"><input type="text" maxlength="1">
+    <div class="auth-layout reveal">
+        <div class="auth-decor">
+            <div class="auth-decor-icon"><i data-lucide="mail-check"></i></div>
+            <h2>Almost There!</h2>
+            <p>Check your inbox for the 6-digit verification code we just sent you.</p>
         </div>
-        <button class="btn-primary full-btn">Verify email</button>
-        <button class="btn-secondary full-btn">Resend code</button>
-    </article>
+        <div class="auth-form">
+            <h1>Email Verification</h1>
+            <p class="muted">A verification code has been sent to your email. Enter the code below.</p>
+
+            <div class="field-grid otp-grid">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            </div>
+
+            <button class="btn-primary full-btn"><i data-lucide="check-circle"></i> Verify Email</button>
+            <button class="btn-secondary full-btn"><i data-lucide="refresh-cw"></i> Resend Code</button>
+
+            <a class="auth-back" href="{% url 'users:login' %}"><i data-lucide="arrow-left"></i> Back to login</a>
+        </div>
+    </div>
 </section>
 {% endblock %}

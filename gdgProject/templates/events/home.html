@@ -3,14 +3,19 @@
 {% block title %}CampusArena | Discover Events{% endblock %}
 
 {% block content %}
-<section class="hero">
+<!-- Hero Section -->
+<section class="hero reveal">
+    <div class="hero-decor hero-decor-1"></div>
+    <div class="hero-decor hero-decor-2"></div>
+
     <div>
-        <p class="eyebrow">Discover. Compete. Build.</p>
-        <h1>Your Campus, Your Arena.</h1>
-        <p class="muted">Find hackathons, workshops, and challenges designed for student creators.</p>
+        <p class="eyebrow"><i data-lucide="sparkles"></i> Discover. Compete. Build.</p>
+        <h1>Your Campus,<br>Your <span>Arena.</span></h1>
+        <p class="muted" style="max-width:520px;">Find hackathons, workshops, and coding challenges designed for student
+            creators. Build your portfolio, grow your network.</p>
         <div class="search-wrap">
-            <input type="text" placeholder="Search events, tech stacks, or colleges">
-            <button>Search</button>
+            <input type="text" placeholder="Search events, tech stacks, or colleges..." id="event-search">
+            <button class="btn-primary"><i data-lucide="search"></i> Search</button>
         </div>
         <div class="stats-row">
             <div><strong>50+</strong><span>Events</span></div>
@@ -18,47 +23,97 @@
             <div><strong>100+</strong><span>Teams</span></div>
         </div>
     </div>
+
     <div class="hero-card">
-        <h3>Featured Event</h3>
-        <p>{{ featured_events.0.title }}</p>
-        <small>{{ featured_events.0.date }} • {{ featured_events.0.mode }}</small>
-        <a href="{% url 'events:event_detail' featured_events.0.id %}" class="btn-primary">View details</a>
+        <h3><i data-lucide="flame"></i> Featured Event</h3>
+        {% if featured_events %}
+        <div class="event-badge">{{ featured_events.0.category }}</div>
+        <h2 style="font-size:1.25rem;">{{ featured_events.0.title }}</h2>
+        <div class="event-meta">
+            <span><i data-lucide="calendar"></i> {{ featured_events.0.date }}</span>
+            <span><i data-lucide="radio"></i> {{ featured_events.0.mode }}</span>
+        </div>
+        {% if featured_events.0.spots %}
+        <div>
+            <div class="progress-track">
+                <div class="progress-fill" style="width:41%;"></div>
+            </div>
+            <div class="progress-label"><span>{{ featured_events.0.spots }} spots filled</span></div>
+        </div>
+        {% endif %}
+        <a href="{% url 'events:event_detail' featured_events.0.id %}" class="btn-primary"><i
+                data-lucide="arrow-right"></i> View Details</a>
+        {% else %}
+        <div class="empty-state">
+            <i data-lucide="calendar-x"></i>
+            <p>No featured events yet</p>
+        </div>
+        {% endif %}
     </div>
 </section>
 
-<section class="section">
+<!-- Featured Events Chips -->
+<section class="section reveal">
     <div class="section-head">
-        <h2>Featured events</h2>
-        <div class="chip-row">
+        <h2><i data-lucide="star"></i> Featured Events</h2>
+        <div class="chip-row" style="margin-top:.5rem;">
             {% for event in featured_events %}
-                <a class="chip" href="{% url 'events:event_detail' event.id %}">{{ event.title }}</a>
+            <a class="chip" href="{% url 'events:event_detail' event.id %}">
+                {{ event.title }} · <strong>{{ event.status }}</strong>
+            </a>
+            {% empty %}
+            <span class="muted">No featured events available.</span>
             {% endfor %}
         </div>
     </div>
 </section>
 
-<section class="section">
+<!-- Browse All Events -->
+<section class="section reveal">
     <div class="section-head split">
-        <h2>Browse all events</h2>
+        <h2><i data-lucide="grid-3x3"></i> Browse All Events</h2>
         <div class="filters">
-            <button class="chip active">All</button>
-            <button class="chip">Hackathons</button>
-            <button class="chip">Workshops</button>
-            <button class="chip">Quizzes</button>
-            <button class="chip">Competitions</button>
+            <button class="chip active"><i data-lucide="layers"></i> All</button>
+            <button class="chip"><i data-lucide="code-2"></i> Hackathons</button>
+            <button class="chip"><i data-lucide="book-open"></i> Workshops</button>
+            <button class="chip"><i data-lucide="brain"></i> Quizzes</button>
+            <button class="chip"><i data-lucide="award"></i> Competitions</button>
         </div>
     </div>
 
     <div class="card-grid">
         {% for event in event_grid %}
-            <article class="event-card">
-                <div class="event-badge">{{ event.category }}</div>
+        <article class="event-card reveal reveal-delay-{{ forloop.counter }}">
+            <div class="event-card-banner">
+                <span class="event-badge">{{ event.category }}</span>
+            </div>
+            <div class="event-card-body">
                 <h3>{{ event.title }}</h3>
-                <p>{{ event.date }} • {{ event.mode }}</p>
-                <p>{{ event.type }} • Prize: {{ event.prize }}</p>
-                <span class="status {{ event.status|lower }}">{{ event.status }}</span>
-                <a class="btn-secondary" href="{% url 'events:event_detail' event.id %}">Register Now</a>
-            </article>
+                <div class="event-meta">
+                    <span><i data-lucide="calendar"></i> {{ event.date }}</span>
+                    <span><i data-lucide="radio"></i> {{ event.mode }}</span>
+                    <span><i data-lucide="users"></i> {{ event.type }}</span>
+                </div>
+                <div class="event-card-footer">
+                    <div>
+                        <span class="status {{ event.status|lower }}">
+                            {% if event.status == 'Open' %}<i data-lucide="circle-check"></i>{% elif event.status ==
+                            'Closed' %}<i data-lucide="circle-x"></i>{% else %}<i data-lucide="clock"></i>{% endif %}
+                            {{ event.status }}
+                        </span>
+                        {% if event.prize %}<span class="muted" style="font-size:.85rem;margin-left:.4rem;">Prize: {{
+                            event.prize }}</span>{% endif %}
+                    </div>
+                    <a class="btn-primary btn-small" href="{% url 'events:event_detail' event.id %}">Register <i
+                            data-lucide="arrow-right"></i></a>
+                </div>
+            </div>
+        </article>
+        {% empty %}
+        <div class="empty-state" style="grid-column:1/-1;">
+            <i data-lucide="inbox"></i>
+            <p>No events available right now. Check back soon!</p>
+        </div>
         {% endfor %}
     </div>
 </section>
