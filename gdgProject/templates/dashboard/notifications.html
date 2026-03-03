@@ -21,10 +21,10 @@
             <article class="surface notif-card {% if not notif.read %}notif-unread{% endif %}">
                 <div style="display:flex;align-items:flex-start;gap:.7rem;">
                     {% if not notif.read %}<div class="notif-dot"></div>{% endif %}
-                    <div class="notif-icon-wrap"
-                        style="background:{% if notif.type == 'success' %}var(--ok-soft){% elif notif.type == 'warning' %}var(--warn-soft){% elif notif.type == 'info' %}var(--primary-glow){% else %}var(--surface-3){% endif %};">
-                        <i data-lucide="{% if notif.type == 'success' %}check-circle{% elif notif.type == 'warning' %}alert-triangle{% elif notif.type == 'info' %}info{% else %}bell{% endif %}"
-                            style="color:{% if notif.type == 'success' %}var(--ok){% elif notif.type == 'warning' %}var(--warn){% elif notif.type == 'info' %}var(--primary){% else %}var(--muted){% endif %};"></i>
+                    <div
+                        class="notif-icon-wrap {% if notif.type == 'success' %}notif-success{% elif notif.type == 'warning' %}notif-warning{% elif notif.type == 'info' %}notif-info{% else %}notif-default{% endif %}">
+                        <i
+                            data-lucide="{% if notif.type == 'success' %}check-circle{% elif notif.type == 'warning' %}alert-triangle{% elif notif.type == 'info' %}info{% else %}bell{% endif %}"></i>
                     </div>
                     <div style="flex:1;">
                         <p style="margin-bottom:.2rem;">{{ notif.message }}</p>

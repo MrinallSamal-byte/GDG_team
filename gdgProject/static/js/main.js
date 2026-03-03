@@ -249,6 +249,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    /* ---------- Create Event Form Logic ---------- */
+    const createEventForm = document.getElementById('create-event-form');
+    if (createEventForm) {
+        const participationSelect = createEventForm.querySelector('select[name="participation_type"]');
+        const minTeamField = createEventForm.querySelector('input[name="min_team_size"]');
+        const maxTeamField = createEventForm.querySelector('input[name="max_team_size"]');
+
+        if (participationSelect && minTeamField && maxTeamField) {
+            function updateTeamFields() {
+                const val = participationSelect.value;
+                const minWrapper = minTeamField.closest('.form-field');
+                const maxWrapper = maxTeamField.closest('.form-field');
+                if (val === 'Solo') {
+                    if (minWrapper) minWrapper.style.display = 'none';
+                    if (maxWrapper) maxWrapper.style.display = 'none';
+                    minTeamField.required = false;
+                    maxTeamField.required = false;
+                } else {
+                    if (minWrapper) minWrapper.style.display = 'block';
+                    if (maxWrapper) maxWrapper.style.display = 'block';
+                    minTeamField.required = true;
+                    maxTeamField.required = true;
+                }
+            }
+            participationSelect.addEventListener('change', updateTeamFields);
+            updateTeamFields(); // Initial call
+        }
+
+        // Date logic
+        const startDateInput = createEventForm.querySelector('input[name="start_date"]');
+        const endDateInput = createEventForm.querySelector('input[name="end_date"]');
+        if (startDateInput && endDateInput) {
+            startDateInput.addEventListener('change', () => {
+                endDateInput.min = startDateInput.value;
+            });
+            endDateInput.addEventListener('change', () => {
+                if (startDateInput.value && endDateInput.value < startDateInput.value) {
+                    endDateInput.value = startDateInput.value;
+                }
+            });
+        }
+    }
+
     /* ---------- Re-init lucide icons (for dynamic content) ---------- */
     if (window.lucide) lucide.createIcons();
 });

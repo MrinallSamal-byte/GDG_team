@@ -2287,6 +2287,38 @@ button {
     height: 18px;
 }
 
+.notif-success {
+    background: var(--ok-soft);
+}
+
+.notif-success i {
+    color: var(--ok);
+}
+
+.notif-warning {
+    background: var(--warn-soft);
+}
+
+.notif-warning i {
+    color: var(--warn);
+}
+
+.notif-info {
+    background: var(--primary-glow);
+}
+
+.notif-info i {
+    color: var(--primary);
+}
+
+.notif-default {
+    background: var(--surface-3);
+}
+
+.notif-default i {
+    color: var(--muted);
+}
+
 /* ---------- Settings Page ---------- */
 .settings-grid {
     display: grid;
@@ -2375,222 +2407,223 @@ button {
 }
 
 /* ---------- Prefers Reduced Motion ---------- */
+@media (prefers-reduced-motion: reduce) {}
+
+.user-menu {
+    position: relative;
+}
+
+.user-menu-toggle {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .3rem .6rem .3rem .3rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all var(--motion-fast) ease;
+}
+
+.user-menu-toggle:hover {
+    border-color: color-mix(in srgb, var(--primary), var(--border) 55%);
+    box-shadow: var(--shadow-xs);
+}
+
+.user-menu-toggle .avatar {
+    width: 28px;
+    height: 28px;
+    font-size: .72rem;
+}
+
+.user-menu-toggle span {
+    font-weight: 600;
+    font-size: .88rem;
+    color: var(--text);
+}
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + .5rem);
+    right: 0;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: .4rem;
+    display: none;
+    z-index: 150;
+    animation: fadeIn var(--motion-fast) ease;
+}
+
+.user-dropdown.open {
+    display: block;
+}
+
+.user-dropdown a {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .55rem .75rem;
+    border-radius: var(--radius-md);
+    color: var(--muted);
+    font-weight: 600;
+    font-size: .9rem;
+    transition: all var(--motion-fast) ease;
+}
+
+.user-dropdown a:hover {
+    color: var(--text);
+    background: var(--primary-glow);
+}
+
+.user-dropdown .dropdown-divider {
+    height: 1px;
+    background: var(--border-soft);
+    margin: .3rem .4rem;
+}
+
+/* ---------- Custom Scrollbar ---------- */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-soft);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-soft);
+}
+
+/* ---------- Section Subtitle ---------- */
+.section-subtitle {
+    color: var(--muted);
+    font-size: .93rem;
+    max-width: 520px;
+    margin-top: .2rem;
+}
+
+/* ---------- Tabs Grid (fallback) ---------- */
+.tabs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+/* ---------- Reduced Motion ---------- */
 @media (prefers-reduced-motion: reduce) {
-    .user-menu {
-        position: relative;
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 
-    .user-menu-toggle {
-        display: flex;
-        align-items: center;
-        gap: .45rem;
-        padding: .3rem .6rem .3rem .3rem;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-full);
-        background: var(--surface);
-        cursor: pointer;
-        transition: all var(--motion-fast) ease;
+    .reveal {
+        opacity: 1;
+        transform: none;
     }
+}
 
-    .user-menu-toggle:hover {
-        border-color: color-mix(in srgb, var(--primary), var(--border) 55%);
-        box-shadow: var(--shadow-xs);
-    }
-
-    .user-menu-toggle .avatar {
-        width: 28px;
-        height: 28px;
-        font-size: .72rem;
-    }
-
-    .user-menu-toggle span {
-        font-weight: 600;
-        font-size: .88rem;
-        color: var(--text);
-    }
-
-    .user-dropdown {
-        position: absolute;
-        top: calc(100% + .5rem);
-        right: 0;
-        min-width: 200px;
-        background: var(--surface);
-        border: 1px solid var(--border-soft);
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-md);
-        padding: .4rem;
-        display: none;
-        z-index: 150;
-        animation: fadeIn var(--motion-fast) ease;
-    }
-
-    .user-dropdown.open {
-        display: block;
-    }
-
-    .user-dropdown a {
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        padding: .55rem .75rem;
-        border-radius: var(--radius-md);
-        color: var(--muted);
-        font-weight: 600;
-        font-size: .9rem;
-        transition: all var(--motion-fast) ease;
-    }
-
-    .user-dropdown a:hover {
-        color: var(--text);
-        background: var(--primary-glow);
-    }
-
-    .user-dropdown .dropdown-divider {
-        height: 1px;
-        background: var(--border-soft);
-        margin: .3rem .4rem;
-    }
-
-    /* ---------- Custom Scrollbar ---------- */
-    ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: var(--bg-soft);
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: var(--border);
-        border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--muted-soft);
-    }
-
-    /* ---------- Section Subtitle ---------- */
-    .section-subtitle {
-        color: var(--muted);
-        font-size: .93rem;
-        max-width: 520px;
-        margin-top: .2rem;
-    }
-
-    /* ---------- Tabs Grid (fallback) ---------- */
-    .tabs-grid {
-        display: grid;
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+    .card-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
     }
 
-    .full-width {
-        grid-column: 1 / -1;
+    .metric-grid,
+    .dashboard-main,
+    .two-col,
+    .tabs-grid,
+    .event-header,
+    .hero,
+    .dashboard-layout,
+    .prize-grid,
+    .footer-grid {
+        grid-template-columns: 1fr;
     }
 
-    /* ---------- Reduced Motion ---------- */
-    @media (prefers-reduced-motion: reduce) {
-
-        *,
-        *::before,
-        *::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-            scroll-behavior: auto !important;
-        }
-
-        .reveal {
-            opacity: 1;
-            transform: none;
-        }
+    .footer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
     }
 
-    /* ---------- Responsive ---------- */
-    @media (max-width: 1024px) {
-        .card-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .metric-grid,
-        .dashboard-main,
-        .two-col,
-        .tabs-grid,
-        .event-header,
-        .hero,
-        .dashboard-layout,
-        .prize-grid,
-        .footer-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .footer-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        .nav-center {
-            display: none;
-        }
-
-        .mobile-toggle {
-            display: flex;
-        }
-
-        .sidebar {
-            position: static;
-        }
-
-        .auth-layout {
-            grid-template-columns: 1fr;
-        }
-
-        .auth-decor {
-            display: none;
-        }
+    .nav-center {
+        display: none;
     }
 
-    @media (max-width: 680px) {
-        .nav-wrap {
-            min-height: 64px;
-        }
-
-        .container {
-            width: min(1200px, 94%);
-        }
-
-        .search-wrap {
-            flex-direction: column;
-        }
-
-        .card-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .stats-row,
-        .field-grid,
-        .otp-grid,
-        .countdown {
-            grid-template-columns: 1fr;
-        }
-
-        .countdown {
-            grid-template-columns: repeat(4, 1fr);
-        }
-
-        .section-head.split,
-        .footer-bottom,
-        .auth-links {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .footer-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .metric-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
+    .mobile-toggle {
+        display: flex;
     }
+
+    .sidebar {
+        position: static;
+    }
+
+    .auth-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-decor {
+        display: none;
+    }
+}
+
+@media (max-width: 680px) {
+    .nav-wrap {
+        min-height: 64px;
+    }
+
+    .container {
+        width: min(1200px, 94%);
+    }
+
+    .search-wrap {
+        flex-direction: column;
+    }
+
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-row,
+    .field-grid,
+    .otp-grid,
+    .countdown {
+        grid-template-columns: 1fr;
+    }
+
+    .countdown {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .section-head.split,
+    .footer-bottom,
+    .auth-links {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .metric-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

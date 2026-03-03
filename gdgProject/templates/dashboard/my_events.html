@@ -33,7 +33,7 @@
                             {% endif %}
                             {{ event.status }}
                         </span>
-                        <a href="{% url 'event_detail' event.id %}" class="btn-secondary btn-small"><i
+                        <a href="{% url 'events:event_detail' event.id %}" class="btn-secondary btn-small"><i
                                 data-lucide="external-link"></i> View</a>
                     </div>
                 </div>
@@ -46,7 +46,7 @@
             {% empty %}
             <article class="surface">
                 <div class="empty-state"><i data-lucide="calendar-x"></i>
-                    <p>You haven't joined any events yet. <a href="{% url 'home' %}">Browse events</a></p>
+                    <p>You haven't joined any events yet. <a href="{% url 'events:home' %}">Browse events</a></p>
                 </div>
             </article>
             {% endfor %}
