@@ -1,0 +1,360 @@
+"""
+Team Join-Request Service — reference service-layer implementation.
+
+Demonstrates the Controller → Service → Repository → Model pattern with:
+- Atomic transactions
+- Permission checks
+- Business rule validation
+- Notification side-effects
+- Idempotency handling
+- Structured logging
+"""
+import logging
+from dataclasses import dataclass
+
+from django.db import IntegrityError, transaction
+from django.utils import timezone
+
+logger = logging.getLogger("campusarena.team")
+
+
+# ─── Exceptions (from core.exceptions taxonomy) ─────────────────────────────
+class ServiceError(Exception):
+    """Base for all service-layer exceptions."""
+
+    def __init__(self, message: str, code: str = "service_error"):
+        self.message = message
+        self.code = code
+        super().__init__(message)
+
+
+class NotFoundError(ServiceError):
+    def __init__(self, message="Resource not found"):
+        super().__init__(message, code="not_found")
+
+
+class PermissionDeniedError(ServiceError):
+    def __init__(self, message="Permission denied"):
+        super().__init__(message, code="permission_denied")
+
+
+class ValidationError(ServiceError):
+    def __init__(self, message="Validation failed"):
+        super().__init__(message, code="validation_error")
+
+
+class ConflictError(ServiceError):
+    def __init__(self, message="Conflict"):
+        super().__init__(message, code="conflict")
+
+
+# ─── Data Transfer Objects ──────────────────────────────────────────────────
+@dataclass(frozen=True)
+class JoinRequestResult:
+    request_id: int
+    team_name: str
+    status: str
+    message: str
+
+
+# ─── Repository Layer ────────────────────────────────────────────────────────
+class TeamRepository:
+    """Encapsulates all Team/JoinRequest DB queries."""
+
+    @staticmethod
+    def get_team_with_event(team_id: int):
+        from team.models_v2 import Team
+
+        try:
+            return Team.objects.select_related("event", "leader").get(
+                id=team_id
+            )
+        except Team.DoesNotExist:
+            raise NotFoundError(f"Team {team_id} not found")
+
+    @staticmethod
+    def get_pending_request(team_id: int, user_id: int):
+        from team.models_v2 import JoinRequest, JoinRequestStatus
+
+        try:
+            return JoinRequest.objects.select_related("team", "user").get(
+                team_id=team_id,
+                user_id=user_id,
+                status=JoinRequestStatus.PENDING,
+            )
+        except JoinRequest.DoesNotExist:
+            raise NotFoundError("No pending join request found")
+
+    @staticmethod
+    def user_has_team_for_event(user_id: int, event_id: int) -> bool:
+        from team.models_v2 import TeamMembership
+
+        return TeamMembership.objects.filter(
+            user_id=user_id,
+            team__event_id=event_id,
+        ).exists()
+
+    @staticmethod
+    def create_join_request(team, user, role: str, skills: str, message: str):
+        from team.models_v2 import JoinRequest
+
+        return JoinRequest.objects.create(
+            team=team,
+            user=user,
+            role=role,
+            skills=skills,
+            message=message,
+        )
+
+    @staticmethod
+    def create_membership(team, user, role: str, skills: str):
+        from team.models_v2 import TeamMembership
+
+        return TeamMembership.objects.create(
+            team=team,
+            user=user,
+            role=role,
+            skills=skills,
+        )
+
+
+# ─── Service Layer ───────────────────────────────────────────────────────────
+class TeamJoinRequestService:
+    """
+    Business logic for the team join-request workflow.
+
+    Handles: create request, approve, decline, cancel.
+    All methods are atomic and raise typed exceptions.
+    """
+
+    def __init__(self, repo: TeamRepository | None = None):
+        self.repo = repo or TeamRepository()
+
+    @transaction.atomic
+    def create_join_request(
+        self,
+        *,
+        team_id: int,
+        user,
+        role: str,
+        skills: str = "",
+        message: str = "",
+    ) -> JoinRequestResult:
+        """
+        A user requests to join a team.
+
+        Business rules:
+        1. Team must exist and be open.
+        2. Event registration must be open.
+        3. User cannot already be in a team for this event.
+        4. User cannot be the team leader (they are already a member).
+        5. Team must not be full.
+        6. No duplicate pending request.
+        """
+        team = self.repo.get_team_with_event(team_id)
+
+        # Rule 1: Team open
+        from team.models_v2 import TeamStatus
+        if team.status != TeamStatus.OPEN:
+            raise ValidationError("This team is not accepting new members.")
+
+        # Rule 2: Registration open
+        if not team.event.is_registration_open:
+            raise ValidationError("Event registration is closed.")
+
+        # Rule 3: Not already in a team
+        if self.repo.user_has_team_for_event(user.id, team.event_id):
+            raise ConflictError("You are already in a team for this event.")
+
+        # Rule 4: Not the leader
+        if team.leader_id == user.id:
+            raise ValidationError("You cannot request to join your own team.")
+
+        # Rule 5: Team capacity
+        if team.is_full:
+            raise ValidationError("This team is full.")
+
+        # Rule 6: Idempotency — no duplicate pending request
+        try:
+            join_request = self.repo.create_join_request(
+                team=team, user=user, role=role, skills=skills, message=message
+            )
+        except IntegrityError:
+            raise ConflictError("You already have a pending request for this team.")
+
+        logger.info(
+            "join_request_created",
+            extra={
+                "team_id": team.id,
+                "user_id": user.id,
+                "request_id": join_request.id,
+                "event_id": team.event_id,
+            },
+        )
+
+        # Side effect: notify team leader
+        self._notify_leader(team, user, join_request)
+
+        return JoinRequestResult(
+            request_id=join_request.id,
+            team_name=team.name,
+            status="pending",
+            message=f"Join request sent to {team.name}.",
+        )
+
+    @transaction.atomic
+    def approve_request(
+        self,
+        *,
+        team_id: int,
+        requester_user_id: int,
+        approver,
+    ) -> JoinRequestResult:
+        """
+        Team leader approves a join request.
+
+        Business rules:
+        1. Only the team leader can approve.
+        2. Request must be pending.
+        3. Team must still have capacity.
+        4. Requester must not already be in another team for this event.
+        """
+        from team.models_v2 import JoinRequestStatus, TeamStatus
+
+        team = self.repo.get_team_with_event(team_id)
+
+        # Rule 1: Permission
+        if team.leader_id != approver.id:
+            raise PermissionDeniedError("Only the team leader can approve requests.")
+
+        # Rule 2: Pending request
+        join_request = self.repo.get_pending_request(team_id, requester_user_id)
+
+        # Rule 3: Capacity (re-check under transaction)
+        if team.is_full:
+            raise ValidationError("Team is already full. Cannot approve.")
+
+        # Rule 4: Requester hasn't joined another team meanwhile
+        if self.repo.user_has_team_for_event(requester_user_id, team.event_id):
+            join_request.status = JoinRequestStatus.DECLINED
+            join_request.reviewed_by = approver
+            join_request.reviewed_at = timezone.now()
+            join_request.save(update_fields=["status", "reviewed_by", "reviewed_at", "updated_at"])
+            raise ConflictError("Requester has already joined another team.")
+
+        # Approve
+        join_request.status = JoinRequestStatus.APPROVED
+        join_request.reviewed_by = approver
+        join_request.reviewed_at = timezone.now()
+        join_request.save(
+            update_fields=["status", "reviewed_by", "reviewed_at", "updated_at"]
+        )
+
+        # Create membership
+        self.repo.create_membership(
+            team=team,
+            user=join_request.user,
+            role=join_request.role,
+            skills=join_request.skills,
+        )
+
+        # Auto-close team if full
+        if team.is_full:
+            team.status = TeamStatus.CLOSED
+            team.save(update_fields=["status", "updated_at"])
+
+        logger.info(
+            "join_request_approved",
+            extra={
+                "team_id": team.id,
+                "user_id": requester_user_id,
+                "approver_id": approver.id,
+                "request_id": join_request.id,
+            },
+        )
+
+        # Side effect: notify requester
+        self._notify_requester_approved(team, join_request.user)
+
+        return JoinRequestResult(
+            request_id=join_request.id,
+            team_name=team.name,
+            status="approved",
+            message=f"{join_request.user.get_full_name()} added to {team.name}.",
+        )
+
+    @transaction.atomic
+    def decline_request(
+        self,
+        *,
+        team_id: int,
+        requester_user_id: int,
+        decliner,
+    ) -> JoinRequestResult:
+        """Team leader declines a join request."""
+        from team.models_v2 import JoinRequestStatus
+
+        team = self.repo.get_team_with_event(team_id)
+
+        if team.leader_id != decliner.id:
+            raise PermissionDeniedError("Only the team leader can decline requests.")
+
+        join_request = self.repo.get_pending_request(team_id, requester_user_id)
+
+        join_request.status = JoinRequestStatus.DECLINED
+        join_request.reviewed_by = decliner
+        join_request.reviewed_at = timezone.now()
+        join_request.save(
+            update_fields=["status", "reviewed_by", "reviewed_at", "updated_at"]
+        )
+
+        logger.info(
+            "join_request_declined",
+            extra={
+                "team_id": team.id,
+                "user_id": requester_user_id,
+                "request_id": join_request.id,
+            },
+        )
+
+        self._notify_requester_declined(team, join_request.user)
+
+        return JoinRequestResult(
+            request_id=join_request.id,
+            team_name=team.name,
+            status="declined",
+            message="Join request declined.",
+        )
+
+    # ─── Notification Helpers (delegate to NotificationService) ──────────
+    def _notify_leader(self, team, requester, join_request):
+        """Placeholder — wire to NotificationService / Celery task."""
+        logger.info(
+            "notification_queued",
+            extra={
+                "type": "join_request_received",
+                "recipient_id": team.leader_id,
+                "actor_id": requester.id,
+                "team_id": team.id,
+            },
+        )
+
+    def _notify_requester_approved(self, team, requester):
+        logger.info(
+            "notification_queued",
+            extra={
+                "type": "join_request_approved",
+                "recipient_id": requester.id,
+                "team_id": team.id,
+            },
+        )
+
+    def _notify_requester_declined(self, team, requester):
+        logger.info(
+            "notification_queued",
+            extra={
+                "type": "join_request_declined",
+                "recipient_id": requester.id,
+                "team_id": team.id,
+            },
+        )

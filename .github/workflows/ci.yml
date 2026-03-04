@@ -1,0 +1,149 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# CampusArena — GitHub Actions CI Pipeline
+# ═══════════════════════════════════════════════════════════════════════════════
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  PYTHON_VERSION: "3.12"
+  DJANGO_SETTINGS_MODULE: gdgProject.settings.dev
+
+jobs:
+  # ── Lint & Format ─────────────────────────────────────────────────────────
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install linters
+        run: pip install ruff black isort
+
+      - name: Ruff check
+        run: ruff check gdgProject/
+
+      - name: Black check
+        run: black --check gdgProject/
+
+      - name: isort check
+        run: isort --check-only gdgProject/
+
+  # ── Tests ─────────────────────────────────────────────────────────────────
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: test_campusarena
+          POSTGRES_USER: campusarena
+          POSTGRES_PASSWORD: testpass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U campusarena"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run migrations
+        working-directory: gdgProject
+        env:
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          DB_ENGINE: django.db.backends.sqlite3
+          DB_NAME: ":memory:"
+        run: python manage.py migrate --run-syncdb
+
+      - name: Run tests with coverage
+        working-directory: gdgProject
+        env:
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          DB_ENGINE: django.db.backends.sqlite3
+          DB_NAME: ":memory:"
+        run: |
+          pip install coverage
+          coverage run manage.py test --verbosity=2
+          coverage report --fail-under=60
+          coverage xml
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: gdgProject/coverage.xml
+
+  # ── Security Scan ─────────────────────────────────────────────────────────
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install safety
+        run: pip install safety bandit
+
+      - name: Dependency vulnerability scan
+        run: safety check --file requirements.txt || true
+
+      - name: Bandit static analysis
+        run: bandit -r gdgProject/ -ll --exclude gdgProject/env || true
+
+  # ── Build Docker Image ───────────────────────────────────────────────────
+  build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t campusarena:${{ github.sha }} .
+
+      - name: Test image health
+        run: |
+          docker run -d --name test-app \
+            -e SECRET_KEY=build-test \
+            -e DB_ENGINE=django.db.backends.sqlite3 \
+            -e DB_NAME=/tmp/test.db \
+            -e ALLOWED_HOSTS=localhost \
+            -p 8000:8000 \
+            campusarena:${{ github.sha }}
+          sleep 5
+          curl -f http://localhost:8000/health/ || exit 1
+          docker stop test-app
