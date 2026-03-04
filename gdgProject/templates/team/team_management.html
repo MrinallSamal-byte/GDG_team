@@ -12,7 +12,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:.6rem;">
             <span class="status open"><i data-lucide="users"></i> Members {{ team.members_count }}</span>
-            <button class="btn-secondary btn-small"><i data-lucide="settings-2"></i> Settings</button>
+            <button class="btn-secondary btn-small" data-action="team-settings"><i data-lucide="settings-2"></i> Settings</button>
         </div>
     </div>
 
@@ -82,8 +82,8 @@
                         </div>
                     </div>
                     <div class="inline-actions">
-                        <button class="btn-primary btn-small"><i data-lucide="check"></i> Approve</button>
-                        <button class="btn-secondary btn-small"><i data-lucide="x"></i> Decline</button>
+                        <button class="btn-primary btn-small" data-action="accept-request"><i data-lucide="check"></i> Approve</button>
+                        <button class="btn-secondary btn-small" data-action="decline-request"><i data-lucide="x"></i> Decline</button>
                     </div>
                 </li>
                 {% empty %}

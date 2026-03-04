@@ -29,35 +29,39 @@
                 <div class="field-grid">
                     <div class="form-field">
                         <i data-lucide="user"></i>
-                        <input type="text" name="full_name" placeholder="Full name" required>
+                        <input type="text" name="full_name" placeholder="Full name" required
+                               value="{{ form_data.full_name|default:'' }}">
                     </div>
                     <div class="form-field">
                         <i data-lucide="mail"></i>
-                        <input type="email" name="email" placeholder="Email" required>
+                        <input type="email" name="email" placeholder="Email" required
+                               value="{{ form_data.email|default:'' }}">
                     </div>
                     <div class="form-field">
                         <i data-lucide="phone"></i>
-                        <input type="tel" name="phone" placeholder="Phone number">
+                        <input type="tel" name="phone" placeholder="Phone number"
+                               value="{{ form_data.phone|default:'' }}">
                     </div>
                     <div class="form-field">
                         <i data-lucide="building-2"></i>
-                        <input type="text" name="college" placeholder="College name" required>
+                        <input type="text" name="college" placeholder="College name" required
+                               value="{{ form_data.college|default:'' }}">
                     </div>
                     <div class="form-field">
                         <i data-lucide="graduation-cap"></i>
                         <select name="branch">
-                            <option selected disabled>Branch</option>
+                            <option disabled {% if not form_data.branch %}selected{% endif %}>Branch</option>
                             {% for branch in branches %}
-                            <option value="{{ branch }}">{{ branch }}</option>
+                            <option value="{{ branch }}" {% if form_data.branch == branch %}selected{% endif %}>{{ branch }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-field">
                         <i data-lucide="calendar"></i>
                         <select name="year">
-                            <option selected disabled>Year of study</option>
+                            <option disabled {% if not form_data.year %}selected{% endif %}>Year of study</option>
                             {% for year in years %}
-                            <option value="{{ year }}">{{ year }}</option>
+                            <option value="{{ year }}" {% if form_data.year == year %}selected{% endif %}>{{ year }}</option>
                             {% endfor %}
                         </select>
                     </div>

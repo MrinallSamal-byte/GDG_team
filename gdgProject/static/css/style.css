@@ -2406,9 +2406,7 @@ button {
     gap: 1rem;
 }
 
-/* ---------- Prefers Reduced Motion ---------- */
-@media (prefers-reduced-motion: reduce) {}
-
+/* ---------- User Menu ---------- */
 .user-menu {
     position: relative;
 }
@@ -2482,6 +2480,258 @@ button {
     height: 1px;
     background: var(--border-soft);
     margin: .3rem .4rem;
+}
+
+/* ---------- Avatar sizes (missing) ---------- */
+.avatar-xs {
+    width: 24px;
+    height: 24px;
+    font-size: .62rem;
+}
+
+.avatar-md {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+}
+
+/* ---------- Profile Content Layout ---------- */
+.profile-content {
+    display: grid;
+    gap: 1rem;
+}
+
+/* ---------- Skip to Content (A11y) — enhanced ---------- */
+
+/* ---------- Focus Visible Outline ---------- */
+:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
+}
+
+/* ---------- Button Loading State ---------- */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: .75;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    right: .75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinLoader .6s linear infinite;
+}
+
+@keyframes spinLoader {
+    to { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* ---------- Notification Badge ---------- */
+.nav-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--radius-full);
+    background: var(--danger);
+    color: #fff;
+    font-size: .68rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-left: .3rem;
+}
+
+/* ---------- Sidebar badge ---------- */
+.sidebar-link .nav-badge {
+    margin-left: auto;
+}
+
+/* ---------- Event category colour palette ---------- */
+.event-banner-hackathon::before { background: linear-gradient(135deg, #6d28d9 0%, #4f46e5 50%, #3b82f6 100%); }
+.event-banner-workshop::before  { background: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #0e7490 100%); }
+.event-banner-quiz::before      { background: linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #fbbf24 100%); }
+.event-banner-design::before,
+.event-banner-design-challenge::before { background: linear-gradient(135deg, #e11d48 0%, #f43f5e 50%, #fb7185 100%); }
+.event-banner-coding-contest::before   { background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%); }
+.event-banner-ideathon::before  { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%); }
+.event-banner-seminar::before   { background: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #2dd4bf 100%); }
+.event-banner-competition::before { background: linear-gradient(135deg, #c2410c 0%, #ea580c 50%, #fb923c 100%); }
+.event-banner-case-study::before  { background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #60a5fa 100%); }
+
+/* ---------- Field validation states ---------- */
+.form-field.has-error input,
+.form-field.has-error select,
+.form-field.has-error textarea {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px var(--danger-soft);
+}
+
+.form-field .field-error {
+    color: var(--danger);
+    font-size: .78rem;
+    font-weight: 600;
+    margin-top: .25rem;
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+}
+
+/* ---------- Confirmation Modal ---------- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--motion-base) ease, visibility var(--motion-base) ease;
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: 2rem;
+    width: min(480px, 92%);
+    transform: translateY(18px);
+    transition: transform var(--motion-base) var(--motion-spring);
+}
+
+.modal-overlay.open .modal {
+    transform: translateY(0);
+}
+
+.modal h3 {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .55rem;
+}
+
+.modal p {
+    color: var(--muted);
+    font-size: .95rem;
+    margin-bottom: 1.25rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: .6rem;
+    justify-content: flex-end;
+}
+
+/* ---------- Toast Notifications ---------- */
+.toast-container {
+    position: fixed;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    z-index: 600;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    pointer-events: none;
+}
+
+.toast {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: .75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    font-size: .92rem;
+    font-weight: 600;
+    pointer-events: auto;
+    animation: toastIn var(--motion-base) var(--motion-spring) both;
+    min-width: 240px;
+    max-width: 360px;
+}
+
+.toast.toast-success { color: var(--ok); border-left: 3px solid var(--ok); }
+.toast.toast-error   { color: var(--danger); border-left: 3px solid var(--danger); }
+.toast.toast-info    { color: var(--primary); border-left: 3px solid var(--primary); }
+.toast.toast-warning { color: var(--warn); border-left: 3px solid var(--warn); }
+
+.toast.toast-exit {
+    animation: toastOut var(--motion-base) ease forwards;
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateY(16px) scale(.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toastOut {
+    from { opacity: 1; transform: translateY(0); max-height: 80px; margin-bottom: 0; }
+    to   { opacity: 0; transform: translateY(8px); max-height: 0; margin-bottom: 0; }
+}
+
+/* ---------- Inline status-action row ---------- */
+.action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+/* ---------- Event detail action sticky cta ---------- */
+.sticky-cta {
+    position: sticky;
+    bottom: 1rem;
+    z-index: 10;
+    display: none;
+}
+
+@media (max-width: 680px) {
+    .sticky-cta {
+        display: block;
+    }
+}
+
+/* ---------- Improved chip selection ---------- */
+.chip-toggle .chip.active::before {
+    content: '✓ ';
+    font-size: .8em;
+}
+
+/* ---------- Registration steps visual override ---------- */
+.reg-step {
+    display: none;
+}
+
+.reg-step.active-step {
+    display: grid;
+    gap: 1rem;
+}
+
+/* Full-form: show all steps (default without JS) */
+.reg-step {
+    display: grid;
+    gap: 1rem;
 }
 
 /* ---------- Custom Scrollbar ---------- */
@@ -2602,14 +2852,17 @@ button {
     }
 
     .stats-row,
-    .field-grid,
-    .otp-grid,
-    .countdown {
+    .field-grid {
         grid-template-columns: 1fr;
     }
 
-    .countdown {
+    .countdown,
+    .otp-grid {
         grid-template-columns: repeat(4, 1fr);
+    }
+
+    .otp-grid {
+        grid-template-columns: repeat(6, 1fr);
     }
 
     .section-head.split,
@@ -2626,4 +2879,68 @@ button {
     .metric-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+}
+/* ========================================================
+   Error Pages (404 / 500)
+   ======================================================== */
+.error-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 4rem 1.5rem;
+    gap: 1.25rem;
+}
+
+.error-visual {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.error-code {
+    font-size: clamp(6rem, 18vw, 10rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    user-select: none;
+}
+
+.error-icon {
+    position: absolute;
+    width: 3rem;
+    height: 3rem;
+    color: var(--text-muted);
+    right: -2rem;
+    bottom: 0.5rem;
+}
+
+.error-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.error-message {
+    max-width: 480px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin: 0;
+}
+
+.error-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 0.5rem;
 }

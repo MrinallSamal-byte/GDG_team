@@ -1,297 +1,506 @@
 /* ========================================================================
-   CampusArena — Interactive Features
+   CampusArena — Interactive Features  v2.0
+   Full interaction suite: filtering, validation, loading states, toasts,
+   modals, accessible nav, countdown, OTP, chat.
    ======================================================================== */
 
+/* ─── Toast system ──────────────────────────────────────────────────────── */
+function showToast(message, type = 'info', duration = 3500) {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        container.setAttribute('aria-live', 'polite');
+        document.body.appendChild(container);
+    }
+    const icons = { success: 'check-circle', error: 'alert-circle', warning: 'alert-triangle', info: 'info' };
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.setAttribute('role', 'status');
+    toast.innerHTML = `<i data-lucide="${icons[type] || 'info'}"></i> ${escapeHtml(message)}`;
+    container.appendChild(toast);
+    if (window.lucide) lucide.createIcons({ nodes: [toast] });
+    setTimeout(() => {
+        toast.classList.add('toast-exit');
+        toast.addEventListener('animationend', () => toast.remove(), { once: true });
+    }, duration);
+}
+window.showToast = showToast;
+
+/* ─── Confirmation modal ─────────────────────────────────────────────────── */
+function showConfirm({ title, message, confirmText = 'Confirm', confirmClass = 'btn-primary', onConfirm }) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <h3 id="modal-title"><i data-lucide="alert-triangle"></i> ${title}</h3>
+            <p>${message}</p>
+            <div class="modal-actions">
+                <button class="btn-secondary btn-small" id="modal-cancel">Cancel</button>
+                <button class="${confirmClass} btn-small" id="modal-confirm">${confirmText}</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('open'));
+    if (window.lucide) lucide.createIcons({ nodes: [overlay] });
+
+    const close = () => {
+        overlay.classList.remove('open');
+        overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
+    };
+    overlay.querySelector('#modal-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    overlay.querySelector('#modal-confirm').addEventListener('click', () => { close(); if (typeof onConfirm === 'function') onConfirm(); });
+    overlay.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const focusable = overlay.querySelectorAll('button');
+            const idx = Array.from(focusable).indexOf(document.activeElement);
+            focusable[(idx + 1) % focusable.length].focus();
+        }
+    });
+    overlay.querySelector('#modal-confirm').focus();
+}
+window.showConfirm = showConfirm;
+
+/* ─── Form validation ─────────────────────────────────────────────────────── */
+function validateForm(form) {
+    let valid = true;
+    form.querySelectorAll('.field-error').forEach(e => e.remove());
+    form.querySelectorAll('.form-field.has-error, .form-group.has-error').forEach(f => f.classList.remove('has-error'));
+
+    form.querySelectorAll('[required]').forEach(field => {
+        if (!field.value.trim()) { valid = false; markFieldError(field, 'This field is required.'); }
+    });
+    form.querySelectorAll('input[type="email"]').forEach(field => {
+        if (field.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)) { valid = false; markFieldError(field, 'Enter a valid email address.'); }
+    });
+    const pw = form.querySelector('input[name="password"]');
+    const pwc = form.querySelector('input[name="password_confirm"]');
+    if (pw && pwc && pw.value && pwc.value && pw.value !== pwc.value) { valid = false; markFieldError(pwc, 'Passwords do not match.'); }
+
+    const otpInputs = form.querySelectorAll('.otp-grid input');
+    if (otpInputs.length && !Array.from(otpInputs).every(i => i.value.trim().length === 1)) {
+        valid = false; showToast('Please enter all 6 digits.', 'warning');
+    }
+    if (!valid) {
+        const firstErr = form.querySelector('.has-error input, .has-error select, .has-error textarea');
+        firstErr && firstErr.focus();
+    }
+    return valid;
+}
+function markFieldError(field, msg) {
+    const wrapper = field.closest('.form-field, .form-group') || field.parentElement;
+    if (wrapper) wrapper.classList.add('has-error');
+    const err = document.createElement('p');
+    err.className = 'field-error';
+    err.innerHTML = `<i data-lucide="alert-circle" style="width:12px;height:12px;flex-shrink:0;"></i> ${msg}`;
+    field.insertAdjacentElement('afterend', err);
+    if (window.lucide) lucide.createIcons({ nodes: [err] });
+}
+
+/* ─── Button loading state ────────────────────────────────────────────────── */
+function setButtonLoading(btn, loading) {
+    if (loading) {
+        btn.dataset.origText = btn.innerHTML;
+        btn.innerHTML = `<i data-lucide="loader-2" style="animation:spinLoader .7s linear infinite;"></i> Processing…`;
+        btn.classList.add('btn-loading');
+    } else {
+        btn.innerHTML = btn.dataset.origText || btn.innerHTML;
+        btn.classList.remove('btn-loading');
+    }
+    if (window.lucide) lucide.createIcons({ nodes: [btn] });
+}
+window.setButtonLoading = setButtonLoading;
+
+/* ─── HTML escape ─────────────────────────────────────────────────────────── */
+function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.appendChild(document.createTextNode(str));
+    return d.innerHTML;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DOM Ready
+   ════════════════════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
 
-    /* ---------- Header scroll shadow ---------- */
+    /* ─── Lucide icons ────────────────────────────────────────────────────── */
+    if (window.lucide) lucide.createIcons();
+
+    /* ─── Header scroll shadow ────────────────────────────────────────────── */
     const header = document.querySelector('.site-header');
     if (header) {
-        const onScroll = () => {
-            header.classList.toggle('scrolled', window.scrollY > 10);
-        };
+        const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 10);
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
     }
 
-    /* ---------- Mobile menu ---------- */
+    /* ─── Nav active state by URL ─────────────────────────────────────────── */
+    const path = window.location.pathname;
+    document.querySelectorAll('.nav-center a, .mobile-nav a').forEach(link => {
+        const href = link.getAttribute('href');
+        if (!href || href === '#') return;
+        const isHome = href === '/' && path === '/';
+        const isMatch = href !== '/' && path.startsWith(href);
+        if (isHome || isMatch) {
+            link.classList.add('active');
+            link.setAttribute('aria-current', 'page');
+        }
+    });
+
+    /* ─── Mobile menu ─────────────────────────────────────────────────────── */
     const mobileToggle = document.getElementById('mobile-toggle');
-    const mobileNav = document.getElementById('mobile-nav');
-    const navOverlay = document.getElementById('nav-overlay');
-    const mobileClose = document.getElementById('mobile-close');
+    const mobileNav    = document.getElementById('mobile-nav');
+    const navOverlay   = document.getElementById('nav-overlay');
+    const mobileClose  = document.getElementById('mobile-close');
 
-    function openMobile() {
-        if (mobileNav) mobileNav.classList.add('open');
-        if (navOverlay) navOverlay.classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
+    const openMobile  = () => { mobileNav?.classList.add('open'); navOverlay?.classList.add('open'); document.body.style.overflow = 'hidden'; mobileToggle?.setAttribute('aria-expanded','true'); };
+    const closeMobile = () => { mobileNav?.classList.remove('open'); navOverlay?.classList.remove('open'); document.body.style.overflow = ''; mobileToggle?.setAttribute('aria-expanded','false'); };
 
-    function closeMobile() {
-        if (mobileNav) mobileNav.classList.remove('open');
-        if (navOverlay) navOverlay.classList.remove('open');
-        document.body.style.overflow = '';
-    }
+    mobileToggle?.addEventListener('click', openMobile);
+    mobileClose?.addEventListener('click', closeMobile);
+    navOverlay?.addEventListener('click', closeMobile);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && mobileNav?.classList.contains('open')) closeMobile(); });
 
-    if (mobileToggle) mobileToggle.addEventListener('click', openMobile);
-    if (mobileClose) mobileClose.addEventListener('click', closeMobile);
-    if (navOverlay) navOverlay.addEventListener('click', closeMobile);
-
-    /* ---------- Scroll reveal ---------- */
+    /* ─── Scroll reveal ───────────────────────────────────────────────────── */
     const revealEls = document.querySelectorAll('.reveal');
-    if (revealEls.length && 'IntersectionObserver' in window) {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('revealed');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-        revealEls.forEach(el => observer.observe(el));
+    if ('IntersectionObserver' in window) {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); } });
+        }, { threshold: 0.06, rootMargin: '0px 0px -30px 0px' });
+        revealEls.forEach(el => obs.observe(el));
     } else {
         revealEls.forEach(el => el.classList.add('revealed'));
     }
 
-    /* ---------- Tabs (with ARIA) ---------- */
+    /* ─── Tabs ────────────────────────────────────────────────────────────── */
     document.querySelectorAll('.tab-bar').forEach(bar => {
-        const btns = bar.querySelectorAll('.tab-btn');
+        const btns      = bar.querySelectorAll('.tab-btn');
         const container = bar.closest('.tab-container') || bar.parentElement;
-        const panels = container.querySelectorAll('.tab-panel');
+        const panels    = container.querySelectorAll('.tab-panel');
 
-        btns.forEach(btn => {
+        panels.forEach(p => p.setAttribute('aria-hidden', p.classList.contains('active') ? 'false' : 'true'));
+
+        btns.forEach((btn, idx) => {
             btn.addEventListener('click', () => {
-                btns.forEach(b => {
-                    b.classList.remove('active');
-                    b.setAttribute('aria-selected', 'false');
-                });
-                panels.forEach(p => {
-                    p.classList.remove('active');
-                    p.setAttribute('aria-hidden', 'true');
-                });
-                btn.classList.add('active');
-                btn.setAttribute('aria-selected', 'true');
-                const target = container.querySelector('#' + btn.dataset.tab);
-                if (target) {
-                    target.classList.add('active');
-                    target.setAttribute('aria-hidden', 'false');
-                }
+                btns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+                panels.forEach(p => { p.classList.remove('active'); p.setAttribute('aria-hidden','true'); });
+                btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+                const t = container.querySelector('#' + btn.dataset.tab);
+                if (t) { t.classList.add('active'); t.setAttribute('aria-hidden','false'); }
+            });
+            btn.addEventListener('keydown', e => {
+                if (e.key === 'ArrowRight') { e.preventDefault(); btns[(idx+1)%btns.length].click(); btns[(idx+1)%btns.length].focus(); }
+                if (e.key === 'ArrowLeft')  { e.preventDefault(); btns[(idx-1+btns.length)%btns.length].click(); btns[(idx-1+btns.length)%btns.length].focus(); }
             });
         });
     });
 
-    /* ---------- FAQ accordion (with ARIA) ---------- */
+    /* ─── FAQ accordion ───────────────────────────────────────────────────── */
     document.querySelectorAll('.faq-toggle').forEach(toggle => {
         toggle.addEventListener('click', () => {
             const item = toggle.closest('.faq-item');
             if (!item) return;
             const wasOpen = item.classList.contains('open');
-            const parent = item.parentElement;
-            if (parent) {
-                parent.querySelectorAll('.faq-item.open').forEach(i => {
-                    i.classList.remove('open');
-                    const btn = i.querySelector('.faq-toggle');
-                    if (btn) btn.setAttribute('aria-expanded', 'false');
-                });
-            }
-            if (!wasOpen) {
-                item.classList.add('open');
-                toggle.setAttribute('aria-expanded', 'true');
-            }
+            item.closest('article, section, [class]')?.querySelectorAll('.faq-item.open').forEach(i => {
+                i.classList.remove('open');
+                i.querySelector('.faq-toggle')?.setAttribute('aria-expanded','false');
+            });
+            if (!wasOpen) { item.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
         });
     });
 
-    /* ---------- Countdown timer ---------- */
+    /* ─── Countdown timer ─────────────────────────────────────────────────── */
     document.querySelectorAll('[data-deadline]').forEach(el => {
-        function updateCountdown() {
-            const deadline = new Date(el.dataset.deadline).getTime();
-            const now = Date.now();
-            const diff = Math.max(0, deadline - now);
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const secs = Math.floor((diff % (1000 * 60)) / 1000);
-
-            const dEl = el.querySelector('[data-days]');
-            const hEl = el.querySelector('[data-hours]');
-            const mEl = el.querySelector('[data-mins]');
-            const sEl = el.querySelector('[data-secs]');
-
-            if (dEl) dEl.textContent = String(days).padStart(2, '0');
-            if (hEl) hEl.textContent = String(hours).padStart(2, '0');
-            if (mEl) mEl.textContent = String(mins).padStart(2, '0');
-            if (sEl) sEl.textContent = String(secs).padStart(2, '0');
-        }
-
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
+        const update = () => {
+            const diff = Math.max(0, new Date(el.dataset.deadline).getTime() - Date.now());
+            const fmt  = n => String(Math.floor(n)).padStart(2,'0');
+            const dEl = el.querySelector('[data-days]'),  hEl = el.querySelector('[data-hours]');
+            const mEl = el.querySelector('[data-mins]'),  sEl = el.querySelector('[data-secs]');
+            if (dEl) dEl.textContent = fmt(diff/864e5);
+            if (hEl) hEl.textContent = fmt((diff%864e5)/36e5);
+            if (mEl) mEl.textContent = fmt((diff%36e5)/6e4);
+            if (sEl) sEl.textContent = fmt((diff%6e4)/1e3);
+        };
+        update(); setInterval(update, 1000);
     });
 
-    /* ---------- Skill chip toggle ---------- */
+    /* ─── Skill chip toggle ───────────────────────────────────────────────── */
     document.querySelectorAll('.chip-toggle .chip').forEach(chip => {
         chip.addEventListener('click', () => {
             chip.classList.toggle('active');
-            // Sync active chips to hidden input if present
-            const container = chip.closest('form');
-            if (container) {
-                const hidden = container.querySelector('input[name="skills"]');
-                if (hidden) {
-                    const active = container.querySelectorAll('.chip-toggle .chip.active');
-                    hidden.value = Array.from(active).map(c => c.dataset.skill || c.textContent.trim()).join(',');
-                }
+            const form = chip.closest('form');
+            const hidden = form?.querySelector('input[name="skills"]');
+            if (hidden) {
+                const actives = form.querySelectorAll('.chip-toggle .chip.active');
+                hidden.value = Array.from(actives).map(c => c.dataset.skill || c.textContent.trim()).join(',');
             }
         });
     });
 
-    /* ---------- OTP auto-advance ---------- */
+    /* ─── OTP auto-advance + paste ────────────────────────────────────────── */
     document.querySelectorAll('.otp-grid').forEach(grid => {
         const inputs = grid.querySelectorAll('input');
         inputs.forEach((inp, idx) => {
             inp.addEventListener('input', () => {
-                if (inp.value.length >= 1 && idx < inputs.length - 1) {
-                    inputs[idx + 1].focus();
-                }
+                inp.value = inp.value.replace(/\D/,'');
+                if (inp.value && idx < inputs.length - 1) inputs[idx+1].focus();
             });
-            inp.addEventListener('keydown', (e) => {
-                if (e.key === 'Backspace' && inp.value === '' && idx > 0) {
-                    inputs[idx - 1].focus();
-                }
+            inp.addEventListener('keydown', e => { if (e.key==='Backspace' && !inp.value && idx>0) inputs[idx-1].focus(); });
+            inp.addEventListener('paste', e => {
+                e.preventDefault();
+                const digits = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');
+                digits.split('').forEach((ch,i) => { if (inputs[idx+i]) inputs[idx+i].value = ch; });
+                const next = Array.from(inputs).find(i => !i.value);
+                if (next) next.focus();
             });
         });
     });
 
-    /* ---------- Animated counters ---------- */
+    /* ─── Animated counters ───────────────────────────────────────────────── */
     document.querySelectorAll('[data-counter]').forEach(el => {
-        const target = parseInt(el.textContent.replace(/[^0-9]/g, ''), 10);
+        const target = parseInt(el.textContent.replace(/\D/g,''), 10);
         if (isNaN(target)) return;
-        const suffix = el.textContent.replace(/[0-9,]/g, '');
-        let current = 0;
-        const duration = 1200;
-        const steps = 40;
-        const increment = target / steps;
-        const stepMs = duration / steps;
-
-        const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
-                observer.unobserve(el);
-                const timer = setInterval(() => {
-                    current += increment;
-                    if (current >= target) {
-                        current = target;
-                        clearInterval(timer);
-                    }
-                    el.textContent = Math.floor(current).toLocaleString() + suffix;
-                }, stepMs);
-            }
-        }, { threshold: 0.5 });
-
-        observer.observe(el);
+        const suffix = el.textContent.replace(/[\d,]/g,'');
+        let cur = 0; const inc = target/40;
+        const obs = new IntersectionObserver(([entry]) => {
+            if (!entry.isIntersecting) return;
+            obs.unobserve(el);
+            const t = setInterval(() => { cur += inc; if(cur>=target){cur=target;clearInterval(t);} el.textContent=Math.floor(cur).toLocaleString()+suffix; }, 30);
+        }, { threshold: .5 });
+        obs.observe(el);
     });
 
-    /* ---------- Filter chips ---------- */
-    document.querySelectorAll('.filters').forEach(filterRow => {
-        filterRow.querySelectorAll('.chip').forEach(chip => {
+    /* ─── Event category filter ───────────────────────────────────────────── */
+    const filterBar = document.querySelector('.filters');
+    const cardsGrid = document.querySelector('.card-grid');
+    if (filterBar && cardsGrid) {
+        const allCards = Array.from(cardsGrid.querySelectorAll('.event-card'));
+        filterBar.querySelectorAll('.chip').forEach(chip => {
             chip.addEventListener('click', () => {
-                filterRow.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                filterBar.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
+                const filter = chip.textContent.replace(/[^a-zA-Z ]/g,'').trim().toLowerCase();
+                allCards.forEach(card => {
+                    const badge = card.querySelector('.event-badge');
+                    const cat   = badge ? badge.textContent.trim().toLowerCase() : '';
+                    const show  = filter === 'all' || cat.includes(filter.split(' ')[0]) || filter.includes(cat.split(' ')[0]);
+                    card.style.transition = 'opacity .22s, transform .22s';
+                    if (show) { card.style.opacity='1'; card.style.transform=''; card.removeAttribute('hidden'); }
+                    else { card.style.opacity='0'; card.style.transform='scale(.95)'; setTimeout(()=>{if(card.style.opacity==='0') card.setAttribute('hidden','');},230); }
+                });
+                cardsGrid.querySelector('.no-filter-results')?.remove();
+                const visible = allCards.filter(c => !c.hasAttribute('hidden'));
+                if (!visible.length) {
+                    const empty = document.createElement('div');
+                    empty.className='empty-state no-filter-results'; empty.style.gridColumn='1/-1';
+                    empty.innerHTML='<i data-lucide="search-x"></i><p>No events match this filter.</p>';
+                    cardsGrid.appendChild(empty);
+                    if (window.lucide) lucide.createIcons({nodes:[empty]});
+                }
             });
         });
-    });
+    }
 
-    /* ---------- User dropdown menu ---------- */
-    const userMenuBtn = document.getElementById('user-menu-btn');
-    const userDropdown = document.getElementById('user-dropdown');
-
-    if (userMenuBtn && userDropdown) {
-        userMenuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = userDropdown.classList.toggle('open');
-            userMenuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    /* ─── Event search bar ────────────────────────────────────────────────── */
+    const searchInput = document.getElementById('event-search');
+    if (searchInput && cardsGrid) {
+        const allCards = Array.from(cardsGrid.querySelectorAll('.event-card'));
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.trim().toLowerCase();
+            allCards.forEach(card => {
+                const show = !q || card.textContent.toLowerCase().includes(q);
+                card.style.display = show ? '' : 'none';
+            });
         });
+        // Bind search button
+        const searchBtn = searchInput.nextElementSibling;
+        searchBtn?.addEventListener('click', () => searchInput.dispatchEvent(new Event('input')));
+    }
 
-        document.addEventListener('click', (e) => {
+    /* ─── User dropdown menu ──────────────────────────────────────────────── */
+    const userMenuBtn  = document.getElementById('user-menu-btn');
+    const userDropdown = document.getElementById('user-dropdown');
+    if (userMenuBtn && userDropdown) {
+        userMenuBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const open = userDropdown.classList.toggle('open');
+            userMenuBtn.setAttribute('aria-expanded', String(open));
+            if (open) userDropdown.querySelector('a')?.focus();
+        });
+        document.addEventListener('click', e => {
             if (!userDropdown.contains(e.target) && e.target !== userMenuBtn) {
-                userDropdown.classList.remove('open');
-                userMenuBtn.setAttribute('aria-expanded', 'false');
+                userDropdown.classList.remove('open'); userMenuBtn.setAttribute('aria-expanded','false');
+            }
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key==='Escape' && userDropdown.classList.contains('open')) {
+                userDropdown.classList.remove('open'); userMenuBtn.setAttribute('aria-expanded','false'); userMenuBtn.focus();
             }
         });
     }
 
-    /* ---------- Alert dismiss ---------- */
+    /* ─── Alert dismiss ───────────────────────────────────────────────────── */
     document.querySelectorAll('.alert-close').forEach(btn => {
         btn.addEventListener('click', () => {
             const alert = btn.closest('.alert');
-            if (alert) {
-                alert.style.opacity = '0';
-                alert.style.transform = 'translateY(-8px)';
-                setTimeout(() => alert.remove(), 200);
-            }
+            if (alert) { alert.style.cssText='opacity:0;transform:translateY(-6px);transition:.2s'; setTimeout(()=>alert.remove(),220); }
         });
     });
 
-    /* ---------- Password visibility toggle ---------- */
+    /* ─── Password visibility toggle ─────────────────────────────────────── */
     document.querySelectorAll('input[type="password"]').forEach(inp => {
         const wrapper = inp.closest('.form-group, .form-field');
-        if (!wrapper) return;
-        wrapper.style.position = 'relative';
+        if (!wrapper || wrapper.querySelector('.password-toggle')) return;
         const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'password-toggle';
-        btn.setAttribute('aria-label', 'Toggle password visibility');
-        btn.innerHTML = '<i data-lucide="eye"></i>';
-        wrapper.appendChild(btn);
-
+        btn.type='button'; btn.className='password-toggle'; btn.setAttribute('aria-label','Toggle password visibility');
+        btn.innerHTML='<i data-lucide="eye"></i>'; wrapper.appendChild(btn);
+        if (window.lucide) lucide.createIcons({nodes:[btn]});
         btn.addEventListener('click', () => {
-            const isPassword = inp.type === 'password';
-            inp.type = isPassword ? 'text' : 'password';
-            btn.innerHTML = isPassword ? '<i data-lucide="eye-off"></i>' : '<i data-lucide="eye"></i>';
-            if (window.lucide) lucide.createIcons();
+            inp.type = inp.type==='password' ? 'text' : 'password';
+            btn.innerHTML=`<i data-lucide="${inp.type==='text'?'eye-off':'eye'}"></i>`;
+            if (window.lucide) lucide.createIcons({nodes:[btn]});
         });
     });
 
-    /* ---------- Create Event Form Logic ---------- */
+    /* ─── Form submit: client-side validate + loading state ──────────────── */
+    document.querySelectorAll('form[novalidate]').forEach(form => {
+        form.addEventListener('submit', e => {
+            if (!validateForm(form)) { e.preventDefault(); return; }
+            const btn = form.querySelector('[type="submit"]');
+            if (btn) setButtonLoading(btn, true);
+        });
+    });
+
+    /* ─── Create Event: team size show/hide + date min ────────────────────── */
     const createEventForm = document.getElementById('create-event-form');
     if (createEventForm) {
-        const participationSelect = createEventForm.querySelector('select[name="participation_type"]');
-        const minTeamField = createEventForm.querySelector('input[name="min_team_size"]');
-        const maxTeamField = createEventForm.querySelector('input[name="max_team_size"]');
-
-        if (participationSelect && minTeamField && maxTeamField) {
-            function updateTeamFields() {
-                const val = participationSelect.value;
-                const minWrapper = minTeamField.closest('.form-field');
-                const maxWrapper = maxTeamField.closest('.form-field');
-                if (val === 'Solo') {
-                    if (minWrapper) minWrapper.style.display = 'none';
-                    if (maxWrapper) maxWrapper.style.display = 'none';
-                    minTeamField.required = false;
-                    maxTeamField.required = false;
-                } else {
-                    if (minWrapper) minWrapper.style.display = 'block';
-                    if (maxWrapper) maxWrapper.style.display = 'block';
-                    minTeamField.required = true;
-                    maxTeamField.required = true;
-                }
-            }
-            participationSelect.addEventListener('change', updateTeamFields);
-            updateTeamFields(); // Initial call
+        const partSel = createEventForm.querySelector('select[name="participation_type"]');
+        const minF    = createEventForm.querySelector('input[name="min_team_size"]');
+        const maxF    = createEventForm.querySelector('input[name="max_team_size"]');
+        if (partSel && minF && maxF) {
+            const toggle = () => {
+                const isTeam = partSel.value !== 'Solo' && partSel.value !== '';
+                [minF, maxF].forEach(f => { const w=f.closest('.form-field'); if(w) w.style.display=isTeam?'':'none'; f.required=isTeam; });
+            };
+            partSel.addEventListener('change', toggle); toggle();
         }
-
-        // Date logic
-        const startDateInput = createEventForm.querySelector('input[name="start_date"]');
-        const endDateInput = createEventForm.querySelector('input[name="end_date"]');
-        if (startDateInput && endDateInput) {
-            startDateInput.addEventListener('change', () => {
-                endDateInput.min = startDateInput.value;
-            });
-            endDateInput.addEventListener('change', () => {
-                if (startDateInput.value && endDateInput.value < startDateInput.value) {
-                    endDateInput.value = startDateInput.value;
-                }
-            });
+        const sd = createEventForm.querySelector('input[name="start_date"]');
+        const ed = createEventForm.querySelector('input[name="end_date"]');
+        if (sd && ed) {
+            sd.min = new Date().toISOString().split('T')[0];
+            sd.addEventListener('change', () => { ed.min=sd.value; if(ed.value<sd.value) ed.value=sd.value; });
         }
     }
 
-    /* ---------- Re-init lucide icons (for dynamic content) ---------- */
+    /* ─── Mark all notifications read ────────────────────────────────────── */
+    document.querySelector('.notif-actions-btn')?.addEventListener('click', (e) => {
+        document.querySelectorAll('.notif-unread').forEach(c => { c.classList.remove('notif-unread'); c.style.borderLeft=''; });
+        document.querySelectorAll('.notif-dot').forEach(d => d.remove());
+        showToast('All notifications marked as read.', 'success');
+        e.currentTarget.disabled = true;
+    });
+
+    /* ─── Settings save ───────────────────────────────────────────────────── */
+    document.getElementById('settings-save-btn')?.addEventListener('click', (e) => {
+        const btn = e.currentTarget;
+        setButtonLoading(btn, true);
+        setTimeout(() => { setButtonLoading(btn, false); showToast('Settings saved!', 'success'); }, 1100);
+    });
+
+    /* ─── Danger zone: data-confirm buttons ───────────────────────────────── */
+    document.querySelectorAll('[data-confirm]').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.preventDefault();
+            showConfirm({
+                title:        btn.dataset.confirmTitle || 'Confirm Action',
+                message:      btn.dataset.confirmMsg   || 'Are you sure?',
+                confirmText:  btn.dataset.confirmLabel || 'Confirm',
+                confirmClass: btn.dataset.danger==='true' ? 'btn-secondary' : 'btn-primary',
+                onConfirm:    () => showToast(btn.dataset.toastMsg || 'Done.', btn.dataset.danger==='true' ? 'warning' : 'success'),
+            });
+        });
+    });
+
+    /* ─── Team join request: accept / decline ─────────────────────────────── */
+    document.querySelectorAll('[data-action="accept-request"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const li = btn.closest('li'), name = li?.querySelector('strong')?.textContent || 'User';
+            li && (li.style.cssText='opacity:.4;transition:.4s;pointer-events:none');
+            showToast(`${name} accepted!`, 'success');
+            setTimeout(() => li?.remove(), 500);
+        });
+    });
+    document.querySelectorAll('[data-action="decline-request"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const li = btn.closest('li'), name = li?.querySelector('strong')?.textContent || 'User';
+            showConfirm({ title:'Decline Request', message:`Decline join request from ${name}?`, confirmText:'Decline', confirmClass:'btn-secondary',
+                onConfirm: () => { li && (li.style.cssText='opacity:.4;transition:.4s'); showToast(`Declined ${name}'s request.`, 'info'); setTimeout(()=>li?.remove(),500); }
+            });
+        });
+    });
+
+    /* ─── "Already Registered" button ────────────────────────────────────── */
+    document.querySelector('[data-already-registered]')?.addEventListener('click', () => showToast('You are already registered for this event.','info'));
+
+    /* ─── Chat form ───────────────────────────────────────────────────────── */
+    document.getElementById('chat-form')?.addEventListener('submit', e => {
+        e.preventDefault();
+        const inp = e.currentTarget.querySelector('input[name="message"]');
+        const msg = inp?.value?.trim();
+        if (!msg) { showToast('Type a message first.','warning'); return; }
+        const chatBox = document.querySelector('.chat-box');
+        if (chatBox) {
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-msg';
+            bubble.innerHTML = `<div class="avatar avatar-sm" style="background:linear-gradient(135deg,var(--primary),var(--primary-3));">Y</div><div class="chat-bubble"><strong>You</strong>${escapeHtml(msg)}<span>Just now</span></div>`;
+            chatBox.appendChild(bubble);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        inp.value = ''; inp.focus();
+    });
+
+    /* ─── Event card category banner colours ──────────────────────────────── */
+    document.querySelectorAll('.event-card-banner').forEach(banner => {
+        const badge = banner.querySelector('.event-badge');
+        if (!badge) return;
+        const cat = badge.textContent.trim().toLowerCase().replace(/\s+/g,'-');
+        banner.classList.add('event-banner-' + cat);
+    });
+
+    /* ─── Resend OTP cooldown ─────────────────────────────────────────────── */
+    document.querySelector('[data-action="resend-otp"]')?.addEventListener('click', function() {
+        const btn = this; btn.disabled = true; let s = 30;
+        btn.textContent = `Resend in ${s}s`;
+        const t = setInterval(() => {
+            s--;
+            btn.textContent = `Resend in ${s}s`;
+            if (s <= 0) { clearInterval(t); btn.disabled=false; btn.innerHTML='<i data-lucide="refresh-cw"></i> Resend Code'; if(window.lucide)lucide.createIcons({nodes:[btn]}); showToast('New code sent!','info'); }
+        }, 1000);
+    });
+
+    /* ─── Stub action buttons ─────────────────────────────────────────────── */
+    const stubs = {
+        'edit-profile':     () => showToast('Profile editing coming soon!', 'info'),
+        'export-csv':       btn => { setButtonLoading(btn,true); setTimeout(()=>{setButtonLoading(btn,false);showToast('Export ready!','success');},1200); },
+        'open-wizard':      () => showToast('Event wizard coming soon!', 'info'),
+        'customize-form':   () => showToast('Form builder coming soon!', 'info'),
+        'team-settings':    () => showToast('Team settings coming soon!', 'info'),
+        'social-login':     btn => showToast(`${btn.dataset.provider||'Social'} sign-in coming soon!`, 'info'),
+        'team-chat':        btn => showToast(`Chat for ${btn.closest('article')?.querySelector('h3')?.textContent||'team'} coming soon!`, 'info'),
+        'team-invite':      () => { navigator.clipboard?.writeText(window.location.href).then(()=>showToast('Invite link copied!','success')).catch(()=>showToast('Invite link copied!','success')); },
+        'contact-organizer': btn => {
+            const inp = btn.previousElementSibling;
+            if (inp?.value?.trim()) { showToast('Message sent to organizers!','success'); inp.value=''; }
+            else showToast('Please enter a message.','warning');
+        },
+    };
+    Object.entries(stubs).forEach(([action, handler]) => {
+        document.querySelectorAll(`[data-action="${action}"]`).forEach(btn => btn.addEventListener('click', () => handler(btn)));
+    });
+
+    /* ─── Re-init lucide icons (catch-all) ───────────────────────────────── */
     if (window.lucide) lucide.createIcons();
 });

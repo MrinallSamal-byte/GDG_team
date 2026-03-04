@@ -25,7 +25,7 @@
     <div class="event-actions">
         <a href="{% url 'registration:register_event' event.id %}" class="btn-primary"><i data-lucide="pen-line"></i>
             Register Now</a>
-        <button class="btn-secondary"><i data-lucide="check-circle"></i> Already Registered</button>
+        <button class="btn-secondary" data-already-registered><i data-lucide="check-circle"></i> Already Registered</button>
         <!-- Countdown -->
         <div class="countdown" data-deadline="2026-04-18T00:00:00">
             <div class="countdown-unit"><strong data-days>12</strong><span>Days</span></div>
@@ -143,8 +143,7 @@
                         <strong>{{ team.name }}</strong>
                         <span><i data-lucide="users"></i> {{ team.members }} · Need: {{ team.needs }}</span>
                         <div class="inline-actions">
-                            <button class="btn-primary btn-small"><i data-lucide="user-plus"></i> Request to
-                                Join</button>
+                    <button class="btn-primary btn-small" data-action="request-join"><i data-lucide="user-plus"></i> Request to Join</button>
                         </div>
                     </li>
                     {% empty %}
@@ -204,8 +203,8 @@
                 <span><i data-lucide="phone"></i> +91 98765 43210</span>
             </div>
             <div class="search-wrap">
-                <input type="text" placeholder="Ask a question to organizers...">
-                <button class="btn-primary"><i data-lucide="send"></i> Send</button>
+                <input type="text" placeholder="Ask a question to organizers..." id="contact-msg">
+                <button class="btn-primary" data-action="contact-organizer"><i data-lucide="send"></i> Send</button>
             </div>
         </article>
     </div>

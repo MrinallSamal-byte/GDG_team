@@ -97,23 +97,29 @@
                             <strong>Deactivate Account</strong>
                             <p class="muted">Temporarily disable your account</p>
                         </div>
-                        <button class="btn-secondary btn-small" style="border-color:var(--warn);color:var(--warn);"><i
-                                data-lucide="pause-circle"></i> Deactivate</button>
+                        <button class="btn-secondary btn-small" style="border-color:var(--warn);color:var(--warn);"
+                            data-confirm data-confirm-title="Deactivate Account"
+                            data-confirm-msg="Your account will be temporarily disabled. You can reactivate it by logging in again."
+                            data-confirm-label="Deactivate" data-danger="false"
+                            data-toast-msg="Account deactivation requested.">
+                            <i data-lucide="pause-circle"></i> Deactivate</button>
                     </div>
                     <div class="settings-item">
                         <div>
                             <strong>Delete Account</strong>
                             <p class="muted">Permanently delete your account and data</p>
                         </div>
-                        <button class="btn-secondary btn-small"
-                            style="border-color:var(--danger);color:var(--danger);"><i data-lucide="trash-2"></i>
-                            Delete</button>
+                        <button class="btn-secondary btn-small" style="border-color:var(--danger);color:var(--danger);"
+                            data-confirm data-confirm-title="Delete Account"
+                            data-confirm-msg="This will permanently delete your account and all associated data. This action cannot be undone."
+                            data-confirm-label="Delete Permanently" data-danger="true"
+                            data-toast-msg="Account deletion requested. Our team will follow up.">
+                            <i data-lucide="trash-2"></i> Delete</button>
                     </div>
                 </div>
             </article>
 
-            <button class="btn-primary full-btn" style="margin-top:.5rem;"><i data-lucide="save"></i> Save
-                Changes</button>
+            <button class="btn-primary full-btn" style="margin-top:.5rem;" id="settings-save-btn"><i data-lucide="save"></i> Save Changes</button>
         </div>
     </div>
 </section>
