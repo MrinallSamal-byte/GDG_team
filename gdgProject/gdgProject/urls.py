@@ -28,4 +28,5 @@ urlpatterns = [
     path('teams/', include('team.urls')),
     path('organizer/', include('eventManagement.urls')),
     path('auth/', include('users.urls')),
+    path('notifications/', include('notification.urls')),
 ]

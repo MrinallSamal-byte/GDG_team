@@ -1,5 +1,7 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_http_methods
 
 
 _STUB_TEAM = {
@@ -37,6 +39,8 @@ def _context(team_id):
     }
 
 
+@login_required
+@require_http_methods(['GET', 'POST'])
 def team_management(request, team_id):
     if request.method == 'POST':
         message = request.POST.get('message', '').strip()

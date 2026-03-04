@@ -1,5 +1,7 @@
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_http_methods
 
 
 _ANALYTICS = {
@@ -16,6 +18,7 @@ _PARTICIPANTS = [
 ]
 
 
+@staff_member_required
 def organizer_dashboard(request):
     return render(
         request,
@@ -27,6 +30,8 @@ def organizer_dashboard(request):
     )
 
 
+@staff_member_required
+@require_http_methods(['GET', 'POST'])
 def create_event(request):
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()

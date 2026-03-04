@@ -404,11 +404,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     /* ─── Settings save ───────────────────────────────────────────────────── */
-    document.getElementById('settings-save-btn')?.addEventListener('click', (e) => {
-        const btn = e.currentTarget;
-        setButtonLoading(btn, true);
-        setTimeout(() => { setButtonLoading(btn, false); showToast('Settings saved!', 'success'); }, 1100);
-    });
+    const settingsForm = document.getElementById('settings-form');
+    const settingsSaveBtn = document.getElementById('settings-save-btn');
+    if (settingsForm && settingsSaveBtn) {
+        settingsForm.addEventListener('submit', (e) => {
+            setButtonLoading(settingsSaveBtn, true);
+        });
+    }
 
     /* ─── Danger zone: data-confirm buttons ───────────────────────────────── */
     document.querySelectorAll('[data-confirm]').forEach(btn => {
@@ -444,6 +446,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ─── "Already Registered" button ────────────────────────────────────── */
     document.querySelector('[data-already-registered]')?.addEventListener('click', () => showToast('You are already registered for this event.','info'));
+
+    /* ─── Request to Join Team ────────────────────────────────────────────── */
+    document.querySelectorAll('[data-action="request-join"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const li = btn.closest('li');
+            const teamName = li?.querySelector('strong')?.textContent || 'this team';
+            setButtonLoading(btn, true);
+            setTimeout(() => {
+                setButtonLoading(btn, false);
+                btn.textContent = 'Request Sent';
+                btn.disabled = true;
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+                showToast(`Join request sent to ${teamName}!`, 'success');
+            }, 800);
+        });
+    });
 
     /* ─── Chat form ───────────────────────────────────────────────────────── */
     document.getElementById('chat-form')?.addEventListener('submit', e => {
@@ -503,4 +522,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ─── Re-init lucide icons (catch-all) ───────────────────────────────── */
     if (window.lucide) lucide.createIcons();
+
+    /* ─── Notification badge polling ──────────────────────────────────────── */
+    (function notifPoll() {
+        const headerBadge = document.getElementById('header-notif-badge');
+        const sidebarBadge = document.getElementById('sidebar-notif-badge');
+        if (!headerBadge && !sidebarBadge) return;
+
+        let interval = 30000; // start at 30s
+        const maxInterval = 120000; // max 2 min
+        let errorCount = 0;
+
+        function updateBadges(count) {
+            [headerBadge, sidebarBadge].forEach(badge => {
+                if (!badge) return;
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = '';
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
+        }
+
+        async function poll() {
+            try {
+                const resp = await fetch('/notifications/api/unread-count/', { credentials: 'same-origin' });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    updateBadges(data.count || 0);
+                    errorCount = 0;
+                    interval = 30000; // reset on success
+                }
+            } catch (e) {
+                errorCount++;
+                interval = Math.min(interval * 1.5, maxInterval); // backoff
+            }
+            if (errorCount < 10) setTimeout(poll, interval);
+        }
+
+        // Initial fetch + start polling
+        poll();
+    })();
+
+    /* ─── Registration form: show/hide team details ───────────────────────── */
+    const regForm = document.getElementById('event-register-form');
+    if (regForm) {
+        const radios = regForm.querySelectorAll('input[name="type"]');
+        const teamStep = regForm.querySelector('article:last-of-type'); // Step 5: Team Details
+        if (radios.length && teamStep) {
+            function toggleTeamStep() {
+                const selected = regForm.querySelector('input[name="type"]:checked');
+                const showTeam = selected && (selected.value === 'create_team' || selected.value === 'join_team');
+                teamStep.style.display = showTeam ? '' : 'none';
+            }
+            radios.forEach(r => r.addEventListener('change', toggleTeamStep));
+            toggleTeamStep();
+        }
+    }
 });

@@ -19,7 +19,8 @@
 
                 <div class="form-field">
                     <i data-lucide="mail"></i>
-                    <input type="email" name="email" id="login-email" placeholder="Email address" required>
+                    <input type="email" name="email" id="login-email" placeholder="Email address" required
+                           value="{{ email|default:'' }}">
                 </div>
                 <div class="form-field">
                     <i data-lucide="lock"></i>

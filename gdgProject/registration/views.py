@@ -1,5 +1,7 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_http_methods
 
 
 _REQUIRED_FIELDS = {
@@ -33,6 +35,8 @@ _STUB_EVENT = {
 }
 
 
+@login_required
+@require_http_methods(['GET', 'POST'])
 def register_event(request, event_id):
     event = dict(_STUB_EVENT, id=event_id)
 

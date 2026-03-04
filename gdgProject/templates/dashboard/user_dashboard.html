@@ -10,7 +10,7 @@
     <div>
         <!-- Welcome -->
         <div class="welcome-header reveal">
-            <h1>👋 Welcome back!</h1>
+            <h1>👋 Welcome back{% if user.first_name %}, {{ user.first_name }}{% endif %}!</h1>
             <p>Here's an overview of your events, teams, and activity.</p>
         </div>
 

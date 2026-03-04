@@ -2482,6 +2482,15 @@ button {
     margin: .3rem .4rem;
 }
 
+.dropdown-logout-btn:hover {
+    background: var(--danger-soft) !important;
+}
+
+.mobile-nav-logout:hover {
+    background: var(--danger-soft);
+    border-radius: var(--radius-md);
+}
+
 /* ---------- Avatar sizes (missing) ---------- */
 .avatar-xs {
     width: 24px;

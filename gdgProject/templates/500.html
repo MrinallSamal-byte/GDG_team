@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}500 — Server Error | CampusArena{% endblock %}
+
+{% block content %}
+<section class="error-page">
+    <div class="error-visual">
+        <span class="error-code">500</span>
+        <i data-lucide="server-crash" class="error-icon"></i>
+    </div>
+    <h1 class="error-title">Server Error</h1>
+    <p class="error-message">
+        Something went wrong on our end. Our team has been notified and
+        is working on a fix. Please try again in a few moments.
+    </p>
+    <div class="error-actions">
+        <a href="{% url 'events:home' %}" class="btn-primary">
+            <i data-lucide="home"></i> Go to Home
+        </a>
+        <button class="btn-secondary" onclick="location.reload()">
+            <i data-lucide="refresh-cw"></i> Try Again
+        </button>
+    </div>
+</section>
+{% endblock %}

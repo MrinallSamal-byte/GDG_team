@@ -16,20 +16,22 @@
             <!-- Account -->
             <article class="surface">
                 <h2><i data-lucide="user-cog"></i> Account</h2>
+                <form method="POST" action="" id="settings-form">
+                    {% csrf_token %}
                 <div class="settings-group">
                     <div class="settings-item">
                         <div>
                             <strong>Display Name</strong>
                             <p class="muted">How your name appears to others</p>
                         </div>
-                        <input type="text" value="Student User" style="max-width:220px;">
+                        <input type="text" name="display_name" value="{{ user.get_full_name|default:user.username }}" style="max-width:220px;">
                     </div>
                     <div class="settings-item">
                         <div>
                             <strong>Email Address</strong>
                             <p class="muted">Used for login and notifications</p>
                         </div>
-                        <input type="email" value="student@campusarena.in" style="max-width:220px;">
+                        <input type="email" name="email" value="{{ user.email }}" style="max-width:220px;">
                     </div>
                     <div class="settings-item">
                         <div>
@@ -39,9 +41,8 @@
                         <button class="btn-secondary btn-small"><i data-lucide="key"></i> Change</button>
                     </div>
                 </div>
+                </form>
             </article>
-
-            <!-- Notifications Preferences -->
             <article class="surface">
                 <h2><i data-lucide="bell-ring"></i> Notification Preferences</h2>
                 <div class="settings-group">
@@ -119,7 +120,7 @@
                 </div>
             </article>
 
-            <button class="btn-primary full-btn" style="margin-top:.5rem;" id="settings-save-btn"><i data-lucide="save"></i> Save Changes</button>
+            <button type="submit" form="settings-form" class="btn-primary full-btn" style="margin-top:.5rem;" id="settings-save-btn"><i data-lucide="save"></i> Save Changes</button>
         </div>
     </div>
 </section>

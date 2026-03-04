@@ -1,12 +1,14 @@
 {% load static %}
 <aside class="surface sidebar reveal">
     <div class="sidebar-profile">
-        <div class="avatar avatar-lg">S</div>
+        <div class="avatar avatar-lg">{{ user.first_name|first|default:"U" }}</div>
         <div>
-            <strong>Student User</strong>
-            <span>CSE · 3rd Year</span>
+            <strong>{{ user.get_full_name|default:user.username }}</strong>
+            <span>{% if user.profile.branch %}{{ user.profile.branch }}{% endif %}{% if user.profile.year_display %} · {{ user.profile.year_display }}{% endif %}{% if not user.profile.branch and not user.profile.year_display %}Member{% endif %}</span>
         </div>
     </div>
+    <a class="sidebar-link{% if current_page == 'overview' %} active{% endif %}"
+        href="{% url 'dashboard:user_dashboard' %}"><i data-lucide="layout-dashboard"></i> Overview</a>
     <a class="sidebar-link{% if current_page == 'profile' %} active{% endif %}"
         href="{% url 'dashboard:my_profile' %}"><i data-lucide="user"></i> My Profile</a>
     <a class="sidebar-link{% if current_page == 'events' %} active{% endif %}" href="{% url 'dashboard:my_events' %}"><i
@@ -14,9 +16,11 @@
     <a class="sidebar-link{% if current_page == 'teams' %} active{% endif %}" href="{% url 'dashboard:my_teams' %}"><i
             data-lucide="users"></i> My Teams</a>
     <a class="sidebar-link{% if current_page == 'requests' %} active{% endif %}"
-        href="{% url 'dashboard:pending_requests' %}"><i data-lucide="inbox"></i> Pending Requests</a>
+        href="{% url 'dashboard:pending_requests' %}"><i data-lucide="inbox"></i> Pending Requests
+        <span class="nav-badge" id="sidebar-requests-badge" style="display:none;">0</span></a>
     <a class="sidebar-link{% if current_page == 'notifications' %} active{% endif %}"
-        href="{% url 'dashboard:notifications' %}"><i data-lucide="bell"></i> Notifications</a>
+        href="{% url 'dashboard:notifications' %}"><i data-lucide="bell"></i> Notifications
+        <span class="nav-badge" id="sidebar-notif-badge" style="display:none;">0</span></a>
     <a class="sidebar-link{% if current_page == 'settings' %} active{% endif %}"
         href="{% url 'dashboard:settings' %}"><i data-lucide="settings"></i> Settings</a>
 </aside>
