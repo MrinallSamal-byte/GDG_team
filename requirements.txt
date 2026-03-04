@@ -7,6 +7,9 @@ Django>=6.0,<7.0
 python-decouple>=3.8
 gunicorn>=22.0
 
+# Image handling (required for Event.banner ImageField)
+Pillow>=10.0
+
 # Database
 psycopg[binary]>=3.1
 
@@ -15,6 +18,8 @@ whitenoise>=6.6
 
 # Development / Testing
 coverage>=7.4
+factory-boy>=3.3
+pytest-django>=4.8
 ruff>=0.3
 black>=24.0
 isort>=5.13

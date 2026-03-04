@@ -63,7 +63,7 @@ class TeamRepository:
 
     @staticmethod
     def get_team_with_event(team_id: int):
-        from team.models_v2 import Team
+        from team.models import Team
 
         try:
             return Team.objects.select_related("event", "leader").get(
@@ -74,7 +74,7 @@ class TeamRepository:
 
     @staticmethod
     def get_pending_request(team_id: int, user_id: int):
-        from team.models_v2 import JoinRequest, JoinRequestStatus
+        from team.models import JoinRequest, JoinRequestStatus
 
         try:
             return JoinRequest.objects.select_related("team", "user").get(
@@ -87,7 +87,7 @@ class TeamRepository:
 
     @staticmethod
     def user_has_team_for_event(user_id: int, event_id: int) -> bool:
-        from team.models_v2 import TeamMembership
+        from team.models import TeamMembership
 
         return TeamMembership.objects.filter(
             user_id=user_id,
@@ -96,7 +96,7 @@ class TeamRepository:
 
     @staticmethod
     def create_join_request(team, user, role: str, skills: str, message: str):
-        from team.models_v2 import JoinRequest
+        from team.models import JoinRequest
 
         return JoinRequest.objects.create(
             team=team,
@@ -108,7 +108,7 @@ class TeamRepository:
 
     @staticmethod
     def create_membership(team, user, role: str, skills: str):
-        from team.models_v2 import TeamMembership
+        from team.models import TeamMembership
 
         return TeamMembership.objects.create(
             team=team,
@@ -154,7 +154,7 @@ class TeamJoinRequestService:
         team = self.repo.get_team_with_event(team_id)
 
         # Rule 1: Team open
-        from team.models_v2 import TeamStatus
+        from team.models import TeamStatus
         if team.status != TeamStatus.OPEN:
             raise ValidationError("This team is not accepting new members.")
 
@@ -219,7 +219,7 @@ class TeamJoinRequestService:
         3. Team must still have capacity.
         4. Requester must not already be in another team for this event.
         """
-        from team.models_v2 import JoinRequestStatus, TeamStatus
+        from team.models import JoinRequestStatus, TeamStatus
 
         team = self.repo.get_team_with_event(team_id)
 
@@ -292,7 +292,7 @@ class TeamJoinRequestService:
         decliner,
     ) -> JoinRequestResult:
         """Team leader declines a join request."""
-        from team.models_v2 import JoinRequestStatus
+        from team.models import JoinRequestStatus
 
         team = self.repo.get_team_with_event(team_id)
 

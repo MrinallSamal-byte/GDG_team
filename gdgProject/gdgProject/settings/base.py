@@ -33,6 +33,7 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
+    "core",
     "dashboard",
     "eventManagement",
     "events",
@@ -53,9 +54,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # Custom middleware — add after the ErrorHandlerMiddleware is created:
-    # "core.middleware.error_handler.ErrorHandlerMiddleware",
-    # "core.middleware.request_logging.RequestLoggingMiddleware",
+    # Custom middleware
+    "core.middleware.ErrorHandlerMiddleware",
 ]
 
 ROOT_URLCONF = "gdgProject.urls"
