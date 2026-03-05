@@ -19,104 +19,148 @@
             <div class="field-grid">
                 <div class="form-field" style="grid-column:1/-1;">
                     <i data-lucide="type"></i>
-                    <input type="text" name="title" placeholder="Event title" required>
+                    <input type="text" name="title" placeholder="Event title" required
+                           value="{{ form_data.title|default:'' }}">
                 </div>
                 <div class="form-field">
                     <i data-lucide="tag"></i>
-                    <select name="category">
-                        <option selected disabled>Category</option>
-                        <option>Hackathon</option>
-                        <option>Workshop</option>
-                        <option>Quiz</option>
-                        <option>Seminar</option>
-                        <option>Competition</option>
+                    <select name="category" required>
+                        <option value="" disabled {% if not form_data.category %}selected{% endif %}>Category</option>
+                        {% for val, label in categories %}
+                        <option value="{{ val }}" {% if form_data.category == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="form-field">
                     <i data-lucide="monitor"></i>
-                    <select name="mode">
-                        <option selected disabled>Mode</option>
-                        <option>Online</option>
-                        <option>Offline</option>
-                        <option>Hybrid</option>
+                    <select name="mode" required>
+                        <option value="" disabled {% if not form_data.mode %}selected{% endif %}>Mode</option>
+                        {% for val, label in modes %}
+                        <option value="{{ val }}" {% if form_data.mode == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
                     </select>
-                </div>
-                <div class="form-field">
-                    <i data-lucide="calendar"></i>
-                    <input type="date" name="start_date" required>
-                </div>
-                <div class="form-field">
-                    <i data-lucide="calendar-check"></i>
-                    <input type="date" name="end_date" required>
                 </div>
                 <div class="form-field" style="grid-column:1/-1;">
                     <textarea name="description" rows="4"
                         placeholder="Event description — what's it about, who should join, and why it's awesome?"
-                        style="padding-left:.9rem;"></textarea>
+                        style="padding-left:.9rem;">{{ form_data.description|default:'' }}</textarea>
                 </div>
             </div>
         </article>
 
-        <!-- Step 2: Participation -->
+        <!-- Step 2: Dates & Venue -->
+        <article class="surface">
+            <h2><i data-lucide="calendar-days"></i> Dates & Location</h2>
+            <div class="field-grid">
+                <div class="form-field">
+                    <i data-lucide="calendar"></i>
+                    <label style="font-size:.8rem;color:var(--muted);">Event Start</label>
+                    <input type="date" name="start_date" required
+                           value="{{ form_data.start_date|default:'' }}">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="calendar-check"></i>
+                    <label style="font-size:.8rem;color:var(--muted);">Event End</label>
+                    <input type="date" name="end_date" required
+                           value="{{ form_data.end_date|default:'' }}">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="calendar-plus"></i>
+                    <label style="font-size:.8rem;color:var(--muted);">Registration Opens</label>
+                    <input type="date" name="registration_start" required
+                           value="{{ form_data.registration_start|default:'' }}">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="calendar-minus"></i>
+                    <label style="font-size:.8rem;color:var(--muted);">Registration Closes</label>
+                    <input type="date" name="registration_end" required
+                           value="{{ form_data.registration_end|default:'' }}">
+                </div>
+                <div class="form-field" style="grid-column:1/-1;">
+                    <i data-lucide="map-pin"></i>
+                    <input type="text" name="venue" placeholder="Venue / Platform (e.g. Room 101 / Google Meet)"
+                           value="{{ form_data.venue|default:'' }}">
+                </div>
+            </div>
+        </article>
+
+        <!-- Step 3: Participation -->
         <article class="surface">
             <h2><i data-lucide="users"></i> Participation</h2>
             <div class="field-grid">
                 <div class="form-field">
                     <i data-lucide="hash"></i>
-                    <input type="number" name="max_participants" placeholder="Max participants" min="1">
+                    <input type="number" name="max_participants" placeholder="Max participants" min="1"
+                           value="{{ form_data.max_participants|default:'' }}">
                 </div>
                 <div class="form-field">
                     <i data-lucide="users-round"></i>
                     <select name="participation_type">
-                        <option selected disabled>Participation Type</option>
-                        <option>Solo</option>
-                        <option>Team</option>
-                        <option>Both</option>
+                        <option value="" disabled {% if not form_data.participation_type %}selected{% endif %}>Participation Type</option>
+                        {% for val, label in ptypes %}
+                        <option value="{{ val }}" {% if form_data.participation_type == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="form-field">
                     <i data-lucide="users"></i>
-                    <input type="number" name="min_team_size" placeholder="Min team size" min="1">
+                    <input type="number" name="min_team_size" placeholder="Min team size" min="1"
+                           value="{{ form_data.min_team_size|default:'' }}">
                 </div>
                 <div class="form-field">
                     <i data-lucide="users"></i>
-                    <input type="number" name="max_team_size" placeholder="Max team size" min="1">
+                    <input type="number" name="max_team_size" placeholder="Max team size" min="1"
+                           value="{{ form_data.max_team_size|default:'' }}">
+                </div>
+                <div class="form-field" style="grid-column:1/-1;">
+                    <i data-lucide="shield-check"></i>
+                    <textarea name="eligibility" rows="2" placeholder="Eligibility criteria (e.g. Open to all B.Tech students)"
+                              style="padding-left:.9rem;">{{ form_data.eligibility|default:'' }}</textarea>
+                </div>
+                <div class="form-field" style="grid-column:1/-1;">
+                    <i data-lucide="scroll-text"></i>
+                    <textarea name="rules" rows="3" placeholder="Rules & guidelines..."
+                              style="padding-left:.9rem;">{{ form_data.rules|default:'' }}</textarea>
                 </div>
             </div>
         </article>
 
-        <!-- Step 3: Prizes -->
+        <!-- Step 4: Prizes & Certificates -->
         <article class="surface">
             <h2><i data-lucide="trophy"></i> Prizes & Certificates</h2>
             <div class="field-grid">
                 <div class="form-field">
                     <i data-lucide="medal"></i>
-                    <input type="text" name="prize_1st" placeholder="1st place prize">
+                    <input type="text" name="prize_1st" placeholder="1st place prize"
+                           value="{{ form_data.prize_1st|default:'' }}">
                 </div>
                 <div class="form-field">
                     <i data-lucide="medal"></i>
-                    <input type="text" name="prize_2nd" placeholder="2nd place prize">
+                    <input type="text" name="prize_2nd" placeholder="2nd place prize"
+                           value="{{ form_data.prize_2nd|default:'' }}">
                 </div>
                 <div class="form-field">
                     <i data-lucide="medal"></i>
-                    <input type="text" name="prize_3rd" placeholder="3rd place prize">
+                    <input type="text" name="prize_3rd" placeholder="3rd place prize"
+                           value="{{ form_data.prize_3rd|default:'' }}">
                 </div>
                 <div class="form-field">
                     <i data-lucide="badge-check"></i>
                     <select name="certificates">
-                        <option selected disabled>Certificates</option>
-                        <option>Participation only</option>
-                        <option>Merit only</option>
-                        <option>Both</option>
-                        <option>None</option>
+                        <option value="" disabled selected>Certificates</option>
+                        <option value="participation">Participation only</option>
+                        <option value="merit">Merit only</option>
+                        <option value="both">Both</option>
+                        <option value="none">None</option>
                     </select>
                 </div>
             </div>
         </article>
 
         <div style="display:flex;gap:.7rem;justify-content:flex-end;">
-            <a href="{% url 'eventManagement:organizer_dashboard' %}" class="btn-secondary"><i
-                    data-lucide="arrow-left"></i> Cancel</a>
+            <a href="{% url 'eventManagement:organizer_dashboard' %}" class="btn-secondary">
+                <i data-lucide="arrow-left"></i> Cancel
+            </a>
             <button type="submit" class="btn-primary"><i data-lucide="rocket"></i> Create Event</button>
         </div>
     </form>

@@ -13,10 +13,10 @@
         <h1>Your Campus,<br>Your <span>Arena.</span></h1>
         <p class="muted" style="max-width:520px;">Find hackathons, workshops, and coding challenges designed for student
             creators. Build your portfolio, grow your network.</p>
-        <div class="search-wrap">
-            <input type="text" placeholder="Search events, tech stacks, or colleges..." id="event-search">
-            <button class="btn-primary"><i data-lucide="search"></i> Search</button>
-        </div>
+        <form method="GET" action="" class="search-wrap" id="search-form">
+            <input type="text" name="q" placeholder="Search events, tech stacks, or colleges..." id="event-search" value="{{ q }}">
+            <button type="submit" class="btn-primary"><i data-lucide="search"></i> Search</button>
+        </form>
         <div class="stats-row">
             <div><strong>50+</strong><span>Events</span></div>
             <div><strong>2000+</strong><span>Participants</span></div>
@@ -72,13 +72,23 @@
 <section class="section reveal">
     <div class="section-head split">
         <h2><i data-lucide="grid-3x3"></i> Browse All Events</h2>
-        <div class="filters">
-            <button class="chip active"><i data-lucide="layers"></i> All</button>
-            <button class="chip"><i data-lucide="code-2"></i> Hackathons</button>
-            <button class="chip"><i data-lucide="book-open"></i> Workshops</button>
-            <button class="chip"><i data-lucide="brain"></i> Quizzes</button>
-            <button class="chip"><i data-lucide="award"></i> Competitions</button>
-        </div>
+        <form method="GET" action="" id="filter-form" style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+            {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+            <div class="filters">
+                <a href="?{% if q %}q={{ q }}&{% endif %}sort={{ active_sort }}"
+                   class="chip {% if not active_category %}active{% endif %}"><i data-lucide="layers"></i> All</a>
+                {% for val, label in categories %}
+                <a href="?{% if q %}q={{ q }}&{% endif %}category={{ val }}&sort={{ active_sort }}"
+                   class="chip {% if active_category == val %}active{% endif %}">{{ label }}</a>
+                {% endfor %}
+            </div>
+            <select name="sort" onchange="this.form.submit()" style="padding:.35rem .7rem;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.88rem;">
+                {% if active_category %}<input type="hidden" name="category" value="{{ active_category }}">{% endif %}
+                <option value="newest" {% if active_sort == 'newest' %}selected{% endif %}>Newest</option>
+                <option value="deadline" {% if active_sort == 'deadline' %}selected{% endif %}>Deadline Soon</option>
+                <option value="popular" {% if active_sort == 'popular' %}selected{% endif %}>Most Popular</option>
+            </select>
+        </form>
     </div>
 
     <div class="card-grid">

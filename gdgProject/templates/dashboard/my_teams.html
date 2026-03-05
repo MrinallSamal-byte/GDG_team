@@ -40,8 +40,7 @@
                     {% endfor %}
                 </div>
                 <div style="display:flex;gap:.5rem;margin-top:1rem;">
-                    <button class="btn-secondary btn-small" data-action="team-chat"><i data-lucide="message-circle"></i> Chat</button>
-                    <button class="btn-secondary btn-small" data-action="team-invite"><i data-lucide="user-plus"></i> Invite</button>
+                    <a href="{% url 'team:team_management' team.id %}" class="btn-secondary btn-small"><i data-lucide="message-circle"></i> Manage / Chat</a>
                 </div>
             </article>
             {% empty %}

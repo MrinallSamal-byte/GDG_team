@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Edit Profile{% endblock %}
+
+{% block content %}
+<section class="section" style="max-width:680px;margin:0 auto;">
+    <div class="section-head reveal">
+        <p class="eyebrow"><i data-lucide="edit-3"></i> Profile</p>
+        <h1>Edit Profile</h1>
+        <p class="muted">Update your personal information and skills.</p>
+    </div>
+
+    <form method="POST" action="" class="form-layout">
+        {% csrf_token %}
+
+        <article class="surface reveal">
+            <h2><i data-lucide="user-circle"></i> Personal Information</h2>
+            <div class="field-grid">
+                <div class="form-field">
+                    <i data-lucide="user"></i>
+                    <input type="text" name="full_name" placeholder="Full Name"
+                           value="{{ user.get_full_name|default:user.username }}">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="mail"></i>
+                    <input type="email" name="email" placeholder="Email"
+                           value="{{ user.email }}">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="phone"></i>
+                    <input type="tel" name="phone" placeholder="Phone"
+                           value="{{ profile.phone|default:'' }}">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="building-2"></i>
+                    <input type="text" name="college" placeholder="College"
+                           value="{{ profile.college|default:'' }}">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="graduation-cap"></i>
+                    <select name="branch">
+                        <option value="" disabled>Select branch</option>
+                        {% for b in branches %}
+                        <option value="{{ b }}" {% if profile.branch == b %}selected{% endif %}>{{ b }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-field">
+                    <i data-lucide="calendar"></i>
+                    <select name="year">
+                        <option value="" disabled>Year of study</option>
+                        {% for y in years %}
+                        <option value="{{ y }}" {% if profile.year == y %}selected{% endif %}>Year {{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </article>
+
+        <article class="surface reveal">
+            <h2><i data-lucide="link"></i> Links & Bio</h2>
+            <div class="field-grid">
+                <div class="form-field">
+                    <i data-lucide="github"></i>
+                    <input type="url" name="github" placeholder="GitHub URL"
+                           value="{{ profile.github|default:'' }}">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="linkedin"></i>
+                    <input type="url" name="linkedin" placeholder="LinkedIn URL"
+                           value="{{ profile.linkedin|default:'' }}">
+                </div>
+            </div>
+            <textarea name="bio" rows="4" placeholder="Tell others about yourself..."
+                      style="width:100%;margin-top:.5rem;">{{ profile.bio|default:'' }}</textarea>
+        </article>
+
+        <article class="surface reveal">
+            <h2><i data-lucide="cpu"></i> Skills</h2>
+            <p class="muted" style="margin-bottom:.5rem;">Click to toggle skills:</p>
+            <div class="chip-row chip-toggle" id="skills-toggle">
+                {% for skill in skills %}
+                <button type="button" class="chip {% if skill in active_skills %}active{% endif %}"
+                        data-skill="{{ skill }}">{{ skill }}</button>
+                {% endfor %}
+            </div>
+            <input type="hidden" name="skills" id="skills-hidden"
+                   value="{{ profile.skills|default:'' }}">
+        </article>
+
+        <div class="btn-row reveal">
+            <a href="{% url 'dashboard:my_profile' %}" class="btn-secondary">
+                <i data-lucide="arrow-left"></i> Cancel
+            </a>
+            <button type="submit" class="btn-primary">
+                <i data-lucide="save"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</section>
+
+<script>
+(function () {
+    const hidden = document.getElementById('skills-hidden');
+    document.querySelectorAll('#skills-toggle .chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.classList.toggle('active');
+            hidden.value = [...document.querySelectorAll('#skills-toggle .chip.active')]
+                .map(b => b.dataset.skill).join(',');
+        });
+    });
+})();
+</script>
+{% endblock %}

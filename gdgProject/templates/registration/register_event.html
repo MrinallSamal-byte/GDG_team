@@ -10,7 +10,6 @@
         <p class="muted">{{ event.summary }}</p>
     </div>
 
-    <!-- Connected stepper -->
     <div class="stepper reveal" style="margin-bottom:1.2rem;">
         <div class="step active"><span class="step-num">1</span> Type</div>
         <div class="step-connector"></div>
@@ -18,98 +17,174 @@
         <div class="step-connector"></div>
         <div class="step"><span class="step-num">3</span> Skills</div>
         <div class="step-connector"></div>
-        <div class="step"><span class="step-num">4</span> Custom</div>
-        <div class="step-connector"></div>
-        <div class="step"><span class="step-num">5</span> Team</div>
+        <div class="step"><span class="step-num">4</span> Team</div>
     </div>
 
     <form method="POST" action="" novalidate id="event-register-form" class="form-layout">
         {% csrf_token %}
-        <!-- Step 1 -->
+
+        <!-- Step 1 — Participation type -->
         <article class="surface reveal">
             <h2><i data-lucide="list-checks"></i> Step 1: Participation Type</h2>
             <div class="radio-row">
-                <label><input type="radio" name="type" value="individual" checked> <i data-lucide="user"></i> Register as
-                    Individual</label>
-                <label><input type="radio" name="type" value="create_team"> <i data-lucide="users"></i> Create a New Team</label>
-                <label><input type="radio" name="type" value="join_team"> <i data-lucide="user-plus"></i> Join an Existing Team</label>
+                <label>
+                    <input type="radio" name="type" value="individual"
+                           {% if default_type == 'individual' or not default_type %}checked{% endif %}>
+                    <i data-lucide="user"></i> Register as Individual
+                </label>
+                <label>
+                    <input type="radio" name="type" value="create_team"
+                           {% if default_type == 'create_team' %}checked{% endif %}>
+                    <i data-lucide="users"></i> Create a New Team
+                </label>
+                <label>
+                    <input type="radio" name="type" value="join_team"
+                           {% if default_type == 'join_team' %}checked{% endif %}>
+                    <i data-lucide="user-plus"></i> Join an Existing Team
+                </label>
             </div>
         </article>
 
-        <!-- Step 2 -->
+        <!-- Step 2 — Personal info (auto-filled from UserProfile) -->
         <article class="surface reveal">
             <h2><i data-lucide="user-circle"></i> Step 2: Personal Information</h2>
+            <p class="muted" style="font-size:.85rem;margin-bottom:.7rem;">
+                <i data-lucide="info"></i> Auto-filled from your profile. Update as needed.
+            </p>
             <div class="field-grid">
-                <div class="form-field"><i data-lucide="user"></i><input type="text" name="full_name"
-                        placeholder="Full Name" required></div>
-                <div class="form-field"><i data-lucide="mail"></i><input type="email" name="email" placeholder="Email"
-                        required></div>
-                <div class="form-field"><i data-lucide="phone"></i><input type="tel" name="phone" placeholder="Phone">
+                <div class="form-field">
+                    <i data-lucide="user"></i>
+                    <input type="text" name="full_name" placeholder="Full Name" required
+                           value="{{ prefill.full_name|default:'' }}">
                 </div>
-                <div class="form-field"><i data-lucide="building-2"></i><input type="text" name="college"
-                        placeholder="College"></div>
-                <div class="form-field"><i data-lucide="graduation-cap"></i><input type="text" name="branch"
-                        placeholder="Branch">
+                <div class="form-field">
+                    <i data-lucide="mail"></i>
+                    <input type="email" name="email" placeholder="Email" required
+                           value="{{ prefill.email|default:'' }}">
                 </div>
-                <div class="form-field"><i data-lucide="calendar"></i><input type="text" name="year"
-                        placeholder="Year of study">
+                <div class="form-field">
+                    <i data-lucide="phone"></i>
+                    <input type="tel" name="phone" placeholder="Phone"
+                           value="{{ prefill.phone|default:'' }}">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="building-2"></i>
+                    <input type="text" name="college" placeholder="College"
+                           value="{{ prefill.college|default:'' }}">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="graduation-cap"></i>
+                    <input type="text" name="branch" placeholder="Branch"
+                           value="{{ prefill.branch|default:'' }}">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="calendar"></i>
+                    <input type="number" name="year" placeholder="Year of study" min="1" max="5"
+                           value="{{ prefill.year|default:'' }}">
                 </div>
             </div>
         </article>
 
-        <!-- Step 3 -->
+        <!-- Step 3 — Tech stack & role -->
         <article class="surface reveal">
             <h2><i data-lucide="cpu"></i> Step 3: Tech Stack & Role</h2>
             <p class="muted" style="margin-bottom:.5rem;">Select your primary skills:</p>
-            <div class="chip-row chip-toggle">
+            <div class="chip-row chip-toggle" id="skills-toggle">
                 {% for skill in skills %}
-                <button type="button" class="chip" data-skill="{{ skill }}">{{ skill }}</button>
+                <button type="button" class="chip {% if skill in prefill.skills %}active{% endif %}"
+                        data-skill="{{ skill }}">{{ skill }}</button>
                 {% endfor %}
             </div>
+            <input type="hidden" name="skills" id="skills-hidden" value="{{ prefill.skills|default:'' }}">
             <div class="form-field" style="margin-top:.75rem;">
                 <i data-lucide="briefcase"></i>
                 <select name="preferred_role">
-                    <option selected disabled>Select preferred role</option>
-                    {% for role in roles %}
-                    <option>{{ role }}</option>
+                    <option value="" disabled selected>Select preferred role</option>
+                    {% for val, label in roles %}
+                    <option value="{{ val }}">{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
         </article>
 
-        <!-- Step 4 -->
-        <article class="surface reveal">
-            <h2><i data-lucide="file-text"></i> Step 4: Custom Fields</h2>
+        <!-- Step 4a — Create team (shown when type=create_team) -->
+        <article class="surface reveal" id="create-team-section">
+            <h2><i data-lucide="flag"></i> Step 4: Create Team</h2>
             <div class="field-grid">
-                <div class="form-field"><i data-lucide="globe"></i><input type="url" name="portfolio_url"
-                        placeholder="Portfolio / Project URL"></div>
-                <div class="form-field"><i data-lucide="github"></i><input type="text" name="github_url"
-                        placeholder="GitHub profile">
+                <div class="form-field">
+                    <i data-lucide="flag"></i>
+                    <input type="text" name="team_name" placeholder="Team name">
                 </div>
-                <textarea name="motivation" rows="3" placeholder="Why should your application be selected?"></textarea>
-            </div>
-        </article>
-
-        <!-- Step 5 -->
-        <article class="surface reveal">
-            <h2><i data-lucide="users"></i> Step 5: Team Details</h2>
-            <div class="field-grid">
-                <div class="form-field"><i data-lucide="flag"></i><input type="text" name="team_name"
-                        placeholder="Team name"></div>
-                <div class="form-field"><i data-lucide="hash"></i><input type="number" name="max_members"
-                        placeholder="Max members"></div>
                 <div class="form-field">
                     <i data-lucide="door-open"></i>
                     <select name="open_for_requests">
-                        <option selected>Open for join requests? Yes</option>
-                        <option>Open for join requests? No</option>
+                        <option value="yes" selected>Open for join requests</option>
+                        <option value="no">Closed to join requests</option>
                     </select>
                 </div>
             </div>
         </article>
 
-        <button type="submit" class="btn-primary full-btn reveal"><i data-lucide="check-circle"></i> Submit
-            Registration</button>
+        <!-- Step 4b — Join team (shown when type=join_team) -->
+        <article class="surface reveal" id="join-team-section">
+            <h2><i data-lucide="users"></i> Step 4: Join Existing Team</h2>
+            {% if open_teams %}
+            <p class="muted" style="margin-bottom:.7rem;">Select a team with open spots:</p>
+            <div class="form-field">
+                <i data-lucide="users-round"></i>
+                <select name="join_team_id" id="join-team-select">
+                    <option value="" disabled {% if not default_team_id %}selected{% endif %}>— Choose a team —</option>
+                    {% for team in open_teams %}
+                    <option value="{{ team.id }}"
+                            {% if default_team_id == team.id|stringformat:'s' %}selected{% endif %}>
+                        {{ team.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% else %}
+            <p class="muted"><i data-lucide="info"></i> No open teams available yet. Try creating one!</p>
+            {% endif %}
+        </article>
+
+        <button type="submit" class="btn-primary full-btn reveal">
+            <i data-lucide="check-circle"></i> Submit Registration
+        </button>
     </form>
 </section>
+
+<script>
+(function () {
+    const radios = document.querySelectorAll('input[name="type"]');
+    const createSection = document.getElementById('create-team-section');
+    const joinSection = document.getElementById('join-team-section');
+
+    function updateSections() {
+        const val = document.querySelector('input[name="type"]:checked')?.value;
+        createSection.style.display = val === 'create_team' ? '' : 'none';
+        joinSection.style.display = val === 'join_team' ? '' : 'none';
+    }
+
+    radios.forEach(r => r.addEventListener('change', updateSections));
+    updateSections();
+
+    // Skills chip toggle — keep hidden input in sync
+    const skillsHidden = document.getElementById('skills-hidden');
+
+    function syncSkills() {
+        const active = [...document.querySelectorAll('#skills-toggle .chip.active')]
+            .map(b => b.dataset.skill);
+        skillsHidden.value = active.join(',');
+    }
+
+    document.querySelectorAll('#skills-toggle .chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.classList.toggle('active');
+            syncSkills();
+        });
+    });
+
+    syncSkills();
+})();
+</script>
 {% endblock %}

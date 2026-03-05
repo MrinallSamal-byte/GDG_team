@@ -27,10 +27,16 @@
                                     <strong>{{ req.team }}</strong> for {{ req.event }}</span>
                             </div>
                         </div>
-                        <div class="inline-actions" style="margin-top:.5rem;">
-                            <button class="btn-primary btn-small" data-action="accept-request"><i data-lucide="check"></i> Accept</button>
-                            <button class="btn-secondary btn-small" data-action="decline-request"><i data-lucide="x"></i> Decline</button>
-                        </div>
+                    <div class="inline-actions" style="margin-top:.5rem;">
+                        <form method="POST" action="{% url 'team:approve_request' req.team_id req.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-primary btn-small"><i data-lucide="check"></i> Accept</button>
+                        </form>
+                        <form method="POST" action="{% url 'team:decline_request' req.team_id req.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-secondary btn-small"><i data-lucide="x"></i> Decline</button>
+                        </form>
+                    </div>
                     </li>
                     {% empty %}
                     <li class="empty-state"><i data-lucide="inbox"></i>

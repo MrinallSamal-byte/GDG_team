@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}CampusArena | Team Management{% endblock %}
+{% block title %}CampusArena | {{ team.name }}{% endblock %}
 
 {% block content %}
 <section class="section">
@@ -11,17 +11,28 @@
             <p class="muted">{{ team.event }}</p>
         </div>
         <div style="display:flex;align-items:center;gap:.6rem;">
-            <span class="status open"><i data-lucide="users"></i> Members {{ team.members_count }}</span>
-            <button class="btn-secondary btn-small" data-action="team-settings"><i data-lucide="settings-2"></i> Settings</button>
+            <span class="status open"><i data-lucide="users"></i> {{ team.members_count }}</span>
+            {% if not user_is_leader %}
+            <form method="POST" action="{% url 'team:leave_team' team.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-secondary btn-small"
+                        onclick="return confirm('Leave {{ team.name }}?')">
+                    <i data-lucide="log-out"></i> Leave Team
+                </button>
+            </form>
+            {% endif %}
         </div>
     </div>
 
     <!-- Team Capacity -->
     <div class="reveal" style="max-width:400px;margin-bottom:1.2rem;">
         <div class="progress-track">
-            <div class="progress-fill" style="width:75%;"></div>
+            <div class="progress-fill" style="width:{{ team.capacity_pct }}%;"></div>
         </div>
-        <div class="progress-label"><span>3 members</span><span>4 max</span></div>
+        <div class="progress-label">
+            <span>{{ team.member_count }} members</span>
+            <span>{{ team.max_size }} max</span>
+        </div>
     </div>
 
     <div class="two-col">
@@ -34,22 +45,14 @@
                     <div style="display:flex;align-items:center;gap:.6rem;">
                         <div class="avatar avatar-sm">{{ member.name|first }}</div>
                         <div style="flex:1;">
-                            <strong>{{ member.name }}{% if member.leader %} <span
-                                    style="color:var(--primary);font-size:.78rem;">(Leader)</span>{% endif %}</strong>
-                            <span>{{ member.stack }} · {{ member.role }}</span>
+                            <strong>{{ member.name }}{% if member.leader %} <span style="color:var(--primary);font-size:.78rem;">(Leader)</span>{% endif %}</strong>
+                            <span>{{ member.skills }}{% if member.skills %} · {% endif %}{{ member.role }}</span>
                         </div>
                     </div>
                 </li>
+                {% empty %}
+                <li class="empty-state"><i data-lucide="users"></i><p>No members yet.</p></li>
                 {% endfor %}
-                <li>
-                    <div style="display:flex;align-items:center;gap:.6rem;">
-                        <div class="avatar avatar-sm" style="background:var(--border);color:var(--muted);">?</div>
-                        <div>
-                            <strong style="color:var(--muted);">1 spot open</strong>
-                            <span>Need: ML/AI Engineer</span>
-                        </div>
-                    </div>
-                </li>
             </ul>
         </article>
 
@@ -64,11 +67,11 @@
                 </span>
                 {% endfor %}
             </div>
-            <p class="muted" style="font-size:.88rem;"><i data-lucide="lightbulb"></i> Missing skills are highlighted.
-                Recruit members to fill the gaps!</p>
+            <p class="muted" style="font-size:.88rem;"><i data-lucide="lightbulb"></i> Missing skills are highlighted. Recruit members to fill the gaps!</p>
         </article>
 
-        <!-- Join Requests -->
+        <!-- Join Requests (leader only) -->
+        {% if is_leader %}
         <article class="surface reveal">
             <h2><i data-lucide="inbox"></i> Pending Join Requests</h2>
             <ul class="list">
@@ -78,12 +81,23 @@
                         <div class="avatar avatar-sm">{{ req.name|first }}</div>
                         <div style="flex:1;">
                             <strong>{{ req.name }}</strong>
-                            <span>{{ req.stack }} · {{ req.role }}</span>
+                            <span>{{ req.skills }}{% if req.skills %} · {% endif %}{{ req.role }}</span>
+                            {% if req.message %}<em style="font-size:.82rem;">"{{ req.message }}"</em>{% endif %}
                         </div>
                     </div>
                     <div class="inline-actions">
-                        <button class="btn-primary btn-small" data-action="accept-request"><i data-lucide="check"></i> Approve</button>
-                        <button class="btn-secondary btn-small" data-action="decline-request"><i data-lucide="x"></i> Decline</button>
+                        <form method="POST" action="{% url 'team:approve_request' team.id req.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-primary btn-small">
+                                <i data-lucide="check"></i> Approve
+                            </button>
+                        </form>
+                        <form method="POST" action="{% url 'team:decline_request' team.id req.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-secondary btn-small">
+                                <i data-lucide="x"></i> Decline
+                            </button>
+                        </form>
                     </div>
                 </li>
                 {% empty %}
@@ -93,36 +107,24 @@
                 {% endfor %}
             </ul>
         </article>
+        {% endif %}
 
         <!-- Team Chat -->
         <article class="surface reveal">
             <h2><i data-lucide="message-circle"></i> Team Chat</h2>
-            <div class="chat-box">
+            <div class="chat-box" id="chat-box">
+                {% for msg in chat_messages %}
                 <div class="chat-msg">
-                    <div class="avatar avatar-sm">J</div>
+                    <div class="avatar avatar-sm">{{ msg.sender.username|first|upper }}</div>
                     <div class="chat-bubble">
-                        <strong>John</strong>
-                        Let's finalize the problem statement tonight.
-                        <span>2 hrs ago</span>
+                        <strong>{{ msg.sender.get_full_name|default:msg.sender.username }}</strong>
+                        {{ msg.body }}
+                        <span>{{ msg.created_at|timesince }} ago</span>
                     </div>
                 </div>
-                <div class="chat-msg">
-                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,var(--ok),#2dd4bf);">J</div>
-                    <div class="chat-bubble">
-                        <strong>Jane</strong>
-                        I'll prepare backend architecture notes.
-                        <span>1 hr ago</span>
-                    </div>
-                </div>
-                <div class="chat-msg">
-                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,var(--warn),#f59e0b);">A
-                    </div>
-                    <div class="chat-bubble">
-                        <strong>Alex</strong>
-                        Sharing wireframes in 20 mins.
-                        <span>35 min ago</span>
-                    </div>
-                </div>
+                {% empty %}
+                <p class="muted" style="text-align:center;padding:1rem;">No messages yet. Say hi!</p>
+                {% endfor %}
             </div>
             <form method="POST" action="" class="chat-input" id="chat-form">
                 {% csrf_token %}
@@ -132,4 +134,10 @@
         </article>
     </div>
 </section>
+
+<script>
+// Scroll chat to bottom on load
+const chatBox = document.getElementById('chat-box');
+if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+</script>
 {% endblock %}

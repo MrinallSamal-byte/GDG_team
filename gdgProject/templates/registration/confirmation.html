@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Registration Confirmed{% endblock %}
+
+{% block content %}
+<section class="section" style="max-width:680px;margin:0 auto;">
+    <div class="section-head reveal" style="text-align:center;">
+        <span style="font-size:3.5rem;">🎉</span>
+        <h1>You're Registered!</h1>
+        <p class="muted">Your spot has been confirmed for <strong>{{ registration.event.title }}</strong>.</p>
+    </div>
+
+    <article class="surface reveal" style="margin-bottom:1rem;">
+        <h2><i data-lucide="receipt-text"></i> Registration Summary</h2>
+        <dl class="info-grid">
+            <dt><i data-lucide="hash"></i> Ref #</dt>
+            <dd>REG-{{ registration.id }}</dd>
+
+            <dt><i data-lucide="calendar-days"></i> Date</dt>
+            <dd>{{ registration.created_at|date:"N j, Y" }}</dd>
+
+            <dt><i data-lucide="layers"></i> Event</dt>
+            <dd>{{ registration.event.title }}</dd>
+
+            <dt><i data-lucide="calendar-clock"></i> Event Date</dt>
+            <dd>{{ registration.event.start_date|date:"N j, Y" }}</dd>
+
+            <dt><i data-lucide="map-pin"></i> Venue</dt>
+            <dd>{{ registration.event.venue|default:"Online" }}</dd>
+
+            <dt><i data-lucide="users"></i> Participation</dt>
+            <dd>{{ registration.get_type_display }}</dd>
+
+            {% if registration.team %}
+            <dt><i data-lucide="flag"></i> Team</dt>
+            <dd>{{ registration.team.name }}</dd>
+            {% endif %}
+
+            <dt><i data-lucide="circle-check-big"></i> Status</dt>
+            <dd><span class="chip" style="background:var(--green-subtle);color:var(--green);">Confirmed</span></dd>
+        </dl>
+    </article>
+
+    <article class="surface reveal" style="margin-bottom:1rem;">
+        <h2><i data-lucide="list-todo"></i> What's Next?</h2>
+        <ul class="step-list">
+            <li><i data-lucide="bell"></i> Watch your inbox — you'll get event updates via email.</li>
+            <li><i data-lucide="users"></i> If you created a team, share the link so teammates can find you.</li>
+            <li><i data-lucide="layout-dashboard"></i> Track everything from your <a href="{% url 'dashboard:home' %}">dashboard</a>.</li>
+            <li><i data-lucide="calendar-days"></i> Add the event date to your calendar.</li>
+        </ul>
+    </article>
+
+    <div class="btn-row reveal">
+        <a href="{% url 'events:event_detail' registration.event.id %}" class="btn-secondary">
+            <i data-lucide="arrow-left"></i> Back to Event
+        </a>
+        <a href="{% url 'dashboard:home' %}" class="btn-primary">
+            <i data-lucide="layout-dashboard"></i> Go to Dashboard
+        </a>
+    </div>
+</section>
+{% endblock %}

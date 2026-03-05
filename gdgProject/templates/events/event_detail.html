@@ -12,27 +12,39 @@
         <div class="meta-row">
             <span><i data-lucide="calendar"></i> {{ event.timeline }}</span>
             <span><i data-lucide="users"></i> {{ event.registration }}</span>
-            <span><i data-lucide="clock"></i> Deadline in {{ event.countdown }}</span>
+            {% if event.is_registration_open %}
+            <span style="color:var(--ok);"><i data-lucide="circle-dot"></i> Registration Open</span>
+            {% endif %}
         </div>
-        <!-- Progress bar -->
+        <!-- Progress bar — dynamic from DB -->
         <div style="margin-top:.8rem;max-width:400px;">
             <div class="progress-track">
-                <div class="progress-fill" style="width:41%;"></div>
+                <div class="progress-fill" data-pct="{{ event.pct }}"></div>
             </div>
-            <div class="progress-label"><span>124 registered</span><span>300 max</span></div>
+            <div class="progress-label">
+                <span>{{ event.registered_count }} registered</span>
+                <span>{{ event.capacity }} max</span>
+            </div>
         </div>
     </div>
     <div class="event-actions">
+        {% if event.is_registered %}
+        <button class="btn-secondary" disabled><i data-lucide="check-circle"></i> Already Registered</button>
+        {% elif event.is_registration_open %}
         <a href="{% url 'registration:register_event' event.id %}" class="btn-primary"><i data-lucide="pen-line"></i>
             Register Now</a>
-        <button class="btn-secondary" data-already-registered><i data-lucide="check-circle"></i> Already Registered</button>
-        <!-- Countdown -->
-        <div class="countdown" data-deadline="2026-04-18T00:00:00">
-            <div class="countdown-unit"><strong data-days>12</strong><span>Days</span></div>
-            <div class="countdown-unit"><strong data-hours>05</strong><span>Hours</span></div>
-            <div class="countdown-unit"><strong data-mins>28</strong><span>Mins</span></div>
-            <div class="countdown-unit"><strong data-secs>00</strong><span>Secs</span></div>
+        {% else %}
+        <button class="btn-secondary" disabled><i data-lucide="x-circle"></i> Registration Closed</button>
+        {% endif %}
+        <!-- Countdown — driven by ISO datetime from view -->
+        {% if event.is_registration_open %}
+        <div class="countdown" data-deadline="{{ event.registration_end_iso }}">
+            <div class="countdown-unit"><strong data-days>--</strong><span>Days</span></div>
+            <div class="countdown-unit"><strong data-hours>--</strong><span>Hours</span></div>
+            <div class="countdown-unit"><strong data-mins>--</strong><span>Mins</span></div>
+            <div class="countdown-unit"><strong data-secs>--</strong><span>Secs</span></div>
         </div>
+        {% endif %}
     </div>
 </section>
 
@@ -59,10 +71,12 @@
     <div id="tab-about" class="tab-panel active" role="tabpanel" aria-labelledby="tab-about">
         <article class="surface reveal">
             <h2><i data-lucide="info"></i> About This Event</h2>
-            <p class="text-soft">Eligibility: Open to all branches. Team size 2-4. Bring your own idea or pick from
-                challenge tracks.</p>
-            <p class="text-soft" style="margin-top:.5rem;">Rules: Original work only, no plagiarism, all submissions
-                before final deadline.</p>
+            {% if event.eligibility %}
+            <p class="text-soft"><strong>Eligibility:</strong> {{ event.eligibility }}</p>
+            {% endif %}
+            {% if event.rules %}
+            <p class="text-soft" style="margin-top:.5rem;"><strong>Rules:</strong> {{ event.rules }}</p>
+            {% endif %}
         </article>
     </div>
 
@@ -75,6 +89,7 @@
                 <div class="timeline-item{% if round.status == 'Completed' %} completed{% endif %}">
                     <strong>{{ round.name }}</strong>
                     <span><i data-lucide="calendar-days"></i> {{ round.date }} · {{ round.status }}</span>
+                    {% if round.description %}<p class="muted" style="font-size:.88rem;margin-top:.2rem;">{{ round.description }}</p>{% endif %}
                 </div>
                 {% empty %}
                 <div class="empty-state"><i data-lucide="calendar-x"></i>
@@ -90,24 +105,47 @@
         <article class="surface reveal">
             <h2><i data-lucide="trophy"></i> Prizes & Certificates</h2>
             <div class="prize-grid">
+                {% if event.prize_1st %}
                 <div class="surface prize-card">
                     <span class="prize-icon">🥇</span>
                     <strong>1st Place</strong>
-                    <span>₹1,50,000 + Internship Fast Track</span>
+                    <span>{{ event.prize_1st }}</span>
                 </div>
+                {% endif %}
+                {% if event.prize_2nd %}
                 <div class="surface prize-card">
                     <span class="prize-icon">🥈</span>
                     <strong>2nd Place</strong>
-                    <span>₹70,000 + Cloud Credits</span>
+                    <span>{{ event.prize_2nd }}</span>
                 </div>
+                {% endif %}
+                {% if event.prize_3rd %}
                 <div class="surface prize-card">
                     <span class="prize-icon">🥉</span>
                     <strong>3rd Place</strong>
-                    <span>₹30,000 + Swag Kits</span>
+                    <span>{{ event.prize_3rd }}</span>
                 </div>
+                {% endif %}
+                {% if event.prize_special %}
+                <div class="surface prize-card">
+                    <span class="prize-icon">⭐</span>
+                    <strong>Special Prize</strong>
+                    <span>{{ event.prize_special }}</span>
+                </div>
+                {% endif %}
             </div>
-            <p class="muted" style="margin-top:1rem;"><i data-lucide="badge-check"></i> Participation + Merit
-                certificates available for all participants.</p>
+            <p class="muted" style="margin-top:1rem;">
+                <i data-lucide="badge-check"></i>
+                {% if event.participation_certificate and event.merit_certificate %}
+                    Participation + Merit certificates available for all participants.
+                {% elif event.participation_certificate %}
+                    Participation certificates available.
+                {% elif event.merit_certificate %}
+                    Merit certificates for top performers.
+                {% else %}
+                    No certificates for this event.
+                {% endif %}
+            </p>
         </article>
     </div>
 
@@ -140,10 +178,18 @@
                 <ul class="list">
                     {% for team in teams_open %}
                     <li>
-                        <strong>{{ team.name }}</strong>
-                        <span><i data-lucide="users"></i> {{ team.members }} · Need: {{ team.needs }}</span>
-                        <div class="inline-actions">
-                    <button class="btn-primary btn-small" data-action="request-join"><i data-lucide="user-plus"></i> Request to Join</button>
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;">
+                            <div>
+                                <strong>{{ team.name }}</strong>
+                                <span style="display:block;font-size:.84rem;color:var(--muted);">
+                                    <i data-lucide="users"></i> {{ team.members }} &nbsp;·&nbsp;
+                                    {{ team.spots }} spot{{ team.spots|pluralize }} open
+                                </span>
+                            </div>
+                            <a href="{% url 'registration:register_event' event.id %}?type=join_team&team_id={{ team.id }}"
+                               class="btn-primary btn-small">
+                                <i data-lucide="user-plus"></i> Request to Join
+                            </a>
                         </div>
                     </li>
                     {% empty %}
@@ -153,6 +199,21 @@
                     {% endfor %}
                 </ul>
             </article>
+
+            {% if lft_participants %}
+            <article class="surface reveal" style="grid-column:1/-1;">
+                <h2><i data-lucide="user-search"></i> Looking for a Team</h2>
+                <p class="muted" style="font-size:.88rem;margin-bottom:.8rem;">Registered individuals who haven't joined a team yet.</p>
+                <div style="display:flex;flex-wrap:wrap;gap:.5rem;">
+                    {% for person in lft_participants %}
+                    <span class="chip">
+                        <span class="avatar avatar-xs" style="width:20px;height:20px;font-size:.6rem;">{{ person.name|first }}</span>
+                        {{ person.name }}{% if person.college %} · {{ person.college }}{% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+            </article>
+            {% endif %}
         </div>
     </div>
 
@@ -170,27 +231,18 @@
     <!-- FAQs -->
     <div id="tab-faq" class="tab-panel" role="tabpanel" aria-labelledby="tab-faq">
         <article class="reveal" style="display:grid;gap:.5rem;">
-            <div class="faq-item open">
-                <button class="faq-toggle" aria-expanded="true">Can first-year students join? <i
-                        data-lucide="chevron-down"></i></button>
-                <div class="faq-body">
-                    <p>Yes, absolutely. All are welcome regardless of year of study.</p>
-                </div>
-            </div>
+            {% for faq in faqs %}
             <div class="faq-item">
-                <button class="faq-toggle" aria-expanded="false">Is prior hackathon experience required? <i
-                        data-lucide="chevron-down"></i></button>
+                <button class="faq-toggle" aria-expanded="false">{{ faq.q }} <i data-lucide="chevron-down"></i></button>
                 <div class="faq-body">
-                    <p>No, beginner-friendly tracks are included alongside advanced challenges.</p>
+                    <p>{{ faq.a }}</p>
                 </div>
             </div>
-            <div class="faq-item">
-                <button class="faq-toggle" aria-expanded="false">What tools can we use? <i
-                        data-lucide="chevron-down"></i></button>
-                <div class="faq-body">
-                    <p>Any programming language, framework, or tool. Open-source libraries are encouraged.</p>
-                </div>
+            {% empty %}
+            <div class="surface">
+                <div class="empty-state"><i data-lucide="help-circle"></i><p>No FAQs available.</p></div>
             </div>
+            {% endfor %}
         </article>
     </div>
 
@@ -198,15 +250,28 @@
     <div id="tab-contact" class="tab-panel" role="tabpanel" aria-labelledby="tab-contact">
         <article class="surface reveal">
             <h2><i data-lucide="mail"></i> Contact Organizers</h2>
+            {% if event.contact_info %}
             <div class="event-meta" style="margin-bottom:.8rem;">
-                <span><i data-lucide="mail"></i> hackfest@campusarena.in</span>
-                <span><i data-lucide="phone"></i> +91 98765 43210</span>
+                <span><i data-lucide="info"></i> {{ event.contact_info }}</span>
             </div>
-            <div class="search-wrap">
-                <input type="text" placeholder="Ask a question to organizers..." id="contact-msg">
-                <button class="btn-primary" data-action="contact-organizer"><i data-lucide="send"></i> Send</button>
-            </div>
+            {% endif %}
+            {% if user.is_authenticated %}
+            <form method="POST" action="{% url 'events:contact_organizer' event.id %}" class="search-wrap">
+                {% csrf_token %}
+                <input type="text" name="message" placeholder="Ask a question to organizers..." id="contact-msg" required>
+                <button type="submit" class="btn-primary"><i data-lucide="send"></i> Send</button>
+            </form>
+            {% else %}
+            <p class="muted"><a href="{% url 'users:login' %}?next={{ request.path }}">Sign in</a> to send a message to the organizers.</p>
+            {% endif %}
         </article>
     </div>
 </div>
+
+<script>
+// Set progress bar widths from data attributes (avoids template syntax in style attr)
+document.querySelectorAll('.progress-fill[data-pct]').forEach(function(el) {
+    el.style.width = el.dataset.pct + '%';
+});
+</script>
 {% endblock %}

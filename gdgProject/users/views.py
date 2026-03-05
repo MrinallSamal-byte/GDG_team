@@ -171,3 +171,100 @@ def logout_view(request):
     logout(request)
     messages.info(request, 'You have been signed out.')
     return redirect('events:home')
+
+
+# ── Profile editing ───────────────────────────────────────────────────────────
+
+_ALL_SKILLS = [
+    'Python', 'Django', 'JavaScript', 'TypeScript', 'React', 'Vue', 'Angular',
+    'Node.js', 'Express', 'FastAPI', 'Flask', 'Java', 'Spring Boot', 'Kotlin',
+    'Swift', 'Flutter', 'Dart', 'Go', 'Rust', 'C', 'C++', 'C#', '.NET',
+    'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Docker', 'Kubernetes', 'AWS',
+    'GCP', 'Azure', 'Linux', 'Figma', 'TensorFlow', 'PyTorch',
+]
+
+BRANCHES = ['CSE', 'IT', 'ECE', 'EEE', 'Mechanical', 'Civil', 'Biotech']
+YEARS = [1, 2, 3, 4, 5]
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def edit_profile(request):
+    profile = _get_or_create_profile(request.user)
+
+    if request.method == 'POST':
+        # User fields
+        full_name = request.POST.get('full_name', '').strip()
+        email = request.POST.get('email', '').strip()
+
+        if full_name:
+            parts = full_name.split(' ', 1)
+            request.user.first_name = parts[0]
+            request.user.last_name = parts[1] if len(parts) > 1 else ''
+
+        if email and email != request.user.email:
+            if User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
+                messages.error(request, 'That email is already in use.')
+                return redirect('users:edit_profile')
+            request.user.email = email
+
+        request.user.save()
+
+        # Profile fields
+        profile.phone = request.POST.get('phone', '').strip()
+        profile.college = request.POST.get('college', '').strip()
+        profile.branch = request.POST.get('branch', '').strip()
+        bio = request.POST.get('bio', '').strip()
+        profile.bio = bio
+        github = request.POST.get('github', '').strip()
+        profile.github = github
+        linkedin = request.POST.get('linkedin', '').strip()
+        profile.linkedin = linkedin
+        skills_raw = request.POST.get('skills', '').strip()
+        profile.skills = skills_raw
+        year_raw = request.POST.get('year', '')
+        try:
+            profile.year = int(year_raw) if year_raw else None
+        except ValueError:
+            pass
+        profile.save()
+
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('dashboard:my_profile')
+
+    context = {
+        'profile': profile,
+        'user': request.user,
+        'skills': _ALL_SKILLS,
+        'active_skills': profile.skills_list,
+        'branches': BRANCHES,
+        'years': YEARS,
+        'current_page': 'profile',
+    }
+    return render(request, 'users/edit_profile.html', context)
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def change_password(request):
+    from django.contrib.auth import update_session_auth_hash
+
+    if request.method == 'POST':
+        current = request.POST.get('current_password', '')
+        new_pw = request.POST.get('new_password', '')
+        confirm = request.POST.get('confirm_password', '')
+
+        if not request.user.check_password(current):
+            messages.error(request, 'Current password is incorrect.')
+        elif len(new_pw) < 8:
+            messages.error(request, 'New password must be at least 8 characters.')
+        elif new_pw != confirm:
+            messages.error(request, 'New passwords do not match.')
+        else:
+            request.user.set_password(new_pw)
+            request.user.save()
+            update_session_auth_hash(request, request.user)
+            messages.success(request, 'Password changed successfully!')
+            return redirect('dashboard:settings')
+
+    return render(request, 'users/change_password.html', {'current_page': 'settings'})

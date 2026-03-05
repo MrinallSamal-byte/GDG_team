@@ -9,8 +9,9 @@
             <p class="eyebrow"><i data-lucide="settings-2"></i> Organizer Panel</p>
             <h1>Organizer Dashboard</h1>
         </div>
-        <a href="{% url 'eventManagement:create_event' %}" class="btn-primary"><i data-lucide="plus"></i> Create
-            Event</a>
+        <a href="{% url 'eventManagement:create_event' %}" class="btn-primary">
+            <i data-lucide="plus"></i> Create Event
+        </a>
     </div>
 
     <!-- Metrics -->
@@ -21,44 +22,67 @@
             <strong data-counter>{{ analytics.total_registrations }}</strong>
         </article>
         <article class="surface metric">
-            <div class="metric-icon" style="background:var(--ok-soft);color:var(--ok);"><i data-lucide="git-branch"></i>
+            <div class="metric-icon" style="background:var(--ok-soft);color:var(--ok);">
+                <i data-lucide="check-circle"></i>
             </div>
-            <p>Team vs Solo</p>
-            <strong>{{ analytics.team_vs_solo }}</strong>
+            <p>Confirmed</p>
+            <strong>{{ analytics.confirmed_registrations }}</strong>
         </article>
         <article class="surface metric">
-            <div class="metric-icon" style="background:var(--warn-soft);color:var(--warn);"><i data-lucide="cpu"></i>
+            <div class="metric-icon" style="background:var(--warn-soft);color:var(--warn);">
+                <i data-lucide="layers"></i>
             </div>
-            <p>Top Tech Stacks</p>
-            <strong>{{ analytics.top_stack }}</strong>
+            <p>Total Events</p>
+            <strong>{{ analytics.total_events }}</strong>
         </article>
         <article class="surface metric">
             <div class="metric-icon"
-                style="background:color-mix(in srgb, var(--primary-3), transparent 88%);color:var(--primary-3);"><i
-                    data-lucide="calendar-check"></i></div>
+                style="background:color-mix(in srgb, var(--primary-3), transparent 88%);color:var(--primary-3);">
+                <i data-lucide="calendar-check"></i>
+            </div>
             <p>Active Events</p>
             <strong data-counter>{{ analytics.active_events }}</strong>
         </article>
     </div>
 
     <div class="two-col">
-        <!-- Event Creation Wizard -->
-        <article class="surface reveal">
-            <h2><i data-lucide="wand-2"></i> Event Creation Wizard</h2>
-            <p class="text-soft">Multi-step builder for event basics, timeline, rules, prizes, and participation limits.</p>
-            <button class="btn-secondary" style="margin-top:.7rem;" data-action="open-wizard"><i data-lucide="rocket"></i> Open Wizard</button>
-        </article>
-
-        <!-- Form Builder -->
-        <article class="surface reveal">
-            <h2><i data-lucide="layout-template"></i> Registration Form Builder</h2>
-            <p class="text-soft">Drag fields like text, dropdown, file upload, and URLs to design custom event forms.</p>
-            <button class="btn-secondary" style="margin-top:.7rem;" data-action="customize-form"><i data-lucide="pencil-ruler"></i> Customize Form</button>
+        <!-- My Events -->
+        <article class="surface reveal" style="grid-column:1/-1;">
+            <h2><i data-lucide="calendar-days"></i> My Events</h2>
+            {% if events %}
+            <ul class="list">
+                {% for event in events %}
+                <li>
+                    <div style="display:flex;align-items:center;gap:.55rem;flex:1;">
+                        <div style="flex:1;">
+                            <strong>{{ event.title }}</strong>
+                            <span>{{ event.get_status_display }} · {{ event.reg_count }} registrations</span>
+                        </div>
+                        <span class="status {% if event.status == 'registration_open' or event.status == 'ongoing' %}open{% elif event.status == 'draft' %}closing{% else %}closed{% endif %}">
+                            {{ event.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="inline-actions">
+                        <a href="{% url 'eventManagement:edit_event' event.id %}" class="btn-secondary btn-small">
+                            <i data-lucide="edit-3"></i> Edit
+                        </a>
+                        <a href="{% url 'eventManagement:export_csv' event.id %}" class="btn-secondary btn-small">
+                            <i data-lucide="download"></i> CSV
+                        </a>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state"><i data-lucide="calendar-plus"></i>
+                <p>No events yet. <a href="{% url 'eventManagement:create_event' %}">Create your first event</a>.</p>
+            </div>
+            {% endif %}
         </article>
 
         <!-- Participants -->
         <article class="surface reveal">
-            <h2><i data-lucide="list"></i> Participants</h2>
+            <h2><i data-lucide="list"></i> Recent Registrations</h2>
             <ul class="list">
                 {% for person in participants %}
                 <li>
@@ -66,11 +90,10 @@
                         <div class="avatar avatar-sm">{{ person.name|first }}</div>
                         <div style="flex:1;">
                             <strong>{{ person.name }}</strong>
-                            <span>{{ person.event }}</span>
+                            <span>{{ person.event }}{% if person.team %} · {{ person.team }}{% endif %}</span>
                         </div>
                         <span class="status {% if person.status == 'Confirmed' %}open{% else %}closing{% endif %}">
-                            {% if person.status == 'Confirmed' %}<i data-lucide="check-circle"></i>{% else %}<i
-                                data-lucide="clock"></i>{% endif %}
+                            {% if person.status == 'Confirmed' %}<i data-lucide="check-circle"></i>{% else %}<i data-lucide="clock"></i>{% endif %}
                             {{ person.status }}
                         </span>
                     </div>
@@ -81,19 +104,18 @@
                 </li>
                 {% endfor %}
             </ul>
-            <button class="btn-secondary" style="margin-top:.7rem;" data-action="export-csv"><i data-lucide="download"></i> Export CSV</button>
         </article>
 
-        <!-- Analytics -->
+        <!-- Quick Actions -->
         <article class="surface reveal">
-            <h2><i data-lucide="bar-chart-3"></i> Analytics Snapshot</h2>
-            <div class="chart-placeholder">
-                <i data-lucide="trending-up" style="display:block;margin:0 auto .5rem;"></i>
-                Registration trend graph — connect your data source
-            </div>
-            <div class="chart-placeholder">
-                <i data-lucide="pie-chart" style="display:block;margin:0 auto .5rem;"></i>
-                Tech stack distribution — connect your data source
+            <h2><i data-lucide="zap"></i> Quick Actions</h2>
+            <div style="display:flex;flex-direction:column;gap:.6rem;margin-top:.5rem;">
+                <a href="{% url 'eventManagement:create_event' %}" class="btn-secondary">
+                    <i data-lucide="rocket"></i> New Event Wizard
+                </a>
+                <a href="{% url 'events:home' %}" class="btn-secondary">
+                    <i data-lucide="eye"></i> View Public Events Page
+                </a>
             </div>
         </article>
     </div>
