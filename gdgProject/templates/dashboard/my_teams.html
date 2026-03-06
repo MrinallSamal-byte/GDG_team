@@ -3,6 +3,171 @@
 {% block title %}CampusArena | My Teams{% endblock %}
 
 {% block content %}
+<style>
+    /* Modern Team Cards Grid & Layout */
+    .teams-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .team-card {
+        background-color: #1a1b23; /* Deep dark background */
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    /* Smooth Hover Animation */
+    .team-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(139, 92, 246, 0.4); /* Subtle purple glow on border */
+        box-shadow: 0 12px 24px -10px rgba(139, 92, 246, 0.2), 0 4px 12px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .team-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .team-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px; /* Squircle shape */
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+    }
+
+    .team-title {
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin: 0 0 0.3rem 0;
+        color: #f3f4f6;
+    }
+
+    .team-event {
+        font-size: 0.85rem;
+        color: #9ca3af;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .team-role {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: rgba(255, 255, 255, 0.04);
+        padding: 0.6rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: #d1d5db;
+        margin-bottom: 1.2rem;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .team-role i {
+        width: 16px;
+        height: 16px;
+        color: #8b5cf6;
+    }
+
+    .members-section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6b7280;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+
+    .members-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .member-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background-color: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+        font-size: 0.85rem;
+        color: #e5e7eb;
+        transition: background-color 0.2s ease;
+    }
+
+    .member-chip:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .member-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: #374151;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #d1d5db;
+    }
+
+    .team-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: auto; /* Pushes buttons to the bottom consistently */
+    }
+
+    .action-btn {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background-color: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #d1d5db;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .action-btn i {
+        width: 16px;
+        height: 16px;
+    }
+</style>
+
 <section class="dashboard-layout">
     {% include 'dashboard/_sidebar.html' with current_page='teams' %}
 
@@ -12,43 +177,52 @@
             <p>Teams you've created or joined across events.</p>
         </div>
 
-        <div class="card-grid reveal">
+        <div class="teams-grid reveal">
             {% for team in teams %}
-            <article class="surface">
-                <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:.8rem;">
-                    <div class="avatar avatar-md"
-                        style="background:linear-gradient(135deg, var(--primary), var(--primary-2));color:#fff;">{{
-                        team.name|first }}</div>
+            <article class="team-card">
+                <div class="team-header">
+                    <!-- Fixed line break issue & added |upper to make the letter capitalized -->
+                    <div class="team-avatar">{{ team.name|first|upper }}</div>
                     <div>
-                        <h3 style="font-size:1.05rem;">{{ team.name }}</h3>
-                        <span class="muted" style="font-size:.85rem;">{{ team.event }}</span>
+                        <h3 class="team-title">{{ team.name }}</h3>
+                        <p class="team-event">
+                            <i data-lucide="calendar" style="width: 14px; height: 14px;"></i> 
+                            {{ team.event }}
+                        </p>
                     </div>
                 </div>
-                <div style="margin-bottom:.7rem;">
-                    <span class="muted" style="font-size:.85rem;"><i data-lucide="user-check"
-                            style="width:14px;height:14px;vertical-align:middle;"></i> Your role: <strong>{{ team.role
-                            }}</strong></span>
+
+                <div class="team-role">
+                    <i data-lucide="user-check"></i>
+                    <span>Your role: <strong>{{ team.role }}</strong></span>
                 </div>
-                <p class="muted" style="font-size:.88rem;margin-bottom:.8rem;">Members</p>
-                <div style="display:flex;flex-wrap:wrap;gap:.45rem;">
+
+                <div class="members-section-title">Members</div>
+                <div class="members-list">
                     {% for member in team.members %}
-                    <div class="chip">
-                        <span class="avatar avatar-xs" style="width:20px;height:20px;font-size:.65rem;">{{ member|first
-                            }}</span>
+                    <div class="member-chip">
+                        <!-- Fixed line break issue here too -->
+                        <span class="member-avatar">{{ member|first|upper }}</span>
                         {{ member }}
                     </div>
                     {% endfor %}
                 </div>
-                <div style="display:flex;gap:.5rem;margin-top:1rem;">
-                    <button class="btn-secondary btn-small" data-action="team-chat"><i data-lucide="message-circle"></i> Chat</button>
-                    <button class="btn-secondary btn-small" data-action="team-invite"><i data-lucide="user-plus"></i> Invite</button>
+
+                <div class="team-actions">
+                    <button class="action-btn" data-action="team-chat">
+                        <i data-lucide="message-circle"></i> Chat
+                    </button>
+                    <button class="action-btn" data-action="team-invite">
+                        <i data-lucide="user-plus"></i> Invite
+                    </button>
                 </div>
             </article>
             {% empty %}
-            <article class="surface" style="grid-column:1/-1;">
-                <div class="empty-state"><i data-lucide="users"></i>
-                    <p>Not part of any team yet. Join an event and form your squad!</p>
-                </div>
+            <!-- Improved empty state UI -->
+            <article class="team-card" style="grid-column: 1 / -1; align-items: center; text-align: center; padding: 4rem 1.5rem;">
+                <i data-lucide="users" style="width: 48px; height: 48px; color: #4b5563; margin-bottom: 1rem;"></i>
+                <h3 class="team-title">No Teams Yet</h3>
+                <p style="color: #9ca3af; margin-top: 0.5rem;">Not part of any team yet. Join an event and form your squad!</p>
             </article>
             {% endfor %}
         </div>

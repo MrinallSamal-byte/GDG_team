@@ -179,3 +179,8 @@ def settings_view(request):
         'current_page': 'settings',
         'profile': profile,
     })
+
+def find_teammates(request):
+    return render(request, "dashboard/find_teammates.html", {
+        "current_page": "find_teammates"
+    })

@@ -97,12 +97,10 @@
                 <div class="event-card-footer">
                     <div>
                         <span class="status {{ event.status|lower }}">
-                            {% if event.status == 'Open' %}<i data-lucide="circle-check"></i>{% elif event.status ==
-                            'Closed' %}<i data-lucide="circle-x"></i>{% else %}<i data-lucide="clock"></i>{% endif %}
+                            {% if event.status == 'Open' %}<i data-lucide="circle-check"></i>{% elif event.status == 'Closed' %}<i data-lucide="circle-x"></i>{% else %}<i data-lucide="clock"></i>{% endif %}
                             {{ event.status }}
                         </span>
-                        {% if event.prize %}<span class="muted" style="font-size:.85rem;margin-left:.4rem;">Prize: {{
-                            event.prize }}</span>{% endif %}
+                        {% if event.prize %}<span class="muted" style="font-size:.85rem;margin-left:.4rem;">Prize: {{ event.prize }}</span>{% endif %}
                     </div>
                     <a class="btn-primary btn-small" href="{% url 'events:event_detail' event.id %}">Register <i
                             data-lucide="arrow-right"></i></a>
@@ -117,4 +115,43 @@
         {% endfor %}
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const filterBtns = document.querySelectorAll('.filters .chip');
+        const cards = document.querySelectorAll('.card-grid .event-card');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active button styles
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const filterText = btn.textContent.trim().toLowerCase();
+
+                // Filter logic using display:none to remove empty grid gaps
+                cards.forEach(card => {
+                    const badge = card.querySelector('.event-badge').textContent.trim().toLowerCase();
+                    
+                    let isMatch = false;
+                    if (filterText === 'all') isMatch = true;
+                    else if (filterText.includes('hackathon') && badge.includes('hackathon')) isMatch = true;
+                    else if (filterText.includes('workshop') && badge.includes('workshop')) isMatch = true;
+                    else if (filterText.includes('quiz') && badge.includes('quiz')) isMatch = true;
+                    else if (filterText.includes('competition') && badge.includes('competition')) isMatch = true;
+
+                    if (isMatch) {
+                        card.style.display = ''; // Re-adds to DOM grid layout properly
+                        card.style.visibility = 'visible';
+                        card.style.opacity = '1';
+                    } else {
+                        card.style.display = 'none'; // Completely removes space
+                    }
+                });
+            });
+        });
+    });
+</script>
 {% endblock %}

@@ -2,6 +2,36 @@
 
 {% block title %}CampusArena | Create Event{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Premium styling for the default File Upload button to match your theme */
+    input[type="file"] {
+        padding: 0.45rem 0.6rem;
+        color: var(--muted);
+        cursor: pointer;
+    }
+    input[type="file"]::file-selector-button {
+        margin-right: 1rem;
+        padding: 0.4rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: linear-gradient(155deg, var(--surface), var(--surface-2));
+        color: var(--text);
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all var(--motion-fast) ease;
+    }
+    input[type="file"]::file-selector-button:hover {
+        border-color: color-mix(in srgb, var(--primary), var(--border) 55%);
+        color: var(--primary);
+        background: var(--primary-glow);
+        box-shadow: var(--shadow-sm);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="section">
     <div class="welcome-header reveal">
@@ -10,10 +40,11 @@
         <p class="muted">Fill in the details below to set up your event.</p>
     </div>
 
-    <form method="POST" action="" novalidate id="create-event-form" class="create-event-form reveal">
+    <!-- Added enctype="multipart/form-data" for Banner Image Upload -->
+    <form method="POST" action="" novalidate id="create-event-form" class="create-event-form reveal" enctype="multipart/form-data">
         {% csrf_token %}
 
-        <!-- Step 1: Basics -->
+        <!-- Section 1: Event Basics -->
         <article class="surface">
             <h2><i data-lucide="info"></i> Event Basics</h2>
             <div class="field-grid">
@@ -41,6 +72,11 @@
                         <option>Hybrid</option>
                     </select>
                 </div>
+                <!-- 1. Venue Field -->
+                <div class="form-field" style="grid-column:1/-1;">
+                    <i data-lucide="map-pin"></i>
+                    <input type="text" name="venue" placeholder="Venue (e.g., Main Auditorium, Lab 3, Discord Server)">
+                </div>
                 <div class="form-field">
                     <i data-lucide="calendar"></i>
                     <input type="date" name="start_date" required>
@@ -57,10 +93,15 @@
             </div>
         </article>
 
-        <!-- Step 2: Participation -->
+        <!-- Section 2: Event Details (Participation, Judges, Sponsors) -->
         <article class="surface">
-            <h2><i data-lucide="users"></i> Participation</h2>
+            <h2><i data-lucide="users"></i> Event Details & Participation</h2>
             <div class="field-grid">
+                <!-- 2. Registration Fee -->
+                <div class="form-field">
+                    <i data-lucide="credit-card"></i>
+                    <input type="text" name="registration_fee" placeholder="Registration Fee (e.g., Free, ₹500)">
+                </div>
                 <div class="form-field">
                     <i data-lucide="hash"></i>
                     <input type="number" name="max_participants" placeholder="Max participants" min="1">
@@ -78,14 +119,68 @@
                     <i data-lucide="users"></i>
                     <input type="number" name="min_team_size" placeholder="Min team size" min="1">
                 </div>
-                <div class="form-field">
+                <div class="form-field" style="grid-column:1/-1;">
                     <i data-lucide="users"></i>
                     <input type="number" name="max_team_size" placeholder="Max team size" min="1">
+                </div>
+                <!-- 5. Judges / Mentors -->
+                <div class="form-field">
+                    <i data-lucide="user-check"></i>
+                    <input type="text" name="judges" placeholder="Judges / Mentors (Comma separated)">
+                </div>
+                <!-- 6. Sponsors -->
+                <div class="form-field">
+                    <i data-lucide="briefcase"></i>
+                    <input type="text" name="sponsors" placeholder="Sponsors / Partners (Comma separated)">
                 </div>
             </div>
         </article>
 
-        <!-- Step 3: Prizes -->
+        <!-- Section 3: Event Rounds Builder -->
+        <article class="surface">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.2rem;">
+                <h2 style="margin:0;"><i data-lucide="layers"></i> Event Rounds</h2>
+                <button type="button" class="btn-secondary btn-small" onclick="addRound()"><i data-lucide="plus"></i> Add Round</button>
+            </div>
+            <p class="muted" style="font-size: 0.85rem; margin-bottom: 1.5rem;">Define multiple stages (e.g., Idea Submission, Prototype, Final Pitch).</p>
+            
+            <div id="rounds-container" style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Initial Round Block -->
+                <div class="round-block" style="background: color-mix(in srgb, var(--surface-2), transparent 50%); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-soft);">
+                    <h4 style="margin-top: 0; color: var(--text-soft); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;" class="round-title">Round 1</h4>
+                    <div class="field-grid">
+                        <div class="form-field">
+                            <i data-lucide="pen-tool"></i>
+                            <input type="text" name="round_name[]" placeholder="Round Name (e.g., Idea Submission)">
+                        </div>
+                        <div class="form-field">
+                            <i data-lucide="calendar-clock"></i>
+                            <input type="date" name="round_date[]">
+                        </div>
+                        <div class="form-field" style="grid-column:1/-1;">
+                            <textarea name="round_desc[]" rows="2" placeholder="Brief description of what participants must do in this round..." style="padding-left:.9rem;"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Section 4: Rules & FAQs -->
+        <article class="surface">
+            <h2><i data-lucide="shield-alert"></i> Rules & FAQs</h2>
+            <div class="field-grid">
+                <!-- 3. Rules -->
+                <div class="form-field" style="grid-column:1/-1;">
+                    <textarea name="rules" rows="4" placeholder="Event Rules (e.g., Team limits, Deadlines, Plagiarism Policy)" style="padding-left:.9rem;"></textarea>
+                </div>
+                <!-- 4. FAQs -->
+                <div class="form-field" style="grid-column:1/-1;">
+                    <textarea name="faqs" rows="4" placeholder="Frequently Asked Questions (e.g., Eligibility, Tools required, Prerequisites)" style="padding-left:.9rem;"></textarea>
+                </div>
+            </div>
+        </article>
+
+        <!-- Section 5: Prizes & Certificates -->
         <article class="surface">
             <h2><i data-lucide="trophy"></i> Prizes & Certificates</h2>
             <div class="field-grid">
@@ -114,6 +209,19 @@
             </div>
         </article>
 
+        <!-- Section 6: Media & Banner Upload -->
+        <article class="surface">
+            <h2><i data-lucide="image"></i> Media & Banner</h2>
+            <p class="muted" style="font-size: 0.85rem; margin-bottom: 1rem;">Upload a high-quality banner image for your event page.</p>
+            <div class="field-grid">
+                <!-- 7. Event Banner (Cleaned up inline style since extra_css handles it perfectly now) -->
+                <div class="form-field" style="grid-column:1/-1;">
+                    <input type="file" name="banner_image" accept="image/*">
+                </div>
+            </div>
+        </article>
+
+        <!-- Form Actions -->
         <div style="display:flex;gap:.7rem;justify-content:flex-end;">
             <a href="{% url 'eventManagement:organizer_dashboard' %}" class="btn-secondary"><i
                     data-lucide="arrow-left"></i> Cancel</a>
@@ -121,4 +229,60 @@
         </div>
     </form>
 </section>
+
+<!-- Dynamic Event Rounds Builder Script -->
+<script>
+    let roundCount = 1;
+
+    function addRound() {
+        roundCount++;
+        const container = document.getElementById('rounds-container');
+        
+        // Create new round block
+        const newRound = document.createElement('div');
+        newRound.className = 'round-block';
+        newRound.style.cssText = 'background: color-mix(in srgb, var(--surface-2), transparent 50%); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-soft); margin-top: 0.5rem; opacity: 0; transform: translateY(-10px); transition: all 0.4s ease;';
+        
+        newRound.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+                <h4 style="margin: 0; color: var(--text-soft); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;" class="round-title">Round ${roundCount}</h4>
+                <button type="button" onclick="this.parentElement.parentElement.remove(); renumberRounds();" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size: 0.8rem; font-weight: 600;">Remove</button>
+            </div>
+            <div class="field-grid">
+                <div class="form-field">
+                    <i data-lucide="pen-tool"></i>
+                    <input type="text" name="round_name[]" placeholder="Round Name (e.g., Prototype Round)">
+                </div>
+                <div class="form-field">
+                    <i data-lucide="calendar-clock"></i>
+                    <input type="date" name="round_date[]">
+                </div>
+                <div class="form-field" style="grid-column:1/-1;">
+                    <textarea name="round_desc[]" rows="2" placeholder="Brief description of what participants must do in this round..." style="padding-left:.9rem;"></textarea>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(newRound);
+        
+        // Re-initialize Lucide icons for the new elements
+        if(typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        // Trigger animation
+        setTimeout(() => {
+            newRound.style.opacity = '1';
+            newRound.style.transform = 'translateY(0)';
+        }, 10);
+    }
+
+    function renumberRounds() {
+        const rounds = document.querySelectorAll('.round-title');
+        roundCount = rounds.length;
+        rounds.forEach((title, index) => {
+            title.innerText = `Round ${index + 1}`;
+        });
+    }
+</script>
 {% endblock %}
