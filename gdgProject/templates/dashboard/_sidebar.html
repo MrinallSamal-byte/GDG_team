@@ -15,6 +15,10 @@
             data-lucide="calendar"></i> My Events</a>
     <a class="sidebar-link{% if current_page == 'teams' %} active{% endif %}" href="{% url 'dashboard:my_teams' %}"><i
             data-lucide="users"></i> My Teams</a>
+    <a class="sidebar-link{% if current_page == 'find_teammates' %} active{% endif %}" 
+   href="{% url 'dashboard:find_teammates' %}">
+   <i data-lucide="users"></i> Find Teammates
+</a>
     <a class="sidebar-link{% if current_page == 'requests' %} active{% endif %}"
         href="{% url 'dashboard:pending_requests' %}"><i data-lucide="inbox"></i> Pending Requests
         <span class="nav-badge" id="sidebar-requests-badge" style="display:none;">0</span></a>

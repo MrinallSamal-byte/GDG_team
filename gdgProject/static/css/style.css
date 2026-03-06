@@ -37,10 +37,14 @@
     --radius-md: .75rem;
     --radius-sm: .55rem;
     --radius-full: 999px;
-    --motion-fast: 180ms;
-    --motion-base: 300ms;
-    --motion-slow: 480ms;
-    --motion-spring: cubic-bezier(.2, .7, .2, 1);
+    
+    /* Updated Buttery Smooth Motion Tokens */
+    --motion-fast: 300ms;
+    --motion-base: 450ms;
+    --motion-slow: 700ms;
+    --motion-spring: cubic-bezier(0.34, 1.2, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+    
     --font: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
@@ -92,7 +96,7 @@ body {
     background: var(--bg);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    animation: pageIn var(--motion-slow) ease;
+    animation: pageIn var(--motion-slow) var(--ease-smooth);
 }
 
 /* Subtle radial gradient overlays on body */
@@ -167,7 +171,7 @@ a {
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     background: color-mix(in srgb, var(--surface), transparent 18%);
     border-bottom: 1px solid var(--border-soft);
-    transition: box-shadow var(--motion-base) ease;
+    transition: box-shadow var(--motion-base) var(--ease-smooth);
 }
 
 .site-header.scrolled {
@@ -216,7 +220,7 @@ a {
     border-radius: var(--radius-full);
     font-weight: 600;
     font-size: .92rem;
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
     display: flex;
     align-items: center;
     gap: .4rem;
@@ -249,7 +253,7 @@ a {
     padding: .45rem .55rem;
     cursor: pointer;
     font-size: 1.2rem;
-    transition: background var(--motion-fast) ease;
+    transition: background var(--motion-fast) var(--ease-smooth);
 }
 
 .mobile-toggle:hover {
@@ -264,7 +268,7 @@ a {
     background: rgba(0, 0, 0, .4);
     backdrop-filter: blur(4px);
     opacity: 0;
-    transition: opacity var(--motion-base) ease;
+    transition: opacity var(--motion-base) var(--ease-smooth);
 }
 
 .nav-overlay.open {
@@ -310,7 +314,7 @@ a {
     font-size: 1.3rem;
     padding: .3rem;
     border-radius: var(--radius-sm);
-    transition: color var(--motion-fast) ease;
+    transition: color var(--motion-fast) var(--ease-smooth);
 }
 
 .mobile-nav-close:hover {
@@ -325,7 +329,7 @@ a {
     border-radius: var(--radius-md);
     color: var(--muted);
     font-weight: 600;
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .mobile-nav a i {
@@ -350,11 +354,11 @@ a {
     align-items: center;
     gap: .55rem;
     cursor: pointer;
-    transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .theme-toggle:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
 }
 
@@ -404,7 +408,7 @@ a {
 .reveal {
     opacity: 0;
     transform: translateY(20px);
-    transition: opacity .6s ease, transform .6s var(--motion-spring);
+    transition: opacity .6s var(--ease-smooth), transform .6s var(--motion-spring);
 }
 
 .reveal.revealed {
@@ -563,12 +567,12 @@ a {
     border: 1px solid var(--border-soft);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xs);
-    transition: transform var(--motion-base) ease, box-shadow var(--motion-base) ease, border-color var(--motion-fast) ease;
+    transition: all var(--motion-base) var(--ease-smooth);
 }
 
 .surface:hover,
 .event-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
     box-shadow: var(--shadow-sm);
     border-color: color-mix(in srgb, var(--primary), var(--border) 70%);
 }
@@ -615,7 +619,7 @@ select {
     font-family: var(--font);
     font-size: .95rem;
     padding: .72rem .9rem;
-    transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 input::placeholder,
@@ -676,7 +680,7 @@ button {
     align-items: center;
     gap: .4rem;
     cursor: pointer;
-    transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, border-color var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .btn-primary {
@@ -686,7 +690,7 @@ button {
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     box-shadow: 0 10px 28px color-mix(in srgb, var(--primary), transparent 52%);
 }
 
@@ -701,7 +705,7 @@ button {
 }
 
 .btn-secondary:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     border-color: color-mix(in srgb, var(--primary), var(--border) 55%);
     box-shadow: var(--shadow-sm);
 }
@@ -714,7 +718,7 @@ button {
     font-size: .92rem;
     padding: .4rem .6rem;
     border-radius: var(--radius-sm);
-    transition: background var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .btn-ghost:hover {
@@ -741,13 +745,14 @@ button {
     background: var(--surface);
     color: var(--muted);
     cursor: pointer;
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .btn-icon:hover {
     color: var(--primary);
     border-color: var(--primary);
     background: var(--primary-glow);
+    transform: translateY(-2px);
 }
 
 /* ---------- Stats Row ---------- */
@@ -764,11 +769,11 @@ button {
     border-radius: var(--radius-md);
     padding: .8rem .9rem;
     text-align: center;
-    transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .stats-row div:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
     box-shadow: var(--shadow-sm);
 }
 
@@ -825,7 +830,7 @@ button {
     display: inline-flex;
     align-items: center;
     gap: .3rem;
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .chip:hover,
@@ -834,6 +839,7 @@ button {
     color: var(--primary);
     background: var(--primary-glow);
     box-shadow: 0 2px 8px var(--primary-glow);
+    transform: translateY(-1px);
 }
 
 .chip.ok {
@@ -1110,7 +1116,7 @@ button {
     display: flex;
     align-items: center;
     gap: .35rem;
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
     cursor: pointer;
 }
 
@@ -1129,7 +1135,7 @@ button {
 
 .tab-panel {
     display: none;
-    animation: fadeIn var(--motion-base) ease;
+    animation: fadeIn var(--motion-base) var(--ease-smooth);
 }
 
 .tab-panel.active {
@@ -1204,7 +1210,7 @@ button {
     border-radius: var(--radius-md);
     margin-bottom: .55rem;
     overflow: hidden;
-    transition: border-color var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .faq-item:hover {
@@ -1223,7 +1229,7 @@ button {
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    transition: background var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .faq-toggle:hover {
@@ -1233,7 +1239,7 @@ button {
 .faq-toggle i {
     font-size: 1.1rem;
     color: var(--muted);
-    transition: transform var(--motion-base) ease;
+    transition: all var(--motion-base) var(--ease-smooth);
 }
 
 .faq-item.open .faq-toggle i {
@@ -1243,7 +1249,7 @@ button {
 .faq-body {
     max-height: 0;
     overflow: hidden;
-    transition: max-height var(--motion-base) ease, padding var(--motion-base) ease;
+    transition: all var(--motion-base) var(--ease-smooth);
 }
 
 .faq-item.open .faq-body {
@@ -1271,7 +1277,7 @@ button {
     gap: .18rem;
     padding: .6rem .75rem;
     border-radius: var(--radius-md);
-    transition: background var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .list li:hover {
@@ -1333,7 +1339,7 @@ button {
     border: 1px solid var(--border-soft);
     border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .radio-row label:hover,
@@ -1341,6 +1347,7 @@ button {
     border-color: var(--primary);
     background: var(--primary-glow);
     color: var(--text);
+    transform: translateY(-1px);
 }
 
 /* ---------- Stepper ---------- */
@@ -1376,7 +1383,7 @@ button {
     border: 2px solid var(--border);
     color: var(--muted);
     background: var(--surface);
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .step.active .step-num {
@@ -1500,7 +1507,7 @@ button {
     display: inline-flex;
     align-items: center;
     gap: .3rem;
-    transition: opacity var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .auth-links a:hover,
@@ -1544,12 +1551,13 @@ button {
     color: var(--text);
     font-weight: 600;
     font-size: .88rem;
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .social-btns button:hover {
     border-color: var(--primary);
     background: var(--primary-glow);
+    transform: translateY(-2px);
 }
 
 /* ---------- OTP Grid ---------- */
@@ -1610,7 +1618,7 @@ button {
     color: var(--muted);
     font-weight: 600;
     font-size: .92rem;
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .sidebar-link i {
@@ -1862,7 +1870,7 @@ button {
     gap: .6rem;
     padding: .6rem .65rem;
     border-radius: var(--radius-md);
-    transition: background var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .notif-item:hover {
@@ -1952,11 +1960,12 @@ button {
     padding: .25rem 0;
     color: var(--muted);
     font-size: .9rem;
-    transition: color var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .footer-col a:hover {
     color: var(--primary);
+    transform: translateX(4px);
 }
 
 .footer-bottom {
@@ -1988,13 +1997,14 @@ button {
     border-radius: var(--radius-md);
     border: 1px solid var(--border-soft);
     color: var(--muted);
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .footer-social a:hover {
     color: var(--primary);
     border-color: var(--primary);
     background: var(--primary-glow);
+    transform: translateY(-2px);
 }
 
 /* ---------- Floating Label Form Groups ---------- */
@@ -2012,7 +2022,7 @@ button {
     font-size: .93rem;
     font-weight: 500;
     pointer-events: none;
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
     background: transparent;
     padding: 0 .25rem;
 }
@@ -2119,7 +2129,7 @@ button {
     opacity: .7;
     padding: .2rem;
     font-size: 1.1rem;
-    transition: opacity var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .alert-close:hover {
@@ -2138,7 +2148,7 @@ button {
     border-radius: var(--radius-md);
     font-weight: 700;
     font-size: .9rem;
-    transition: top var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .skip-link:focus {
@@ -2150,7 +2160,7 @@ button {
 .theme-transitioning *,
 .theme-transitioning *::before,
 .theme-transitioning *::after {
-    transition: background-color .4s ease, color .4s ease, border-color .4s ease, box-shadow .4s ease !important;
+    transition: all .4s var(--ease-smooth) !important;
 }
 
 /* ---------- Password Toggle ---------- */
@@ -2166,7 +2176,7 @@ button {
     padding: .2rem;
     display: flex;
     align-items: center;
-    transition: color var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .password-toggle:hover {
@@ -2376,7 +2386,7 @@ button {
     bottom: 0;
     background: var(--surface-3);
     border-radius: var(--radius-full);
-    transition: background var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .toggle-slider::before {
@@ -2420,12 +2430,13 @@ button {
     border-radius: var(--radius-full);
     background: var(--surface);
     cursor: pointer;
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .user-menu-toggle:hover {
     border-color: color-mix(in srgb, var(--primary), var(--border) 55%);
     box-shadow: var(--shadow-xs);
+    transform: translateY(-1px);
 }
 
 .user-menu-toggle .avatar {
@@ -2452,7 +2463,7 @@ button {
     padding: .4rem;
     display: none;
     z-index: 150;
-    animation: fadeIn var(--motion-fast) ease;
+    animation: fadeIn var(--motion-fast) var(--ease-smooth);
 }
 
 .user-dropdown.open {
@@ -2468,12 +2479,13 @@ button {
     color: var(--muted);
     font-weight: 600;
     font-size: .9rem;
-    transition: all var(--motion-fast) ease;
+    transition: all var(--motion-fast) var(--ease-smooth);
 }
 
 .user-dropdown a:hover {
     color: var(--text);
     background: var(--primary-glow);
+    transform: translateX(3px);
 }
 
 .user-dropdown .dropdown-divider {
@@ -2608,7 +2620,7 @@ button {
     justify-content: center;
     opacity: 0;
     visibility: hidden;
-    transition: opacity var(--motion-base) ease, visibility var(--motion-base) ease;
+    transition: all var(--motion-base) var(--ease-smooth);
 }
 
 .modal-overlay.open {
@@ -2685,7 +2697,7 @@ button {
 .toast.toast-warning { color: var(--warn); border-left: 3px solid var(--warn); }
 
 .toast.toast-exit {
-    animation: toastOut var(--motion-base) ease forwards;
+    animation: toastOut var(--motion-base) var(--ease-smooth) forwards;
 }
 
 @keyframes toastIn {
