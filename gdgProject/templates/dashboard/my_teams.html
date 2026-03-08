@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | My Teams{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Explicit theme values so cards always render correctly ── */
+
+    [data-theme="dark"] {
+        --tc-bg:        #1a1b23;
+        --tc-bg-inner:  #13141c;
+        --tc-border:    rgba(255, 255, 255, 0.09);
+        --tc-border-hover: rgba(139, 92, 246, 0.5);
+        --tc-text:      #f3f4f6;
+        --tc-muted:     #9ca3af;
+        --tc-divider:   rgba(255, 255, 255, 0.07);
+        --tc-chip-bg:   rgba(255, 255, 255, 0.05);
+    }
+
+    [data-theme="light"] {
+        --tc-bg:        #ffffff;
+        --tc-bg-inner:  #f3f4f6;
+        --tc-border:    #e5e7eb;
+        --tc-border-hover: #8b5cf6;
+        --tc-text:      #111827;
+        --tc-muted:     #6b7280;
+        --tc-divider:   #e5e7eb;
+        --tc-chip-bg:   #f3f4f6;
+    }
+
+    /* Grid */
+    .teams-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    /* Card shell */
+    .team-card {
+        background-color: var(--tc-bg);
+        border: 1px solid var(--tc-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        min-height: 280px;
+        transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                    box-shadow 0.4s ease,
+                    border-color 0.3s ease;
+    }
+
+    .team-card:hover {
+        transform: translateY(-6px);
+        border-color: var(--tc-border-hover);
+        box-shadow: 0 16px 36px -8px rgba(139, 92, 246, 0.18),
+                    0 4px 12px -4px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Header */
+    .team-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--tc-divider);
+    }
+
+    .team-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: 700;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .team-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+        color: var(--tc-text);
+    }
+
+    .team-event {
+        font-size: 0.82rem;
+        color: var(--tc-muted);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    /* Role pill */
+    .team-role {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: var(--tc-chip-bg);
+        border: 1px solid var(--tc-border);
+        padding: 0.55rem 0.85rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: var(--tc-text);
+        margin-bottom: 1.1rem;
+        width: fit-content;
+    }
+
+    .team-role i {
+        width: 15px;
+        height: 15px;
+        color: #8b5cf6;
+        flex-shrink: 0;
+    }
+
+    /* Members */
+    .members-section-title {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--tc-muted);
+        margin-bottom: 0.6rem;
+        font-weight: 700;
+    }
+
+    .members-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .member-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background-color: var(--tc-chip-bg);
+        border: 1px solid var(--tc-border);
+        border-radius: 20px;
+        padding: 0.22rem 0.7rem 0.22rem 0.22rem;
+        font-size: 0.82rem;
+        color: var(--tc-text);
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .member-chip:hover {
+        border-color: var(--tc-border-hover);
+        background-color: var(--tc-bg-inner);
+    }
+
+    .member-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.68rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    /* Action buttons */
+    .team-actions {
+        display: flex;
+        gap: 0.65rem;
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid var(--tc-divider);
+    }
+
+    .action-btn {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        background-color: var(--tc-chip-bg);
+        border: 1px solid var(--tc-border);
+        color: var(--tc-text);
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.22s ease;
+        text-decoration: none;
+        font-family: inherit;
+    }
+
+    .action-btn:hover {
+        background-color: #8b5cf6;
+        color: #ffffff;
+        border-color: #8b5cf6;
+    }
+
+    .action-btn i { width: 15px; height: 15px; }
+
+    /* Empty state */
+    .teams-empty {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 5rem 2rem;
+        background-color: var(--tc-bg);
+        border: 2px dashed var(--tc-border);
+        border-radius: 16px;
+        gap: 0.75rem;
+    }
+
+    .teams-empty i  { width: 52px; height: 52px; color: var(--tc-muted); opacity: 0.5; }
+    .teams-empty h3 { color: var(--tc-text); font-size: 1.2rem; margin: 0; }
+    .teams-empty p  { color: var(--tc-muted); font-size: 0.95rem; margin: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-layout">
+    {% include 'dashboard/_sidebar.html' with current_page='teams' %}
+
+    <div>
+        <div class="welcome-header reveal">
+            <h1><i data-lucide="users"></i> My Teams</h1>
+            <p>Teams you've created or joined across events.</p>
+        </div>
+
+        <div class="teams-grid reveal">
+            {% for team in teams %}
+            <article class="team-card">
+
+                <div class="team-header">
+                    <div class="team-avatar">{{ team.name|first|upper }}</div>
+                    <div>
+                        <h3 class="team-title">{{ team.name }}</h3>
+                        <p class="team-event">
+                            <i data-lucide="calendar" style="width:13px;height:13px;"></i>
+                            {{ team.event }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="team-role">
+                    <i data-lucide="user-check"></i>
+                    <span>Your role: <strong>{{ team.role }}</strong></span>
+                </div>
+
+                <div class="members-section-title">Members</div>
+                <div class="members-list">
+                    {% for member in team.members %}
+                    <div class="member-chip">
+                        <span class="member-avatar">{{ member|first|upper }}</span>
+                        {{ member }}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="team-actions">
+                    <button class="action-btn" data-action="team-chat">
+                        <i data-lucide="message-circle"></i> Chat
+                    </button>
+                    <button class="action-btn" data-action="team-invite">
+                        <i data-lucide="user-plus"></i> Invite
+                    </button>
+                </div>
+
+            </article>
+            {% empty %}
+            <div class="teams-empty">
+                <i data-lucide="users"></i>
+                <h3>No Teams Yet</h3>
+                <p>Not part of any team yet. Join an event and form your squad!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

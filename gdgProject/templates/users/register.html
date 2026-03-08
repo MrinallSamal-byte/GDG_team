@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Register{% endblock %}
+
+{% block content %}
+<section class="auth-wrap">
+    <div class="auth-layout reveal">
+        <div class="auth-decor">
+            <div class="auth-decor-icon"><i data-lucide="user-plus"></i></div>
+            <h2>Join CampusArena</h2>
+            <p>Create your profile, showcase your skills, and discover events tailored for you.</p>
+        </div>
+        <div class="auth-form">
+            <h1>Create Account</h1>
+            <p class="muted">Multi-step registration with profile and tech stack preferences.</p>
+
+            <!-- Stepper -->
+            <div class="stepper">
+                <div class="step active"><span class="step-num">1</span> Basics</div>
+                <div class="step-connector"></div>
+                <div class="step"><span class="step-num">2</span> Academic</div>
+                <div class="step-connector"></div>
+                <div class="step"><span class="step-num">3</span> Skills</div>
+            </div>
+
+            <form method="POST" action="" novalidate id="register-form">
+                {% csrf_token %}
+
+                <div class="field-grid">
+                    <div class="form-field">
+                        <i data-lucide="user"></i>
+                        <input type="text" name="full_name" placeholder="Full name" required
+                               value="{{ form_data.full_name|default:'' }}">
+                    </div>
+                    <div class="form-field">
+                        <i data-lucide="mail"></i>
+                        <input type="email" name="email" placeholder="Email" required
+                               value="{{ form_data.email|default:'' }}">
+                    </div>
+                    <div class="form-field">
+                        <i data-lucide="phone"></i>
+                        <input type="tel" name="phone" placeholder="Phone number"
+                               value="{{ form_data.phone|default:'' }}">
+                    </div>
+                    <div class="form-field">
+                        <i data-lucide="building-2"></i>
+                        <input type="text" name="college" placeholder="College name" required
+                               value="{{ form_data.college|default:'' }}">
+                    </div>
+                    <div class="form-field">
+                        <i data-lucide="graduation-cap"></i>
+                        <select name="branch">
+                            <option disabled {% if not form_data.branch %}selected{% endif %}>Branch</option>
+                            {% for branch in branches %}
+                            <option value="{{ branch }}" {% if form_data.branch == branch %}selected{% endif %}>{{ branch }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <i data-lucide="calendar"></i>
+                        <select name="year">
+                            <option disabled {% if not form_data.year %}selected{% endif %}>Year of study</option>
+                            {% for year in years %}
+                            <option value="{{ year }}" {% if form_data.year == year %}selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <i data-lucide="lock"></i>
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
+                    <div class="form-field">
+                        <i data-lucide="shield-check"></i>
+                        <input type="password" name="password_confirm" placeholder="Confirm password" required>
+                    </div>
+                </div>
+
+                <p class="muted" style="margin-top:.6rem;"><i data-lucide="cpu"></i> Choose your primary skills</p>
+                <div class="chip-row chip-toggle">
+                    <button type="button" class="chip" data-skill="React">React</button>
+                    <button type="button" class="chip" data-skill="Python">Python</button>
+                    <button type="button" class="chip" data-skill="Django">Django</button>
+                    <button type="button" class="chip" data-skill="Figma">Figma</button>
+                    <button type="button" class="chip" data-skill="Flutter">Flutter</button>
+                    <button type="button" class="chip" data-skill="AWS">AWS</button>
+                    <button type="button" class="chip" data-skill="Node.js">Node.js</button>
+                    <button type="button" class="chip" data-skill="TensorFlow">TensorFlow</button>
+                </div>
+                <input type="hidden" name="skills" id="reg-skills" value="">
+
+                <button type="submit" class="btn-primary full-btn" style="margin-top:.75rem;"><i
+                        data-lucide="user-plus"></i> Register</button>
+            </form>
+
+            <div class="auth-links">
+                <a href="{% url 'users:login' %}"><i data-lucide="log-in"></i> Already have an account? Sign in</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

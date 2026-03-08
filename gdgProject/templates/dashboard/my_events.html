@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | My Events{% endblock %}
+
+{% block content %}
+<section class="dashboard-layout">
+    {% include 'dashboard/_sidebar.html' with current_page='events' %}
+
+    <div>
+        <div class="welcome-header reveal">
+            <h1><i data-lucide="calendar"></i> My Events</h1>
+            <p>All events you've registered for or participated in.</p>
+        </div>
+
+        <div class="dash-events-list reveal">
+            {% for event in events %}
+            <article class="surface dash-event-row">
+                <div class="dash-event-info">
+                    <div>
+                        <h3>{{ event.title }}</h3>
+                        <div class="event-meta">
+                            <span><i data-lucide="tag"></i> {{ event.category }}</span>
+                            <span><i data-lucide="monitor"></i> {{ event.mode }}</span>
+                            <span><i data-lucide="calendar-days"></i> {{ event.date }}</span>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:.7rem;">
+                        <span
+                            class="status {% if event.status == 'Registered' %}open{% elif event.status == 'Completed' %}closed{% else %}closing{% endif %}">
+                            {% if event.status == 'Registered' %}<i data-lucide="check-circle"></i>
+                            {% elif event.status == 'Completed' %}<i data-lucide="flag"></i>
+                            {% else %}<i data-lucide="clock"></i>
+                            {% endif %}
+                            {{ event.status }}
+                        </span>
+                        <a href="{% url 'events:event_detail' event.id %}" class="btn-secondary btn-small"><i
+                                data-lucide="external-link"></i> View</a>
+                    </div>
+                </div>
+                {% if event.team %}
+                <div class="dash-event-team">
+                    <i data-lucide="users"></i> Team: <strong>{{ event.team }}</strong> · Role: {{ event.role }}
+                </div>
+                {% endif %}
+            </article>
+            {% empty %}
+            <article class="surface">
+                <div class="empty-state"><i data-lucide="calendar-x"></i>
+                    <p>You haven't joined any events yet. <a href="{% url 'events:home' %}">Browse events</a></p>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Dashboard{% endblock %}
+
+{% block content %}
+<section class="dashboard-layout">
+    {% include 'dashboard/_sidebar.html' with current_page='overview' %}
+
+    <!-- Main Content -->
+    <div>
+        <!-- Welcome -->
+        <div class="welcome-header reveal">
+            <h1>👋 Welcome back{% if user.first_name %}, {{ user.first_name }}{% endif %}!</h1>
+            <p>Here's an overview of your events, teams, and activity.</p>
+        </div>
+
+        <div class="dashboard-main">
+            <!-- My Events -->
+            <article class="surface reveal">
+                <h2><i data-lucide="calendar"></i> My Events</h2>
+                <ul class="list">
+                    {% for event in my_events %}
+                    <li>
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <strong>{{ event.title }}</strong>
+                            <span
+                                class="status {% if event.status == 'Registered' %}open{% elif event.status == 'Completed' %}closed{% else %}closing{% endif %}">
+                                {% if event.status == 'Registered' %}<i data-lucide="check-circle"></i>
+                                {% elif event.status == 'Completed' %}<i data-lucide="flag"></i>
+                                {% else %}<i data-lucide="clock"></i>
+                                {% endif %}
+                                {{ event.status }}
+                            </span>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="empty-state"><i data-lucide="calendar-x"></i>
+                        <p>No events yet. Browse and register!</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </article>
+
+            <!-- My Teams -->
+            <article class="surface reveal">
+                <h2><i data-lucide="users"></i> My Teams</h2>
+                <ul class="list">
+                    {% for team in my_teams %}
+                    <li>
+                        <div style="display:flex;align-items:center;gap:.55rem;">
+                            <div class="avatar avatar-sm">{{ team.name|first }}</div>
+                            <div>
+                                <strong>{{ team.name }}</strong>
+                                <span>{{ team.event }} · {{ team.role }}</span>
+                            </div>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="empty-state"><i data-lucide="users"></i>
+                        <p>Not part of any team yet.</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </article>
+
+            <!-- Notifications -->
+            <article class="surface reveal" style="grid-column:1/-1;">
+                <h2><i data-lucide="bell"></i> Recent Notifications</h2>
+                <div style="display:grid;gap:.3rem;">
+                    {% for notice in notifications %}
+                    <div class="notif-item">
+                        <div class="notif-dot"></div>
+                        <div>
+                            <span>{{ notice }}</span>
+                            <br><small>Just now</small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state"><i data-lucide="bell-off"></i>
+                        <p>No new notifications.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </article>
+        </div>
+    </div>
+</section>
+{% endblock %}

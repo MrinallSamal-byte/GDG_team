@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Verify Email{% endblock %}
+
+{% block content %}
+<section class="auth-wrap">
+    <div class="auth-layout reveal">
+        <div class="auth-decor">
+            <div class="auth-decor-icon"><i data-lucide="mail-check"></i></div>
+            <h2>Almost There!</h2>
+            <p>Check your inbox for the 6-digit verification code we just sent you.</p>
+        </div>
+        <div class="auth-form">
+            <h1>Email Verification</h1>
+            <p class="muted">A verification code has been sent to your email. Enter the code below.</p>
+
+            <form method="POST" action="" novalidate id="verify-form">
+                {% csrf_token %}
+
+                <div class="field-grid otp-grid">
+                    <input type="text" name="otp_1" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                        aria-label="Digit 1" required>
+                    <input type="text" name="otp_2" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                        aria-label="Digit 2" required>
+                    <input type="text" name="otp_3" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                        aria-label="Digit 3" required>
+                    <input type="text" name="otp_4" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                        aria-label="Digit 4" required>
+                    <input type="text" name="otp_5" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                        aria-label="Digit 5" required>
+                    <input type="text" name="otp_6" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                        aria-label="Digit 6" required>
+                </div>
+
+                <button type="submit" class="btn-primary full-btn" style="margin-top:.75rem;"><i
+                        data-lucide="check-circle"></i> Verify Email</button>
+                <button type="button" class="btn-secondary full-btn" data-action="resend-otp"><i data-lucide="refresh-cw"></i> Resend Code</button>
+            </form>
+
+            <a class="auth-back" href="{% url 'users:login' %}" style="margin-top:.5rem;"><i
+                    data-lucide="arrow-left"></i> Back to login</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

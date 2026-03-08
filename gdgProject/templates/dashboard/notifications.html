@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Notifications{% endblock %}
+
+{% block content %}
+<section class="dashboard-layout">
+    {% include 'dashboard/_sidebar.html' with current_page='notifications' %}
+
+    <div>
+        <div class="welcome-header reveal"
+            style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+            <div>
+                <h1><i data-lucide="bell"></i> Notifications</h1>
+                <p>Stay updated with your events, teams, and platform activity.</p>
+            </div>
+            <button class="btn-secondary btn-small notif-actions-btn"><i data-lucide="check-check"></i> Mark all read</button>
+        </div>
+
+        <div class="notif-list reveal">
+            {% for notif in notifications %}
+            <article class="surface notif-card {% if not notif.read %}notif-unread{% endif %}">
+                <div style="display:flex;align-items:flex-start;gap:.7rem;">
+                    {% if not notif.read %}<div class="notif-dot"></div>{% endif %}
+                    <div
+                        class="notif-icon-wrap {% if notif.type == 'success' %}notif-success{% elif notif.type == 'warning' %}notif-warning{% elif notif.type == 'info' %}notif-info{% else %}notif-default{% endif %}">
+                        <i
+                            data-lucide="{% if notif.type == 'success' %}check-circle{% elif notif.type == 'warning' %}alert-triangle{% elif notif.type == 'info' %}info{% else %}bell{% endif %}"></i>
+                    </div>
+                    <div style="flex:1;">
+                        <p style="margin-bottom:.2rem;">{{ notif.message }}</p>
+                        <small class="muted">{{ notif.time }}</small>
+                    </div>
+                </div>
+            </article>
+            {% empty %}
+            <article class="surface">
+                <div class="empty-state"><i data-lucide="bell-off"></i>
+                    <p>No notifications yet. You're all caught up!</p>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

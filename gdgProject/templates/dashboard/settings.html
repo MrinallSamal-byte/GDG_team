@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Settings{% endblock %}
+
+{% block content %}
+<section class="dashboard-layout">
+    {% include 'dashboard/_sidebar.html' with current_page='settings' %}
+
+    <div>
+        <div class="welcome-header reveal">
+            <h1><i data-lucide="settings"></i> Settings</h1>
+            <p>Customize your CampusArena experience.</p>
+        </div>
+
+        <div class="settings-grid reveal">
+            <!-- Account -->
+            <article class="surface">
+                <h2><i data-lucide="user-cog"></i> Account</h2>
+                <form method="POST" action="" id="settings-form">
+                    {% csrf_token %}
+                <div class="settings-group">
+                    <div class="settings-item">
+                        <div>
+                            <strong>Display Name</strong>
+                            <p class="muted">How your name appears to others</p>
+                        </div>
+                        <input type="text" name="display_name" value="{{ user.get_full_name|default:user.username }}" style="max-width:220px;">
+                    </div>
+                    <div class="settings-item">
+                        <div>
+                            <strong>Email Address</strong>
+                            <p class="muted">Used for login and notifications</p>
+                        </div>
+                        <input type="email" name="email" value="{{ user.email }}" style="max-width:220px;">
+                    </div>
+                    <div class="settings-item">
+                        <div>
+                            <strong>Change Password</strong>
+                            <p class="muted">Update your account password</p>
+                        </div>
+                        <button class="btn-secondary btn-small"><i data-lucide="key"></i> Change</button>
+                    </div>
+                </div>
+                </form>
+            </article>
+            <article class="surface">
+                <h2><i data-lucide="bell-ring"></i> Notification Preferences</h2>
+                <div class="settings-group">
+                    <div class="settings-item">
+                        <div>
+                            <strong>Email Notifications</strong>
+                            <p class="muted">Receive event updates via email</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-item">
+                        <div>
+                            <strong>Team Invites</strong>
+                            <p class="muted">Get notified when someone invites you</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-item">
+                        <div>
+                            <strong>Event Reminders</strong>
+                            <p class="muted">Deadline and upcoming event alerts</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-item">
+                        <div>
+                            <strong>Marketing Emails</strong>
+                            <p class="muted">Platform news and new features</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Danger Zone -->
+            <article class="surface settings-danger">
+                <h2 style="color:var(--danger);"><i data-lucide="alert-triangle"></i> Danger Zone</h2>
+                <div class="settings-group">
+                    <div class="settings-item">
+                        <div>
+                            <strong>Deactivate Account</strong>
+                            <p class="muted">Temporarily disable your account</p>
+                        </div>
+                        <button class="btn-secondary btn-small" style="border-color:var(--warn);color:var(--warn);"
+                            data-confirm data-confirm-title="Deactivate Account"
+                            data-confirm-msg="Your account will be temporarily disabled. You can reactivate it by logging in again."
+                            data-confirm-label="Deactivate" data-danger="false"
+                            data-toast-msg="Account deactivation requested.">
+                            <i data-lucide="pause-circle"></i> Deactivate</button>
+                    </div>
+                    <div class="settings-item">
+                        <div>
+                            <strong>Delete Account</strong>
+                            <p class="muted">Permanently delete your account and data</p>
+                        </div>
+                        <button class="btn-secondary btn-small" style="border-color:var(--danger);color:var(--danger);"
+                            data-confirm data-confirm-title="Delete Account"
+                            data-confirm-msg="This will permanently delete your account and all associated data. This action cannot be undone."
+                            data-confirm-label="Delete Permanently" data-danger="true"
+                            data-toast-msg="Account deletion requested. Our team will follow up.">
+                            <i data-lucide="trash-2"></i> Delete</button>
+                    </div>
+                </div>
+            </article>
+
+            <button type="submit" form="settings-form" class="btn-primary full-btn" style="margin-top:.5rem;" id="settings-save-btn"><i data-lucide="save"></i> Save Changes</button>
+        </div>
+    </div>
+</section>
+{% endblock %}
