@@ -17,11 +17,14 @@ def _get_or_create_profile(user):
 @require_http_methods(['GET', 'POST'])
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('dashboard:user_dashboard')
+        if request.user.is_staff:
+            return redirect('eventManagement:organizer_dashboard')
+        return redirect('events:home')
 
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '')
+        role = request.POST.get('roleLogin', 'student')
 
         if not email or not password:
             messages.error(request, 'Please fill in all required fields.')
@@ -38,7 +41,11 @@ def login_view(request):
             login(request, user)
             messages.success(request, f'Welcome back, {user.first_name or user.username}!')
             next_url = request.GET.get('next', '')
-            return redirect(next_url if next_url else 'dashboard:user_dashboard')
+            if next_url:
+                return redirect(next_url)
+            if role == 'admin' or user.is_staff:
+                return redirect('eventManagement:organizer_dashboard')
+            return redirect('events:home')
         else:
             messages.error(request, 'Invalid email or password. Please try again.')
             return render(request, 'users/login.html', {'email': email})
@@ -84,7 +91,6 @@ def register_view(request):
                 'form_data': request.POST,
             })
 
-        # Build a unique username from email prefix
         base_username = email.split('@')[0]
         username = base_username
         i = 1
@@ -101,7 +107,6 @@ def register_view(request):
             last_name=name_parts[1] if len(name_parts) > 1 else '',
         )
 
-        # Create profile with extended data
         year_int = None
         try:
             year_int = int(year)
@@ -135,7 +140,6 @@ def forgot_password_view(request):
         if not email:
             messages.error(request, 'Please enter your email address.')
         else:
-            # Always show success to prevent email enumeration
             messages.success(
                 request,
                 'If that email is registered, a reset link has been sent. Check your inbox.',
@@ -152,7 +156,6 @@ def email_verification_view(request):
         otp_parts = [request.POST.get(f'otp_{i}', '') for i in range(1, 7)]
         otp = ''.join(otp_parts).strip()
         if len(otp) == 6 and otp.isdigit():
-            # Mark profile as verified
             profile = _get_or_create_profile(request.user)
             profile.email_verified = True
             profile.save(update_fields=['email_verified'])
@@ -166,8 +169,6 @@ def email_verification_view(request):
 
 @require_http_methods(['GET', 'POST'])
 def logout_view(request):
-    """Log the user out. Accepts both GET and POST for compatibility,
-    but the template should use POST via a form."""
     logout(request)
     messages.info(request, 'You have been signed out.')
     return redirect('events:home')
