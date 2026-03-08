@@ -2794,8 +2794,11 @@ button {
 }
 
 /* ---------- Reduced Motion ---------- */
+/* Note: Commented out to force animations on laptops. 
+   Windows/Mac often enable 'reduced motion' automatically on battery saver mode, 
+   which was causing your animations to stop working on your laptop. */
+/*
 @media (prefers-reduced-motion: reduce) {
-
     *,
     *::before,
     *::after {
@@ -2810,6 +2813,7 @@ button {
         transform: none;
     }
 }
+*/
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1024px) {

@@ -22,7 +22,11 @@
                         <p class="muted">{{ profile.branch }} · {{ profile.year }}</p>
                         <p class="muted" style="font-size:.88rem;">{{ profile.college }}</p>
                     </div>
-                    <button class="btn-secondary btn-small" style="margin-left:auto;align-self:start;" data-action="edit-profile"><i data-lucide="edit-3"></i> Edit Profile</button>
+                   <a href="{% url 'dashboard:edit_profile' %}" 
+   class="btn-secondary btn-small" 
+   style="margin-left:auto;align-self:start;">
+    <i data-lucide="edit-3"></i> Edit Profile
+</a>
                 </div>
 
                 <div class="profile-details">

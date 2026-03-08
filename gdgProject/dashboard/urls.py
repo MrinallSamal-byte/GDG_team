@@ -13,4 +13,5 @@ urlpatterns = [
     path('requests/', views.pending_requests, name='pending_requests'),
     path('notifications/', views.notifications_view, name='notifications'),
     path('settings/', views.settings_view, name='settings'),
+    path('edit-profile/', views.edit_profile, name='edit_profile'),
 ]

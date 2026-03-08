@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from users.models import UserProfile
@@ -183,4 +183,28 @@ def settings_view(request):
 def find_teammates(request):
     return render(request, "dashboard/find_teammates.html", {
         "current_page": "find_teammates"
+    })
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edit_profile(request):
+    profile = _get_profile(request.user)
+
+    if request.method == "POST":
+        profile.phone = request.POST.get("phone")
+        profile.github = request.POST.get("github")
+        profile.linkedin = request.POST.get("linkedin")
+        profile.bio = request.POST.get("bio")
+        profile.college = request.POST.get("college")
+        profile.branch = request.POST.get("branch")
+        profile.year = request.POST.get("year")
+
+        profile.save()
+
+        messages.success(request, "Profile updated successfully!")
+        return redirect("dashboard:my_profile")
+
+    return render(request, "dashboard/edit_profile.html", {
+        "profile": profile,
+        "current_page": "profile"
     })

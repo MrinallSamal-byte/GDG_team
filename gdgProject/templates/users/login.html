@@ -41,7 +41,7 @@
     .back-link:hover { color: var(--primary); transform: translateX(-4px); }
 
     /* ==========================================================================
-       AUTH CONTAINER & SMOOTH FADE ANIMATION
+       AUTH CONTAINER & CLEAN 3D FLIP ANIMATION (Matched from Reference)
        ========================================================================== */
     .auth-container {
         flex: 1;
@@ -49,20 +49,24 @@
         align-items: center;
         justify-content: center;
         padding: 20px 20px 60px 20px;
-        /* Removed buggy 3D perspective */
+        perspective: 1200px; /* Gives the 3D depth */
     }
 
     .auth-wrapper {
         width: 100%;
         max-width: 440px;
-        height: 580px; 
+        height: 600px; /* Safely accommodates the role selectors and social buttons */
         position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy smooth flip */
+    }
+
+    .auth-wrapper.flipped {
+        transform: rotateY(180deg);
     }
 
     .auth-front, .auth-back {
         position: absolute;
-        top: 0;
-        left: 0;
         width: 100%;
         height: 100%;
         background: var(--surface);
@@ -70,40 +74,14 @@
         border-radius: var(--radius-xl);
         padding: 24px 32px;
         box-shadow: var(--shadow-lg);
+        backface-visibility: hidden; /* Natively hides the back of the card */
+        -webkit-backface-visibility: hidden;
         display: flex;
         flex-direction: column;
-        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); /* Buttery smooth curve */
     }
 
-    /* Front (Login) Active by Default */
-    .auth-front {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-        pointer-events: auto;
-        visibility: visible;
-    }
-
-    /* Back (Sign Up) Hidden by Default */
     .auth-back {
-        opacity: 0;
-        transform: translateY(15px) scale(0.96);
-        pointer-events: none;
-        visibility: hidden;
-    }
-
-    /* Flipped (Active Sign Up) State */
-    .auth-wrapper.flipped .auth-front {
-        opacity: 0;
-        transform: translateY(-15px) scale(0.96);
-        pointer-events: none;
-        visibility: hidden;
-    }
-
-    .auth-wrapper.flipped .auth-back {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-        pointer-events: auto;
-        visibility: visible;
+        transform: rotateY(180deg); /* Puts the signup form on the back side */
     }
 
     /* ==========================================================================
@@ -213,16 +191,55 @@
     .role-btn i { width: 16px; height: 16px; }
     .role-btn input { display: none; }
 
+    /* ==========================================================================
+       AUTH ALERT — error / success messages
+       ========================================================================== */
+    .auth-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: var(--radius-md, 10px);
+        font-size: 0.84rem;
+        font-weight: 600;
+        line-height: 1.45;
+        margin-bottom: 12px;
+        width: 100%;
+        animation: alertSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    @keyframes alertSlideIn {
+        from { opacity: 0; transform: translateY(-6px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-alert.error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #f87171;
+    }
+    .auth-alert.success {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #34d399;
+    }
+    .auth-alert.warning {
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        color: #fbbf24;
+    }
+    .auth-alert i {
+        width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px;
+    }
+
     @media (max-width: 768px) {
         .custom-navbar { padding: 20px; }
         .auth-front, .auth-back { padding: 24px 20px; }
-        .auth-wrapper { height: 595px; } 
+        .auth-wrapper { height: 620px; } 
     }
 </style>
 
 <!-- Simple Navbar -->
 <nav class="custom-navbar">
-    <!-- Standardized Brand Logo from base.html -->
     <a class="brand" href="{% url 'events:home' %}">
         <i data-lucide="trophy"></i> CampusArena
     </a>
@@ -232,7 +249,7 @@
 </nav>
 
 <div class="auth-container">
-    <div class="auth-wrapper" id="authWrapper">
+    <div class="auth-wrapper {% if show_signup %}flipped{% endif %}" id="authWrapper">
         
         <!-- FRONT: LOGIN FORM -->
         <div class="auth-front">
@@ -240,6 +257,36 @@
                 <h2>Welcome Back</h2>
                 <p>Enter your details to access your arena.</p>
             </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                {% if 'error' in message.tags %}
+                <div class="auth-alert error">
+                    <i data-lucide="alert-circle"></i>
+                    <span>{{ message }}</span>
+                </div>
+                {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            {% if login_error %}
+            <div class="auth-alert error">
+                <i data-lucide="alert-circle"></i>
+                <span>{{ login_error }}</span>
+            </div>
+            {% endif %}
+
+            {% if form.errors and not show_signup %}
+            <div class="auth-alert error">
+                <i data-lucide="alert-circle"></i>
+                <span>
+                    {% for field in form %}
+                        {% for error in field.errors %}{{ error }} {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}{{ error }} {% endfor %}
+                </span>
+            </div>
+            {% endif %}
 
             <form method="POST" action="">
                 {% csrf_token %}
@@ -272,8 +319,7 @@
                     <div class="input-box">
                         <i data-lucide="lock"></i>
                         <input type="password" name="password" placeholder="••••••••" required>
-                        <!-- Wrapped in a button to preserve event listener -->
-                        <button type="button" class="toggle-password" style="background:transparent; border:none; padding:0; display:flex; align-items:center; outline:none;">
+                        <button type="button" class="toggle-password" style="background:transparent; border:none; padding:0; display:flex; align-items:center; outline:none; cursor:pointer;">
                             <i data-lucide="eye"></i>
                         </button>
                     </div>
@@ -304,6 +350,25 @@
                 <h2>Join CampusArena</h2>
                 <p>Create your profile and start competing.</p>
             </div>
+
+            {% if signup_error %}
+            <div class="auth-alert error">
+                <i data-lucide="alert-circle"></i>
+                <span>{{ signup_error }}</span>
+            </div>
+            {% endif %}
+
+            {% if form.errors and show_signup %}
+            <div class="auth-alert error">
+                <i data-lucide="alert-circle"></i>
+                <span>
+                    {% for field in form %}
+                        {% for error in field.errors %}{{ error }} {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}{{ error }} {% endfor %}
+                </span>
+            </div>
+            {% endif %}
 
             <form method="POST" action="">
                 {% csrf_token %}
@@ -336,8 +401,7 @@
                     <div class="input-box">
                         <i data-lucide="lock"></i>
                         <input type="password" name="password" placeholder="••••••••" required>
-                        <!-- Wrapped in a button to preserve event listener -->
-                        <button type="button" class="toggle-password" style="background:transparent; border:none; padding:0; display:flex; align-items:center; outline:none;">
+                        <button type="button" class="toggle-password" style="background:transparent; border:none; padding:0; display:flex; align-items:center; outline:none; cursor:pointer;">
                             <i data-lucide="eye"></i>
                         </button>
                     </div>
@@ -349,7 +413,9 @@
                 
                 <div class="social-icon-row">
                     <button type="button" class="social-icon-btn" aria-label="Sign up with Google">
-                        <i data-lucide="chrome"></i>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17.788 5.108a9 9 0 1 0 3.212 6.892h-8" />
+                        </svg>
                     </button>
                     <button type="button" class="social-icon-btn" aria-label="Sign up with GitHub">
                         <i data-lucide="github"></i>
@@ -369,7 +435,7 @@
 </div>
 
 <script>
-    // 1. Smooth Fade Logic
+    // 1. Smooth Fade/Flip Logic (Matched directly from Reference)
     const authWrapper = document.getElementById('authWrapper');
     const toSignupBtn = document.getElementById('toSignupBtn');
     const toLoginBtn = document.getElementById('toLoginBtn');
@@ -402,10 +468,10 @@
     setupRoleSelection('roleStudentLogin', 'roleAdminLogin');
     setupRoleSelection('roleStudentSignup', 'roleAdminSignup');
 
-    // 3. Password Visibility Toggle (Fixed for Lucide Icon Replacement)
+    // 3. Password Visibility Toggle
     document.querySelectorAll('.toggle-password').forEach(btn => {
         btn.addEventListener('click', function(e) {
-            e.preventDefault(); // Prevent accidental form submissions
+            e.preventDefault();
             
             const input = this.previousElementSibling;
             
@@ -417,7 +483,6 @@
                 this.innerHTML = '<i data-lucide="eye"></i>';
             }
             
-            // Re-render the newly injected Lucide icon specifically
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons(); 
             }
