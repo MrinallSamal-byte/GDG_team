@@ -21,13 +21,13 @@
                         <div class="event-meta">
                             <span><i data-lucide="tag"></i> {{ event.category }}</span>
                             <span><i data-lucide="monitor"></i> {{ event.mode }}</span>
-                            <span><i data-lucide="calendar-days"></i> {{ event.date }}</span>
+                            <span><i data-lucide="calendar-days"></i> {{ event.date|date:"M d, Y" }}</span>
                         </div>
                     </div>
                     <div style="display:flex;align-items:center;gap:.7rem;">
                         <span
-                            class="status {% if event.status == 'Registered' %}open{% elif event.status == 'Completed' %}closed{% else %}closing{% endif %}">
-                            {% if event.status == 'Registered' %}<i data-lucide="check-circle"></i>
+                            class="status {% if event.status == 'Confirmed' %}open{% elif event.status == 'Completed' or event.status == 'Cancelled' %}closed{% else %}closing{% endif %}">
+                            {% if event.status == 'Confirmed' %}<i data-lucide="check-circle"></i>
                             {% elif event.status == 'Completed' %}<i data-lucide="flag"></i>
                             {% else %}<i data-lucide="clock"></i>
                             {% endif %}

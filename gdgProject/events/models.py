@@ -160,6 +160,9 @@ class Event(models.Model):
     )
     contact_info = models.TextField(blank=True, default="")
 
+    # ── Featured ────────────────────────────────────────────────────────────
+    is_featured = models.BooleanField(default=False, db_index=True)
+
     # ── Ownership & Audit ─────────────────────────────────────────────────
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -316,3 +319,79 @@ class EventRound(models.Model):
 
     def __str__(self) -> str:
         return f"{self.event.title} — Round {self.order}: {self.name}"
+
+
+class SponsorType(models.TextChoices):
+    TITLE = "title", _("Title Sponsor")
+    GOLD = "gold", _("Gold Sponsor")
+    SILVER = "silver", _("Silver Sponsor")
+    BRONZE = "bronze", _("Bronze Sponsor")
+    PARTNER = "partner", _("Partner")
+
+
+class EventJudge(models.Model):
+    """A judge or mentor associated with an event."""
+
+    id = models.BigAutoField(primary_key=True)
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="judges",
+    )
+    name = models.CharField(max_length=100)
+    designation = models.CharField(max_length=200, blank=True, default="")
+    photo = models.ImageField(upload_to="events/judges/", blank=True)
+    bio = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["event", "name"]
+
+    def __str__(self) -> str:
+        return f"{self.name} — {self.event.title}"
+
+
+class EventSponsor(models.Model):
+    """A sponsor or partner associated with an event."""
+
+    id = models.BigAutoField(primary_key=True)
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="sponsors",
+    )
+    name = models.CharField(max_length=100)
+    logo = models.ImageField(upload_to="events/sponsors/", blank=True)
+    website_url = models.URLField(blank=True, default="")
+    sponsor_type = models.CharField(
+        max_length=10,
+        choices=SponsorType.choices,
+        default=SponsorType.PARTNER,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["event", "sponsor_type", "name"]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.get_sponsor_type_display()}) — {self.event.title}"
+
+
+class EventAnnouncement(models.Model):
+    """An announcement posted by the organizer to event registrants."""
+
+    id = models.BigAutoField(primary_key=True)
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="announcements",
+    )
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.title} — {self.event.title}"

@@ -56,10 +56,10 @@ class CreateEventTest(TestCase):
         self.client.login(username='creator', password='staffpass123')
         resp = self.client.post(self.url, {
             'title': 'Test Event',
-            'category': 'Hackathon',
-            'mode': 'Online',
-            'start_date': '2026-05-01',
-            'end_date': '2026-05-03',
+            'category': 'hackathon',
+            'mode': 'online',
+            'start_date': '2026-05-01T09:00',
+            'end_date': '2026-05-03T17:00',
             'description': 'A test event.',
         })
         self.assertRedirects(resp, reverse('eventManagement:organizer_dashboard'))
