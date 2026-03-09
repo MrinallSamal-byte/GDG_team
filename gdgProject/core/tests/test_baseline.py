@@ -15,6 +15,7 @@ from core.exceptions import (
     PermissionDeniedError,
     ValidationError,
 )
+from events.models import Event, EventRound, EventStatus
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -120,17 +121,35 @@ class TestEventDetailIntegration(TestCase):
 
     def setUp(self):
         self.client = Client()
+        self.user = User.objects.create_user(username='detailuser', password='pass1234')
+        now = timezone.now()
+        self.event = Event.objects.create(
+            title='HackFest 2026',
+            slug='hackfest-2026-baseline',
+            description='A great hackathon',
+            status=EventStatus.REGISTRATION_OPEN,
+            registration_start=now - timezone.timedelta(days=1),
+            registration_end=now + timezone.timedelta(days=10),
+            event_start=now + timezone.timedelta(days=15),
+            event_end=now + timezone.timedelta(days=16),
+            created_by=self.user,
+        )
+        EventRound.objects.create(
+            event=self.event, name='Round 1', order=1,
+            start_date=now + timezone.timedelta(days=15),
+            end_date=now + timezone.timedelta(days=16),
+        )
 
     def test_event_detail_returns_200(self):
-        resp = self.client.get("/events/1/")
+        resp = self.client.get(f"/events/{self.event.pk}/")
         self.assertEqual(resp.status_code, 200)
 
     def test_event_detail_contains_event_data(self):
-        resp = self.client.get("/events/1/")
+        resp = self.client.get(f"/events/{self.event.pk}/")
         self.assertContains(resp, "HackFest 2026")
 
     def test_event_detail_context_has_rounds(self):
-        resp = self.client.get("/events/1/")
+        resp = self.client.get(f"/events/{self.event.pk}/")
         self.assertIn("rounds", resp.context)
         self.assertTrue(len(resp.context["rounds"]) > 0)
 

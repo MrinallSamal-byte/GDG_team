@@ -24,8 +24,8 @@
                         <div style="display:flex;align-items:center;justify-content:space-between;">
                             <strong>{{ event.title }}</strong>
                             <span
-                                class="status {% if event.status == 'Registered' %}open{% elif event.status == 'Completed' %}closed{% else %}closing{% endif %}">
-                                {% if event.status == 'Registered' %}<i data-lucide="check-circle"></i>
+                                class="status {% if event.status == 'Confirmed' %}open{% elif event.status == 'Completed' or event.status == 'Cancelled' %}closed{% else %}closing{% endif %}">
+                                {% if event.status == 'Confirmed' %}<i data-lucide="check-circle"></i>
                                 {% elif event.status == 'Completed' %}<i data-lucide="flag"></i>
                                 {% else %}<i data-lucide="clock"></i>
                                 {% endif %}
@@ -71,8 +71,8 @@
                     <div class="notif-item">
                         <div class="notif-dot"></div>
                         <div>
-                            <span>{{ notice }}</span>
-                            <br><small>Just now</small>
+                            <span>{{ notice.body }}</span>
+                            <br><small>{{ notice.created_at|timesince }} ago</small>
                         </div>
                     </div>
                     {% empty %}

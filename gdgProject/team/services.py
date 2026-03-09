@@ -19,33 +19,12 @@ logger = logging.getLogger("campusarena.team")
 
 
 # ─── Exceptions (from core.exceptions taxonomy) ─────────────────────────────
-class ServiceError(Exception):
-    """Base for all service-layer exceptions."""
-
-    def __init__(self, message: str, code: str = "service_error"):
-        self.message = message
-        self.code = code
-        super().__init__(message)
-
-
-class NotFoundError(ServiceError):
-    def __init__(self, message="Resource not found"):
-        super().__init__(message, code="not_found")
-
-
-class PermissionDeniedError(ServiceError):
-    def __init__(self, message="Permission denied"):
-        super().__init__(message, code="permission_denied")
-
-
-class ValidationError(ServiceError):
-    def __init__(self, message="Validation failed"):
-        super().__init__(message, code="validation_error")
-
-
-class ConflictError(ServiceError):
-    def __init__(self, message="Conflict"):
-        super().__init__(message, code="conflict")
+from core.exceptions import (
+    ConflictError,
+    NotFoundError,
+    PermissionDeniedError,
+    ValidationError,
+)
 
 
 # ─── Data Transfer Objects ──────────────────────────────────────────────────
@@ -326,35 +305,57 @@ class TeamJoinRequestService:
             message="Join request declined.",
         )
 
-    # ─── Notification Helpers (delegate to NotificationService) ──────────
-    def _notify_leader(self, team, requester, join_request):
-        """Placeholder — wire to NotificationService / Celery task."""
-        logger.info(
-            "notification_queued",
-            extra={
-                "type": "join_request_received",
-                "recipient_id": team.leader_id,
-                "actor_id": requester.id,
-                "team_id": team.id,
-            },
-        )
+    # ─── Notification Helpers ────────────────────────────────────────────
+    @staticmethod
+    def _notify_leader(team, requester, join_request):
+        """Create an in-app notification for the team leader about a new join request."""
+        try:
+            from notification.models import Notification
+            Notification.objects.create(
+                user=team.leader,
+                type='join_request',
+                title=f'New join request for {team.name}',
+                body=f'{requester.get_full_name() or requester.username} wants to join your team "{team.name}".',
+                actor=requester,
+            )
+        except Exception:
+            logger.error(
+                "Failed to create join_request notification for leader %d",
+                team.leader_id, exc_info=True,
+            )
 
-    def _notify_requester_approved(self, team, requester):
-        logger.info(
-            "notification_queued",
-            extra={
-                "type": "join_request_approved",
-                "recipient_id": requester.id,
-                "team_id": team.id,
-            },
-        )
+    @staticmethod
+    def _notify_requester_approved(team, requester):
+        """Notify the requester that their join request was approved."""
+        try:
+            from notification.models import Notification
+            Notification.objects.create(
+                user=requester,
+                type='request_approved',
+                title=f'Join request approved — {team.name}',
+                body=f'You have been added to team "{team.name}" for {team.event.title}.',
+                actor=team.leader,
+            )
+        except Exception:
+            logger.error(
+                "Failed to create approval notification for user %d",
+                requester.id, exc_info=True,
+            )
 
-    def _notify_requester_declined(self, team, requester):
-        logger.info(
-            "notification_queued",
-            extra={
-                "type": "join_request_declined",
-                "recipient_id": requester.id,
-                "team_id": team.id,
-            },
-        )
+    @staticmethod
+    def _notify_requester_declined(team, requester):
+        """Notify the requester that their join request was declined."""
+        try:
+            from notification.models import Notification
+            Notification.objects.create(
+                user=requester,
+                type='request_declined',
+                title=f'Join request declined — {team.name}',
+                body=f'Your request to join team "{team.name}" was declined.',
+                actor=team.leader,
+            )
+        except Exception:
+            logger.error(
+                "Failed to create decline notification for user %d",
+                requester.id, exc_info=True,
+            )

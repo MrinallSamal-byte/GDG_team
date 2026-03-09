@@ -13,10 +13,7 @@
                 <h1><i data-lucide="bell"></i> Notifications</h1>
                 <p>Stay updated with your events, teams, and platform activity.</p>
             </div>
-            <form method="POST" action="{% url 'dashboard:mark_all_read' %}">
-                {% csrf_token %}
-                <button type="submit" class="btn-secondary btn-small"><i data-lucide="check-check"></i> Mark all read</button>
-            </form>
+            <button class="btn-secondary btn-small notif-actions-btn"><i data-lucide="check-check"></i> Mark all read</button>
         </div>
 
         <div class="notif-list reveal">
@@ -30,8 +27,8 @@
                             data-lucide="{% if notif.type == 'success' %}check-circle{% elif notif.type == 'warning' %}alert-triangle{% elif notif.type == 'info' %}info{% else %}bell{% endif %}"></i>
                     </div>
                     <div style="flex:1;">
-                        <p style="margin-bottom:.2rem;">{{ notif.message }}</p>
-                        <small class="muted">{{ notif.time|timesince }} ago</small>
+                        <p style="margin-bottom:.2rem;">{% if notif.title %}<strong>{{ notif.title }}</strong> — {% endif %}{{ notif.body }}</p>
+                        <small class="muted">{{ notif.created_at|timesince }} ago</small>
                     </div>
                 </div>
             </article>

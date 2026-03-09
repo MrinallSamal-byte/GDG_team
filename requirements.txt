@@ -12,9 +12,27 @@ Pillow>=10.0
 
 # Database
 psycopg[binary]>=3.1
+mysqlclient>=2.2
 
 # Static files (production)
 whitenoise>=6.6
+
+# Real-time (Django Channels + WebSocket support)
+channels>=4.0
+channels-redis>=4.2
+daphne>=4.1
+
+# HTML sanitization (XSS prevention for rich text)
+bleach>=6.1
+
+# Calendar export (.ics file generation)
+icalendar>=5.0
+
+# Excel export
+openpyxl>=3.1
+
+# Filtering
+django-filter>=24.0
 
 # Development / Testing
 coverage>=7.4

@@ -8,7 +8,8 @@ import logging
 import traceback
 import uuid
 
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 
 from core.exceptions import AppError
@@ -44,6 +45,10 @@ class ErrorHandlerMiddleware:
 
     def process_exception(self, request, exception):
         request_id = str(uuid.uuid4())
+
+        # Let Django handle its own built-in exceptions (404, 403)
+        if isinstance(exception, (Http404, PermissionDenied)):
+            return None
 
         if isinstance(exception, AppError):
             return self._handle_app_error(request, exception, request_id)

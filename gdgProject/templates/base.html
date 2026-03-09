@@ -8,40 +8,62 @@
     <meta name="description"
         content="CampusArena — Discover hackathons, workshops, and coding challenges designed for student creators.">
     <title>{% block title %}CampusArena{% endblock %}</title>
+
     <script>
         (function () {
             const saved = localStorage.getItem('campusarena-theme');
             if (saved) document.documentElement.setAttribute('data-theme', saved);
         })();
     </script>
+
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
+
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
-    <script>document.addEventListener('DOMContentLoaded', () => { if (window.lucide) lucide.createIcons(); });</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+        });
+    </script>
 </head>
 
 <body class="{% block body_class %}{% endblock %}">
 
-    <!-- Skip to content (a11y) -->
     <a class="skip-link" href="#main-content">Skip to content</a>
 
-    <!-- Header -->
+    <!-- HEADER -->
     <header class="site-header">
         <div class="container nav-wrap">
+
             <a class="brand" href="{% url 'events:home' %}">
                 <i data-lucide="trophy"></i> CampusArena
             </a>
 
-            <nav class="nav-center" aria-label="Main navigation">
-                <a href="{% url 'events:home' %}"><i data-lucide="compass"></i> Events</a>
-                <a href="{% url 'dashboard:user_dashboard' %}"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-                {% if user.is_staff %}
-                <a href="{% url 'eventManagement:organizer_dashboard' %}"><i data-lucide="settings-2"></i> Organizer</a>
+            <!-- DESKTOP NAV -->
+            <nav class="nav-center">
+
+                <a href="{% url 'events:home' %}">
+                    <i data-lucide="compass"></i> Events
+                </a>
+
+                {% if not user.is_staff %}
+                <a href="{% url 'dashboard:user_dashboard' %}">
+                    <i data-lucide="layout-dashboard"></i> Dashboard
+                </a>
                 {% endif %}
+
+                {% if user.is_staff %}
+                <a href="{% url 'eventManagement:organizer_dashboard' %}">
+                    <i data-lucide="settings-2"></i> Organizer
+                </a>
+                {% endif %}
+
             </nav>
 
             <div class="nav-right">
-                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+
+                <!-- THEME BUTTON -->
+                <button id="theme-toggle" class="theme-toggle">
                     <span class="theme-toggle-track">
                         <span class="theme-toggle-thumb"></span>
                     </span>
@@ -49,132 +71,306 @@
                 </button>
 
                 {% if user.is_authenticated %}
+
+                <!-- NOTIFICATIONS -->
                 <a href="{% url 'dashboard:notifications' %}" class="btn-icon" aria-label="Notifications" style="position:relative;">
                     <i data-lucide="bell"></i>
                     <span class="nav-badge" id="header-notif-badge" style="position:absolute;top:-4px;right:-4px;display:none;">0</span>
                 </a>
+
+                <!-- USER MENU -->
                 <div class="user-menu">
-                    <button class="user-menu-toggle" id="user-menu-btn" aria-expanded="false" aria-haspopup="true">
-                        <div class="avatar">{{ user.first_name|first|default:"U" }}</div>
-                        <span>{{ user.first_name|default:"Account" }}</span>
-                        <i data-lucide="chevron-down" style="width:14px;height:14px;color:var(--muted);"></i>
+
+                    <button class="user-menu-toggle" id="user-menu-btn">
+                        <div class="avatar">
+                            {{ user.first_name|first|default:"U" }}
+                        </div>
+
+                        <span>
+                            {{ user.first_name|default:"Account" }}
+                        </span>
+
+                        <i data-lucide="chevron-down"
+                            style="width:14px;height:14px;color:var(--muted);"></i>
                     </button>
-                    <div class="user-dropdown" id="user-dropdown" role="menu">
-                        <a href="{% url 'dashboard:my_profile' %}" role="menuitem"><i data-lucide="user"></i> My Profile</a>
-                        <a href="{% url 'dashboard:my_events' %}" role="menuitem"><i data-lucide="calendar"></i> My Events</a>
-                        <a href="{% url 'dashboard:my_teams' %}" role="menuitem"><i data-lucide="users"></i> My Teams</a>
-                        <a href="{% url 'dashboard:pending_requests' %}" role="menuitem"><i data-lucide="inbox"></i> Requests</a>
+
+                    <div class="user-dropdown" id="user-dropdown">
+
+                        <a href="{% url 'dashboard:my_profile' %}">
+                            <i data-lucide="user"></i> My Profile
+                        </a>
+
+                        <a href="{% url 'dashboard:my_events' %}">
+                            <i data-lucide="calendar"></i> My Events
+                        </a>
+
+                        <a href="{% url 'dashboard:my_teams' %}">
+                            <i data-lucide="users"></i> My Teams
+                        </a>
+
+                        <a href="{% url 'dashboard:pending_requests' %}">
+                            <i data-lucide="inbox"></i> Requests
+                        </a>
+
                         <div class="dropdown-divider"></div>
-                        <a href="{% url 'dashboard:settings' %}" role="menuitem"><i data-lucide="settings"></i> Settings</a>
-                        <a href="{% url 'users:logout' %}" role="menuitem" style="color:var(--danger);"><i data-lucide="log-out"></i> Sign Out</a>
+
+                        <a href="{% url 'dashboard:settings' %}">
+                            <i data-lucide="settings"></i> Settings
+                        </a>
+
+                        <a href="{% url 'users:logout' %}" style="color:var(--danger);">
+                            <i data-lucide="log-out"></i> Sign Out
+                        </a>
+
                     </div>
                 </div>
+
                 {% else %}
-                <a href="{% url 'users:login' %}" class="btn-secondary btn-small"><i data-lucide="log-in"></i> Login</a>
-                <a href="{% url 'users:register' %}" class="btn-primary btn-small"><i data-lucide="user-plus"></i> Sign Up</a>
+
+                <a href="{% url 'users:login' %}" class="btn-primary btn-small">
+                    <i data-lucide="log-in"></i> Login
+                </a>
+
                 {% endif %}
 
-                <button id="mobile-toggle" class="mobile-toggle" aria-label="Open menu">
+                <button id="mobile-toggle" class="mobile-toggle">
                     <i data-lucide="menu"></i>
                 </button>
+
             </div>
         </div>
     </header>
 
-    <!-- Mobile nav overlay -->
+    <!-- MOBILE NAV -->
     <div id="nav-overlay" class="nav-overlay"></div>
-    <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile navigation">
+
+    <nav id="mobile-nav" class="mobile-nav">
+
         <div class="mobile-nav-header">
             <span class="brand">CampusArena</span>
-            <button id="mobile-close" class="mobile-nav-close" aria-label="Close menu"><i data-lucide="x"></i></button>
+
+            <button id="mobile-close">
+                <i data-lucide="x"></i>
+            </button>
         </div>
-        <a href="{% url 'events:home' %}"><i data-lucide="compass"></i> Events</a>
-        <a href="{% url 'dashboard:user_dashboard' %}"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-        {% if user.is_staff %}
-        <a href="{% url 'eventManagement:organizer_dashboard' %}"><i data-lucide="settings-2"></i> Organizer</a>
+
+        <a href="{% url 'events:home' %}">
+            <i data-lucide="compass"></i> Events
+        </a>
+
+        {% if not user.is_staff %}
+        <a href="{% url 'dashboard:user_dashboard' %}">
+            <i data-lucide="layout-dashboard"></i> Dashboard
+        </a>
         {% endif %}
+
+        {% if user.is_staff %}
+        <a href="{% url 'eventManagement:organizer_dashboard' %}">
+            <i data-lucide="settings-2"></i> Organizer
+        </a>
+        {% endif %}
+
         {% if user.is_authenticated %}
-        <a href="{% url 'dashboard:my_profile' %}"><i data-lucide="user"></i> My Profile</a>
-        <form method="POST" action="{% url 'users:logout' %}" style="margin:0;">
+
+        <a href="{% url 'dashboard:my_profile' %}">
+            <i data-lucide="user"></i> My Profile
+        </a>
+
+        <form method="POST" action="{% url 'users:logout' %}">
             {% csrf_token %}
-            <button type="submit" class="mobile-nav-logout" style="background:none;border:none;display:flex;align-items:center;gap:.65rem;padding:.7rem .8rem;border-radius:var(--radius-md);color:var(--danger);font:inherit;font-weight:600;cursor:pointer;width:100%;transition:all var(--motion-fast) ease;"><i data-lucide="log-out"></i> Sign Out</button>
+            <button type="submit" class="mobile-nav-logout"
+                style="background:none;border:none;display:flex;align-items:center;gap:.65rem;padding:.7rem .8rem;border-radius:var(--radius-md);color:var(--danger);font:inherit;font-weight:600;cursor:pointer;width:100%;">
+                <i data-lucide="log-out"></i> Sign Out
+            </button>
         </form>
+
         {% else %}
-        <a href="{% url 'users:login' %}"><i data-lucide="log-in"></i> Login</a>
-        <a href="{% url 'users:register' %}"><i data-lucide="user-plus"></i> Sign Up</a>
+
+        <a href="{% url 'users:login' %}">
+            <i data-lucide="log-in"></i> Login
+        </a>
+
         {% endif %}
     </nav>
 
-    <!-- Django Messages -->
-    {% if messages %}
-    <div class="container" style="padding-top:.75rem;">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
-            <i
-                data-lucide="{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}alert-circle{% elif message.tags == 'warning' %}alert-triangle{% else %}info{% endif %}"></i>
-            {{ message }}
-            <button class="alert-close" aria-label="Dismiss">&times;</button>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <!-- Main -->
+    <!-- MAIN -->
     <main id="main-content" class="container main-content">
+        {% if messages %}
+        <div class="messages-container" style="margin-bottom:1rem;">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert" style="padding:.75rem 1rem;border-radius:var(--radius-md);margin-bottom:.4rem;background:var(--surface-2);border:1px solid var(--border);color:var(--text);">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
+    <!-- FOOTER -->
     <footer class="site-footer">
         <div class="container">
+
             <div class="footer-grid">
+
                 <div>
                     <div class="footer-brand">CampusArena</div>
-                    <p class="footer-about">Discover, compete, and build with fellow students. Your campus, your arena —
-                        find hackathons, workshops, and challenges designed for student creators.</p>
+
+                    <p class="footer-about">
+                        Discover, compete, and build with fellow students.
+                        Your campus, your arena — find hackathons, workshops,
+                        and challenges designed for student creators.
+                    </p>
                 </div>
+
                 <div class="footer-col">
                     <h4>Platform</h4>
                     <a href="{% url 'events:home' %}">Browse Events</a>
                     <a href="{% url 'dashboard:user_dashboard' %}">Dashboard</a>
                     <a href="{% url 'eventManagement:organizer_dashboard' %}">Organize</a>
                 </div>
+
                 <div class="footer-col">
                     <h4>Account</h4>
                     <a href="{% url 'users:login' %}">Login</a>
                     <a href="{% url 'users:register' %}">Register</a>
                     <a href="{% url 'users:forgot_password' %}">Reset Password</a>
                 </div>
+
                 <div class="footer-col">
                     <h4>Support</h4>
                     <a href="{% url 'users:verify_email' %}">Email Verification</a>
                     <a href="{% url 'users:forgot_password' %}">Help Center</a>
                 </div>
+
             </div>
+
             <div class="footer-bottom">
                 <p>&copy; 2026 CampusArena. Built for students, by students.</p>
-                <div class="footer-social">
-                    <a href="#" aria-label="GitHub"><i data-lucide="github"></i></a>
-                    <a href="#" aria-label="Twitter"><i data-lucide="twitter"></i></a>
-                    <a href="#" aria-label="LinkedIn"><i data-lucide="linkedin"></i></a>
-                    <a href="#" aria-label="Instagram"><i data-lucide="instagram"></i></a>
-                </div>
             </div>
+
         </div>
     </footer>
 
+    <!-- Scripts -->
     <script src="{% static 'js/theme.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
-    {% block extra_js %}{% endblock %}
-    <!-- Auto-dismiss flash messages after 5s -->
-    <script>
-        setTimeout(()=>{
-            document.querySelectorAll('.alert').forEach(a=>{
-                a.style.cssText='opacity:0;transform:translateY(-6px);transition:.3s';
-                setTimeout(()=>a.remove(),320);
-            });
-        }, 5000);
-    </script>
-</body>
 
+    <!-- Circular Reveal Theme Toggle Logic -->
+    <style>
+        /* Setup the native View Transition API behavior */
+        ::view-transition-group(root) {
+            animation-duration: 0.7s;
+            animation-timing-function: cubic-bezier(0.34, 1.2, 0.64, 1); /* Smooth spring */
+        }
+        
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation: none;
+            mix-blend-mode: normal;
+            display: block;
+        }
+        
+        ::view-transition-old(root) {
+            z-index: 1;
+        }
+        
+        ::view-transition-new(root) {
+            z-index: 2147483646; /* Ensure new theme always expands on top */
+        }
+
+        /* * CRITICAL FIX: Kill standard CSS transitions momentarily.
+         * If elements fade slowly while the ripple happens, the browser captures a 
+         * "half-faded" screenshot and the ripple effect breaks entirely.
+         */
+        html.vt-active,
+        html.vt-active *,
+        html.vt-active *::before,
+        html.vt-active *::after {
+            transition: none !important;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('theme-toggle');
+            if (!toggleBtn) return;
+
+            const initialLabel = document.getElementById('theme-label');
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            if (initialLabel) initialLabel.textContent = currentTheme === 'dark' ? 'Dark' : 'Light';
+
+            // The 'true' at the end of this listener enables the "Capture Phase". 
+            // It completely intercepts the click BEFORE `theme.js` gets a chance to see it.
+            toggleBtn.addEventListener('click', (e) => {
+                // STOP theme.js from interfering
+                e.preventDefault();
+                e.stopPropagation();
+
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const nextTheme = isDark ? 'light' : 'dark';
+
+                const updateTheme = () => {
+                    document.documentElement.setAttribute('data-theme', nextTheme);
+                    localStorage.setItem('campusarena-theme', nextTheme);
+                    const label = document.getElementById('theme-label');
+                    if(label) label.textContent = nextTheme === 'dark' ? 'Dark' : 'Light';
+                };
+
+                // Fallback for older browsers (Firefox / older Safari)
+                if (!document.startViewTransition) {
+                    updateTheme();
+                    return;
+                }
+
+                // 1. Get click coordinates
+                const x = e.clientX;
+                const y = e.clientY;
+
+                // 2. Calculate distance to the furthest screen corner to ensure circle fills screen
+                const endRadius = Math.hypot(
+                    Math.max(x, window.innerWidth - x),
+                    Math.max(y, window.innerHeight - y)
+                );
+
+                // 3. Temporarily disable CSS transitions so the VT snapshot is instant and clean
+                document.documentElement.classList.add('vt-active');
+
+                // 4. Initiate the View Transition API
+                const transition = document.startViewTransition(updateTheme);
+
+                // 5. Animate the ripple clip-path
+                transition.ready.then(() => {
+                    const animation = document.documentElement.animate(
+                        {
+                            clipPath: [
+                                `circle(0px at ${x}px ${y}px)`,
+                                `circle(${endRadius}px at ${x}px ${y}px)`
+                            ]
+                        },
+                        {
+                            duration: 600,
+                            easing: 'cubic-bezier(0.34, 1.2, 0.64, 1)', 
+                            pseudoElement: '::view-transition-new(root)'
+                        }
+                    );
+
+                    // Re-enable normal CSS transitions when animation finishes
+                    animation.onfinish = () => {
+                        document.documentElement.classList.remove('vt-active');
+                    };
+                });
+                
+                // Cleanup in case of interruption
+                transition.finished.finally(() => {
+                    document.documentElement.classList.remove('vt-active');
+                });
+
+            }, true); // <-- This 'true' blocks theme.js interference!
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
 </html>

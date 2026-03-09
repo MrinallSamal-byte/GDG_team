@@ -227,6 +227,13 @@ document.addEventListener('DOMContentLoaded', () => {
         update(); setInterval(update, 1000);
     });
 
+    /* ─── Progress bars ───────────────────────────────────────────────────── */
+    document.querySelectorAll('.progress-fill[data-progress]').forEach(el => {
+        const rawValue = Number.parseFloat(el.dataset.progress || '0');
+        const progress = Number.isFinite(rawValue) ? Math.min(100, Math.max(0, rawValue)) : 0;
+        el.style.width = `${progress}%`;
+    });
+
     /* ─── Skill chip toggle ───────────────────────────────────────────────── */
     document.querySelectorAll('.chip-toggle .chip').forEach(chip => {
         chip.addEventListener('click', () => {
@@ -466,6 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ─── Chat form ───────────────────────────────────────────────────────── */
     document.getElementById('chat-form')?.addEventListener('submit', e => {
+        if (e.currentTarget.dataset.serverSubmit === 'true') return;
         e.preventDefault();
         const inp = e.currentTarget.querySelector('input[name="message"]');
         const msg = inp?.value?.trim();
