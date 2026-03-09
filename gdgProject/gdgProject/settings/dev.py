@@ -13,9 +13,9 @@ from .base import *  # noqa: F401,F403
 DEBUG = True
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 
-# ─── Database (SQLite for rapid local dev) ───────────────────────────────────
-DATABASES["default"]["ENGINE"] = "django.db.backends.sqlite3"  # noqa: F405
-DATABASES["default"]["NAME"] = BASE_DIR / "db.sqlite3"  # noqa: F405
+# ─── Database (Inherited from base.py configured via .env) ───────────────────
+# DATABASES["default"]["ENGINE"] = "django.db.backends.sqlite3"  # noqa: F405
+# DATABASES["default"]["NAME"] = BASE_DIR / "db.sqlite3"  # noqa: F405
 
 # ─── Email — console in dev ─────────────────────────────────────────────────
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
