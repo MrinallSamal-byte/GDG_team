@@ -27,8 +27,8 @@
                             data-lucide="{% if notif.type == 'success' %}check-circle{% elif notif.type == 'warning' %}alert-triangle{% elif notif.type == 'info' %}info{% else %}bell{% endif %}"></i>
                     </div>
                     <div style="flex:1;">
-                        <p style="margin-bottom:.2rem;">{{ notif.message }}</p>
-                        <small class="muted">{{ notif.time }}</small>
+                        <p style="margin-bottom:.2rem;">{% if notif.title %}<strong>{{ notif.title }}</strong> — {% endif %}{{ notif.body }}</p>
+                        <small class="muted">{{ notif.created_at|timesince }} ago</small>
                     </div>
                 </div>
             </article>

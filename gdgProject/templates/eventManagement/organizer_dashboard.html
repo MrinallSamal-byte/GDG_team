@@ -53,6 +53,7 @@
         <article class="surface" style="padding: 1.25rem;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1rem;">
                 <div>
+<<<<<<< HEAD
                     <h3 style="margin:0; font-size: 1.15rem;">{{ event.name }}</h3>
                     <span class="text-soft" style="font-size: 0.85rem;">{{ event.date_range }}</span>
                 </div>
@@ -107,6 +108,28 @@
                 <button class="btn-secondary btn-small"><i data-lucide="archive" style="color: var(--warn);"></i> Archive</button>
                 <button class="btn-secondary btn-small" style="color: var(--danger);"><i data-lucide="trash-2"></i> Delete</button>
             </div>
+=======
+                    <h3 style="margin:0; font-size: 1.15rem;">{{ event.title }}</h3>
+                    <span class="text-soft" style="font-size: 0.85rem;">{{ event.event_start|date:"M d" }}–{{ event.event_end|date:"M d, Y" }}</span>
+                </div>
+                <span class="status {% if event.status == 'registration_open' or event.status == 'ongoing' %}open{% elif event.status == 'completed' %}closed{% else %}closing{% endif %}">{{ event.get_status_display }}</span>
+            </div>
+            <div class="text-soft" style="font-size: 0.9rem; margin-bottom: 1.5rem;">
+                <i data-lucide="users" style="width:14px;height:14px; vertical-align:middle;"></i> {{ event.registration_count }} Registrations
+            </div>
+            <!-- Requirement 2 & 3: Actions + Delete/Archive -->
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="{% url 'events:event_detail' event.pk %}" class="btn-secondary btn-small"><i data-lucide="eye"></i> View</a>
+                <button class="btn-secondary btn-small"><i data-lucide="users"></i> Participants</button>
+                <button class="btn-secondary btn-small"><i data-lucide="megaphone"></i> Announce</button>
+            </div>
+        </article>
+        {% empty %}
+        <article class="surface" style="padding: 1.5rem; text-align: center;">
+            <i data-lucide="calendar-x" style="width:32px;height:32px;color:var(--muted);margin-bottom:.5rem;"></i>
+            <p class="text-soft">You haven't created any events yet.</p>
+            <a href="{% url 'eventManagement:create_event' %}" class="btn-primary" style="margin-top:.75rem;"><i data-lucide="plus"></i> Create Your First Event</a>
+>>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
         </article>
         {% endfor %}
     </div>
@@ -125,10 +148,18 @@
                     {% csrf_token %}
                     <div class="form-field">
                         <i data-lucide="target"></i>
+<<<<<<< HEAD
                         <select required style="padding-left: 2.6rem;">
                             <option value="">Select Event Target...</option>
                             <option value="hackfest">HackFest 2026</option>
                             <option value="designjam">Design Jam Pro</option>
+=======
+                        <select required style="padding-left: 2.6rem;" name="event_id">
+                            <option value="">Select Event Target...</option>
+                            {% for event in my_events %}
+                            <option value="{{ event.pk }}">{{ event.title }}</option>
+                            {% endfor %}
+>>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
                         </select>
                     </div>
                     <div class="form-field">

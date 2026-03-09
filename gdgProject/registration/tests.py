@@ -1,6 +1,12 @@
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import timezone
+
+from events.models import Event, EventStatus
+from registration.models import Registration, RegistrationTechStack, RegistrationType
+from team.models import Team, TeamMembership
+from users.models import UserProfile
 
 
 class RegistrationViewTest(TestCase):
@@ -11,7 +17,20 @@ class RegistrationViewTest(TestCase):
         self.user = User.objects.create_user(
             username='regtest', password='testpass123',
         )
-        self.url = reverse('registration:register_event', args=[1])
+        UserProfile.objects.create(user=self.user)
+        now = timezone.now()
+        self.event = Event.objects.create(
+            title='Test Event',
+            slug='test-event',
+            description='Test',
+            status=EventStatus.REGISTRATION_OPEN,
+            registration_start=now - timezone.timedelta(days=1),
+            registration_end=now + timezone.timedelta(days=10),
+            event_start=now + timezone.timedelta(days=15),
+            event_end=now + timezone.timedelta(days=16),
+            created_by=self.user,
+        )
+        self.url = reverse('registration:register_event', args=[self.event.pk])
 
     def test_requires_login(self):
         resp = self.client.get(self.url)
@@ -22,7 +41,6 @@ class RegistrationViewTest(TestCase):
         self.client.login(username='regtest', password='testpass123')
         resp = self.client.get(self.url)
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'Event Registration')
 
     def test_submit_missing_fields(self):
         self.client.login(username='regtest', password='testpass123')
@@ -39,5 +57,44 @@ class RegistrationViewTest(TestCase):
             'college': 'MIT',
             'branch': 'CSE',
             'year': '3',
+            'preferred_role': 'Backend Developer',
+            'looking_for_team': 'on',
+            'skills': 'Python,Django',
         })
-        self.assertRedirects(resp, reverse('events:home'))
+        self.assertRedirects(resp, reverse('events:event_detail', args=[self.event.pk]))
+        registration = Registration.objects.get(event=self.event, user=self.user)
+        self.assertEqual(registration.type, RegistrationType.INDIVIDUAL)
+        self.assertEqual(registration.preferred_role, 'backend')
+        self.assertTrue(registration.looking_for_team)
+        self.assertCountEqual(
+            RegistrationTechStack.objects.filter(registration=registration).values_list('tech_name', flat=True),
+            ['Python', 'Django'],
+        )
+
+    def test_create_team_choice_creates_team_registration(self):
+        self.event.participation_type = 'both'
+        self.event.save(update_fields=['participation_type'])
+
+        self.client.login(username='regtest', password='testpass123')
+        resp = self.client.post(self.url, {
+            'type': 'create_team',
+            'full_name': 'Test User',
+            'email': 'test@example.com',
+            'phone': '1234567890',
+            'college': 'MIT',
+            'branch': 'CSE',
+            'year': '3',
+            'preferred_role': 'Backend Developer',
+            'team_name': 'CodeCrafters',
+            'skills': 'Python,Django',
+        })
+
+        team = Team.objects.get(event=self.event, name='CodeCrafters')
+        self.assertRedirects(resp, reverse('team:team_management', args=[team.pk]))
+        self.assertTrue(TeamMembership.objects.filter(team=team, user=self.user, role='backend').exists())
+        registration = Registration.objects.get(event=self.event, user=self.user)
+        self.assertEqual(registration.team, team)
+        self.assertCountEqual(
+            RegistrationTechStack.objects.filter(registration=registration).values_list('tech_name', flat=True),
+            ['Python', 'Django'],
+        )

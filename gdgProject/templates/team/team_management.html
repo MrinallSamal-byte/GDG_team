@@ -11,7 +11,7 @@
             <p class="muted">{{ team.event }}</p>
         </div>
         <div style="display:flex;align-items:center;gap:.6rem;">
-            <span class="status open"><i data-lucide="users"></i> Members {{ team.members_count }}</span>
+            <span class="status open"><i data-lucide="users"></i> Members {{ member_count }}</span>
             <button class="btn-secondary btn-small" data-action="team-settings"><i data-lucide="settings-2"></i> Settings</button>
         </div>
     </div>
@@ -19,9 +19,10 @@
     <!-- Team Capacity -->
     <div class="reveal" style="max-width:400px;margin-bottom:1.2rem;">
         <div class="progress-track">
-            <div class="progress-fill" style="width:75%;"></div>
+            {% widthratio member_count team.event.max_team_size 100 as team_fill_percent %}
+            <div class="progress-fill" data-progress="{{ team_fill_percent }}"></div>
         </div>
-        <div class="progress-label"><span>3 members</span><span>4 max</span></div>
+        <div class="progress-label"><span>{{ member_count }} member{{ member_count|pluralize }}</span><span>{{ team.event.max_team_size }} max</span></div>
     </div>
 
     <div class="two-col">
@@ -32,24 +33,26 @@
                 {% for member in members %}
                 <li>
                     <div style="display:flex;align-items:center;gap:.6rem;">
-                        <div class="avatar avatar-sm">{{ member.name|first }}</div>
+                        <div class="avatar avatar-sm">{{ member.user.get_full_name|default:member.user.username|first }}</div>
                         <div style="flex:1;">
-                            <strong>{{ member.name }}{% if member.leader %} <span
+                            <strong>{{ member.user.get_full_name|default:member.user.username }}{% if member.user_id == team.leader_id %} <span
                                     style="color:var(--primary);font-size:.78rem;">(Leader)</span>{% endif %}</strong>
-                            <span>{{ member.stack }} · {{ member.role }}</span>
+                            <span>{{ member.skills|default:'Skills not added yet' }} · {{ member.get_role_display }}</span>
                         </div>
                     </div>
                 </li>
                 {% endfor %}
+                {% if team.spots_available > 0 %}
                 <li>
                     <div style="display:flex;align-items:center;gap:.6rem;">
                         <div class="avatar avatar-sm" style="background:var(--border);color:var(--muted);">?</div>
                         <div>
-                            <strong style="color:var(--muted);">1 spot open</strong>
-                            <span>Need: ML/AI Engineer</span>
+                            <strong style="color:var(--muted);">{{ team.spots_available }} spot{{ team.spots_available|pluralize }} open</strong>
+                            <span>Recruit teammates to fill the remaining capacity.</span>
                         </div>
                     </div>
                 </li>
+                {% endif %}
             </ul>
         </article>
 
@@ -75,16 +78,29 @@
                 {% for req in requests %}
                 <li>
                     <div style="display:flex;align-items:center;gap:.6rem;">
-                        <div class="avatar avatar-sm">{{ req.name|first }}</div>
+                        <div class="avatar avatar-sm">{{ req.user.get_full_name|default:req.user.username|first }}</div>
                         <div style="flex:1;">
-                            <strong>{{ req.name }}</strong>
-                            <span>{{ req.stack }} · {{ req.role }}</span>
+                            <strong>{{ req.user.get_full_name|default:req.user.username }}</strong>
+                            <span>{{ req.skills|default:'Skills not shared yet' }} · {{ req.get_role_display }}</span>
+                            {% if req.message %}<span style="display:block;">{{ req.message }}</span>{% endif %}
                         </div>
                     </div>
+                    {% if is_leader %}
                     <div class="inline-actions">
-                        <button class="btn-primary btn-small" data-action="accept-request"><i data-lucide="check"></i> Approve</button>
-                        <button class="btn-secondary btn-small" data-action="decline-request"><i data-lucide="x"></i> Decline</button>
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="approve_request">
+                            <input type="hidden" name="request_id" value="{{ req.pk }}">
+                            <button class="btn-primary btn-small" type="submit"><i data-lucide="check"></i> Approve</button>
+                        </form>
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="decline_request">
+                            <input type="hidden" name="request_id" value="{{ req.pk }}">
+                            <button class="btn-secondary btn-small" type="submit"><i data-lucide="x"></i> Decline</button>
+                        </form>
                     </div>
+                    {% endif %}
                 </li>
                 {% empty %}
                 <li class="empty-state"><i data-lucide="inbox"></i>
@@ -94,38 +110,55 @@
             </ul>
         </article>
 
+        {% if is_leader %}
+        <article class="surface reveal">
+            <h2><i data-lucide="sparkles"></i> Suggested Members</h2>
+            <ul class="list">
+                {% for candidate in suggested_members %}
+                <li>
+                    <div style="display:flex;align-items:center;gap:.6rem;">
+                        <div class="avatar avatar-sm">{{ candidate.display_name|first }}</div>
+                        <div style="flex:1;">
+                            <strong>{{ candidate.display_name }}</strong>
+                            <span>{{ candidate.college|default:'College not added' }}</span>
+                            <span style="display:block;">{{ candidate.preferred_role_label|default:'Role not specified' }} · {{ candidate.tech_stacks|join:', '|default:'No tech stacks shared yet' }}</span>
+                            {% if candidate.match_reasons %}
+                            <span style="display:block;">Matches missing skills: {{ candidate.match_reasons|join:', ' }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="empty-state"><i data-lucide="sparkles"></i>
+                    <p>No suggested members available right now.</p>
+                </li>
+                {% endfor %}
+            </ul>
+        </article>
+        {% endif %}
+
         <!-- Team Chat -->
         <article class="surface reveal">
             <h2><i data-lucide="message-circle"></i> Team Chat</h2>
             <div class="chat-box">
+                {% for chat_message in chat_messages %}
                 <div class="chat-msg">
-                    <div class="avatar avatar-sm">J</div>
+                    <div class="avatar avatar-sm">{{ chat_message.sender.get_full_name|default:chat_message.sender.username|first }}</div>
                     <div class="chat-bubble">
-                        <strong>John</strong>
-                        Let's finalize the problem statement tonight.
-                        <span>2 hrs ago</span>
+                        <strong>{{ chat_message.sender.get_full_name|default:chat_message.sender.username }}</strong>
+                        {{ chat_message.body }}
+                        <span>{{ chat_message.created_at|timesince }} ago</span>
                     </div>
                 </div>
-                <div class="chat-msg">
-                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,var(--ok),#2dd4bf);">J</div>
-                    <div class="chat-bubble">
-                        <strong>Jane</strong>
-                        I'll prepare backend architecture notes.
-                        <span>1 hr ago</span>
-                    </div>
+                {% empty %}
+                <div class="empty-state"><i data-lucide="message-circle-off"></i>
+                    <p>No team messages yet.</p>
                 </div>
-                <div class="chat-msg">
-                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,var(--warn),#f59e0b);">A
-                    </div>
-                    <div class="chat-bubble">
-                        <strong>Alex</strong>
-                        Sharing wireframes in 20 mins.
-                        <span>35 min ago</span>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
-            <form method="POST" action="" class="chat-input" id="chat-form">
+            <form method="POST" action="" class="chat-input" id="chat-form" data-server-submit="true">
                 {% csrf_token %}
+                <input type="hidden" name="action" value="send_message">
                 <input type="text" name="message" placeholder="Type a message..." autocomplete="off">
                 <button type="submit" class="btn-primary btn-small"><i data-lucide="send"></i></button>
             </form>

@@ -3,6 +3,10 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
+from events.models import Event
+from notification.models import Notification
+from registration.models import Registration
+from team.models import JoinRequest, JoinRequestStatus, Team, TeamMembership
 from users.models import UserProfile
 
 
@@ -14,20 +18,36 @@ def _get_profile(user):
 
 @login_required
 def user_dashboard(request):
+    # Recent registrations
+    my_regs = Registration.objects.filter(user=request.user).select_related('event')[:5]
     my_events = [
-        {'title': 'HackFest 2026', 'status': 'Registered'},
-        {'title': 'Design Jam Pro', 'status': 'Team Pending'},
-        {'title': 'QuizMania', 'status': 'Completed'},
+        {
+            'title': reg.event.title,
+            'status': reg.get_status_display(),
+            'id': reg.event.pk,
+        }
+        for reg in my_regs
     ]
+
+    # Teams
+    my_memberships = TeamMembership.objects.filter(
+        user=request.user, team__is_deleted=False,
+    ).select_related('team', 'team__event')[:5]
     my_teams = [
-        {'name': 'Team Alpha', 'event': 'HackFest 2026', 'role': 'Frontend Dev'},
-        {'name': 'PixelSmiths', 'event': 'Design Jam Pro', 'role': 'UI/UX'},
+        {
+            'name': m.team.name,
+            'event': m.team.event.title,
+            'role': m.get_role_display(),
+            'id': m.team.pk,
+        }
+        for m in my_memberships
     ]
-    notifications = [
-        'Your join request to Team Alpha was accepted.',
-        'New announcement: HackFest mentor AMA at 6 PM.',
-        'Reminder: Registration deadline ends in 12 hours.',
-    ]
+
+    # Recent notifications
+    notifications = Notification.objects.filter(
+        user=request.user
+    ).order_by('-created_at')[:5]
+
     return render(
         request,
         'dashboard/user_dashboard.html',
@@ -58,9 +78,9 @@ def my_profile(request):
         'skills': profile.skills_list or [],
     }
     stats = {
-        'events_joined': 8,
-        'teams': 3,
-        'certificates': 5,
+        'events_joined': Registration.objects.filter(user=user).count(),
+        'teams': TeamMembership.objects.filter(user=user, team__is_deleted=False).count(),
+        'certificates': 0,
     }
     return render(request, 'dashboard/my_profile.html', {
         'profile': profile_data,
@@ -71,12 +91,27 @@ def my_profile(request):
 
 @login_required
 def my_events(request):
-    events = [
-        {'id': 1, 'title': 'HackFest 2026', 'category': 'Hackathon', 'mode': 'Hybrid', 'date': 'Apr 15–17, 2026', 'status': 'Registered', 'team': 'Team Alpha', 'role': 'Frontend Dev'},
-        {'id': 2, 'title': 'Design Jam Pro', 'category': 'Design', 'mode': 'Online', 'date': 'May 5, 2026', 'status': 'Team Pending', 'team': 'PixelSmiths', 'role': 'UI/UX'},
-        {'id': 3, 'title': 'QuizMania', 'category': 'Quiz', 'mode': 'Offline', 'date': 'Mar 20, 2026', 'status': 'Completed', 'team': None, 'role': None},
-        {'id': 4, 'title': 'CloudSprint Workshop', 'category': 'Workshop', 'mode': 'Online', 'date': 'Jun 10, 2026', 'status': 'Registered', 'team': None, 'role': None},
-    ]
+    registrations = Registration.objects.filter(
+        user=request.user
+    ).select_related('event', 'team')
+
+    events = []
+    for reg in registrations:
+        membership = TeamMembership.objects.filter(
+            user=request.user, team__event=reg.event, team__is_deleted=False,
+        ).select_related('team').first()
+
+        events.append({
+            'id': reg.event.pk,
+            'title': reg.event.title,
+            'category': reg.event.get_category_display(),
+            'mode': reg.event.get_mode_display(),
+            'date': reg.event.event_start,
+            'status': reg.get_status_display(),
+            'team': membership.team.name if membership else None,
+            'role': membership.get_role_display() if membership else None,
+        })
+
     return render(request, 'dashboard/my_events.html', {
         'events': events,
         'current_page': 'events',
@@ -85,26 +120,26 @@ def my_events(request):
 
 @login_required
 def my_teams(request):
-    teams = [
-        {
-            'name': 'Team Alpha',
-            'event': 'HackFest 2026',
-            'role': 'Frontend Dev',
-            'members': ['Arjun S.', 'Priya V.', 'Rahul M.', 'Student User'],
-        },
-        {
-            'name': 'PixelSmiths',
-            'event': 'Design Jam Pro',
-            'role': 'UI/UX Lead',
-            'members': ['Sneha K.', 'Student User', 'Aman P.'],
-        },
-        {
-            'name': 'CodeCrafters',
-            'event': 'CloudSprint Workshop',
-            'role': 'Backend Dev',
-            'members': ['Student User', 'Divya R.'],
-        },
-    ]
+    memberships = TeamMembership.objects.filter(
+        user=request.user, team__is_deleted=False,
+    ).select_related('team', 'team__event')
+
+    teams = []
+    for m in memberships:
+        members = TeamMembership.objects.filter(
+            team=m.team
+        ).select_related('user')
+        teams.append({
+            'id': m.team.pk,
+            'name': m.team.name,
+            'event': m.team.event.title,
+            'role': m.get_role_display(),
+            'members': [
+                mem.user.get_full_name() or mem.user.username
+                for mem in members
+            ],
+        })
+
     return render(request, 'dashboard/my_teams.html', {
         'teams': teams,
         'current_page': 'teams',
@@ -113,33 +148,50 @@ def my_teams(request):
 
 @login_required
 def pending_requests(request):
-    incoming = [
-        {'from': 'Kavya Nair', 'team': 'Team Alpha', 'event': 'HackFest 2026'},
-        {'from': 'Rohan Gupta', 'team': 'CodeCrafters', 'event': 'CloudSprint Workshop'},
+    # Incoming: requests to teams the user leads
+    led_teams = Team.objects.filter(leader=request.user, is_deleted=False)
+    incoming = JoinRequest.objects.filter(
+        team__in=led_teams,
+        status=JoinRequestStatus.PENDING,
+    ).select_related('user', 'team', 'team__event')
+
+    incoming_data = [
+        {
+            'id': jr.pk,
+            'from': jr.user.get_full_name() or jr.user.username,
+            'team': jr.team.name,
+            'event': jr.team.event.title,
+        }
+        for jr in incoming
     ]
-    outgoing = [
-        {'team': 'DevSquad', 'event': 'HackFest 2026', 'status': 'Pending'},
-        {'team': 'Team Phoenix', 'event': 'Design Jam Pro', 'status': 'Accepted'},
-        {'team': 'ByteBusters', 'event': 'QuizMania', 'status': 'Declined'},
+
+    # Outgoing: requests the user has sent
+    outgoing = JoinRequest.objects.filter(
+        user=request.user,
+    ).select_related('team', 'team__event').order_by('-created_at')[:20]
+
+    outgoing_data = [
+        {
+            'team': jr.team.name,
+            'event': jr.team.event.title,
+            'status': jr.get_status_display(),
+        }
+        for jr in outgoing
     ]
+
     return render(request, 'dashboard/pending_requests.html', {
-        'incoming': incoming,
-        'outgoing': outgoing,
+        'incoming': incoming_data,
+        'outgoing': outgoing_data,
         'current_page': 'requests',
     })
 
 
 @login_required
 def notifications_view(request):
-    notifications = [
-        {'message': 'Your join request to Team Alpha was accepted.', 'time': '2 minutes ago', 'type': 'success', 'read': False},
-        {'message': 'New announcement: HackFest mentor AMA at 6 PM.', 'time': '15 minutes ago', 'type': 'info', 'read': False},
-        {'message': 'Reminder: Registration deadline ends in 12 hours.', 'time': '1 hour ago', 'type': 'warning', 'read': False},
-        {'message': 'Your team PixelSmiths was created successfully.', 'time': '3 hours ago', 'type': 'success', 'read': True},
-        {'message': 'Welcome to CampusArena! Complete your profile to get started.', 'time': '1 day ago', 'type': 'info', 'read': True},
-        {'message': 'Rohan Gupta requested to join CodeCrafters.', 'time': '1 day ago', 'type': 'info', 'read': True},
-        {'message': 'QuizMania results are out — you ranked #12!', 'time': '2 days ago', 'type': 'success', 'read': True},
-    ]
+    notifications = Notification.objects.filter(
+        user=request.user
+    ).order_by('-created_at')[:30]
+
     return render(request, 'dashboard/notifications.html', {
         'notifications': notifications,
         'current_page': 'notifications',
@@ -180,17 +232,35 @@ def settings_view(request):
         'profile': profile,
     })
 
+<<<<<<< HEAD
 def find_teammates(request):
     return render(request, "dashboard/find_teammates.html", {
         "current_page": "find_teammates"
     })
 
+=======
+
+@login_required
+def find_teammates(request):
+    # Find users looking for teams
+    looking = Registration.objects.filter(
+        looking_for_team=True,
+    ).select_related('user', 'user__profile', 'event')[:50]
+
+    return render(request, "dashboard/find_teammates.html", {
+        "current_page": "find_teammates",
+        "looking_users": looking,
+    })
+
+
+>>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit_profile(request):
     profile = _get_profile(request.user)
 
     if request.method == "POST":
+<<<<<<< HEAD
         profile.phone = request.POST.get("phone")
         profile.github = request.POST.get("github")
         profile.linkedin = request.POST.get("linkedin")
@@ -198,6 +268,39 @@ def edit_profile(request):
         profile.college = request.POST.get("college")
         profile.branch = request.POST.get("branch")
         profile.year = request.POST.get("year")
+=======
+        profile.phone = request.POST.get("phone", "").strip()
+        profile.github = request.POST.get("github", "").strip()
+        profile.linkedin = request.POST.get("linkedin", "").strip()
+        profile.bio = request.POST.get("bio", "").strip()
+        profile.college = request.POST.get("college", "").strip()
+        profile.branch = request.POST.get("branch", "").strip()
+
+        year_val = request.POST.get("year", "").strip()
+        if year_val:
+            try:
+                year_int = int(year_val)
+                if 1 <= year_int <= 6:
+                    profile.year = year_int
+                else:
+                    messages.error(request, "Year must be between 1 and 6.")
+                    return render(request, "dashboard/edit_profile.html", {
+                        "profile": profile,
+                        "current_page": "profile",
+                    })
+            except ValueError:
+                messages.error(request, "Year must be a number.")
+                return render(request, "dashboard/edit_profile.html", {
+                    "profile": profile,
+                    "current_page": "profile",
+                })
+        else:
+            profile.year = None
+
+        skills = request.POST.get("skills", "").strip()
+        if skills:
+            profile.skills = skills
+>>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
 
         profile.save()
 
@@ -206,5 +309,9 @@ def edit_profile(request):
 
     return render(request, "dashboard/edit_profile.html", {
         "profile": profile,
+<<<<<<< HEAD
         "current_page": "profile"
+=======
+        "current_page": "profile",
+>>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
     })

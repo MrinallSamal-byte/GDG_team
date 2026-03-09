@@ -3,20 +3,21 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 
 services:
-  # ── PostgreSQL ───────────────────────────────────────────────────────────
+  # ── MySQL ────────────────────────────────────────────────────────────────
   db:
-    image: postgres:16-alpine
+    image: mysql:8.0
     restart: unless-stopped
     environment:
-      POSTGRES_DB: campusarena
-      POSTGRES_USER: campusarena
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      MYSQL_DATABASE: campusarena
+      MYSQL_USER: campusarena
+      MYSQL_PASSWORD: ${DB_PASSWORD:-changeme}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-changeme}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
     ports:
-      - "5432:5432"
+      - "3306:3306"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U campusarena"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -44,12 +45,12 @@ services:
     env_file:
       - .env
     environment:
-      DB_ENGINE: django.db.backends.postgresql
+      DB_ENGINE: django.db.backends.mysql
       DB_NAME: campusarena
       DB_USER: campusarena
       DB_PASSWORD: ${DB_PASSWORD:-changeme}
       DB_HOST: db
-      DB_PORT: 5432
+      DB_PORT: 3306
       REDIS_URL: redis://redis:6379/0
       CACHE_BACKEND: django.core.cache.backends.redis.RedisCache
       CACHE_LOCATION: redis://redis:6379/1
@@ -65,4 +66,4 @@ services:
       retries: 3
 
 volumes:
-  pgdata:
+  mysqldata:

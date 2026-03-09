@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 
-from .models import UserProfile
+from .models import UserProfile, UserTechStack
 
 
 class UserProfileInline(admin.StackedInline):
@@ -12,8 +12,13 @@ class UserProfileInline(admin.StackedInline):
     fk_name = 'user'
 
 
+class UserTechStackInline(admin.TabularInline):
+    model = UserTechStack
+    extra = 0
+
+
 class UserAdmin(BaseUserAdmin):
-    inlines = (UserProfileInline,)
+    inlines = (UserProfileInline, UserTechStackInline)
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff')
     list_select_related = ('profile',)
 

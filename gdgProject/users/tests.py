@@ -145,7 +145,7 @@ class RegisterViewTest(TestCase):
             'password_confirm': '123',
         })
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'at least 8 characters')
+        self.assertContains(resp, 'at least 10 characters')
 
     def test_register_duplicate_email(self):
         User.objects.create_user(username='existing', email='dup@example.com', password='pass123')

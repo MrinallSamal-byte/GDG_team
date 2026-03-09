@@ -55,21 +55,27 @@
                 <div class="form-field">
                     <i data-lucide="tag"></i>
                     <select name="category">
-                        <option selected disabled>Category</option>
-                        <option>Hackathon</option>
-                        <option>Workshop</option>
-                        <option>Quiz</option>
-                        <option>Seminar</option>
-                        <option>Competition</option>
+                        <option value="" selected disabled>Category</option>
+                        <option value="hackathon">Hackathon</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="coding_contest">Coding Contest</option>
+                        <option value="quiz">Quiz / Competition</option>
+                        <option value="paper_presentation">Paper Presentation</option>
+                        <option value="design_challenge">Design Challenge</option>
+                        <option value="ideathon">Ideathon</option>
+                        <option value="case_study">Case Study</option>
+                        <option value="cultural">Cultural</option>
+                        <option value="sports">Sports</option>
+                        <option value="other">Other</option>
                     </select>
                 </div>
                 <div class="form-field">
                     <i data-lucide="monitor"></i>
                     <select name="mode">
-                        <option selected disabled>Mode</option>
-                        <option>Online</option>
-                        <option>Offline</option>
-                        <option>Hybrid</option>
+                        <option value="" selected disabled>Mode</option>
+                        <option value="online">Online</option>
+                        <option value="offline">Offline</option>
+                        <option value="hybrid">Hybrid</option>
                     </select>
                 </div>
                 <!-- 1. Venue Field -->
@@ -79,11 +85,23 @@
                 </div>
                 <div class="form-field">
                     <i data-lucide="calendar"></i>
-                    <input type="date" name="start_date" required>
+                    <input type="datetime-local" name="start_date" required>
+                    <label style="font-size:.75rem;color:var(--muted);margin-top:.2rem;">Event Start</label>
                 </div>
                 <div class="form-field">
                     <i data-lucide="calendar-check"></i>
-                    <input type="date" name="end_date" required>
+                    <input type="datetime-local" name="end_date" required>
+                    <label style="font-size:.75rem;color:var(--muted);margin-top:.2rem;">Event End</label>
+                </div>
+                <div class="form-field">
+                    <i data-lucide="calendar"></i>
+                    <input type="datetime-local" name="reg_start_date">
+                    <label style="font-size:.75rem;color:var(--muted);margin-top:.2rem;">Registration Start</label>
+                </div>
+                <div class="form-field">
+                    <i data-lucide="calendar-check"></i>
+                    <input type="datetime-local" name="reg_end_date">
+                    <label style="font-size:.75rem;color:var(--muted);margin-top:.2rem;">Registration End</label>
                 </div>
                 <div class="form-field" style="grid-column:1/-1;">
                     <textarea name="description" rows="4"
@@ -100,7 +118,11 @@
                 <!-- 2. Registration Fee -->
                 <div class="form-field">
                     <i data-lucide="credit-card"></i>
+<<<<<<< HEAD
                     <input type="text" name="registration_fee" placeholder="Registration Fee (e.g., Free, ₹500)">
+=======
+                    <input type="number" step="0.01" min="0" name="registration_fee" placeholder="Registration Fee (₹, 0 = Free)">
+>>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
                 </div>
                 <div class="form-field">
                     <i data-lucide="hash"></i>
@@ -109,10 +131,10 @@
                 <div class="form-field">
                     <i data-lucide="users-round"></i>
                     <select name="participation_type">
-                        <option selected disabled>Participation Type</option>
-                        <option>Solo</option>
-                        <option>Team</option>
-                        <option>Both</option>
+                        <option value="" selected disabled>Participation Type</option>
+                        <option value="individual">Individual</option>
+                        <option value="team">Team</option>
+                        <option value="both">Both</option>
                     </select>
                 </div>
                 <div class="form-field">
@@ -199,11 +221,11 @@
                 <div class="form-field">
                     <i data-lucide="badge-check"></i>
                     <select name="certificates">
-                        <option selected disabled>Certificates</option>
-                        <option>Participation only</option>
-                        <option>Merit only</option>
-                        <option>Both</option>
-                        <option>None</option>
+                        <option value="" selected disabled>Certificates</option>
+                        <option value="participation">Participation only</option>
+                        <option value="merit">Merit only</option>
+                        <option value="both">Both</option>
+                        <option value="none">None</option>
                     </select>
                 </div>
             </div>

@@ -355,10 +355,10 @@
         <h1>Your Campus,<br>Your <span>Arena.</span></h1>
         <p class="muted" style="max-width:520px;">Find hackathons, workshops, and coding challenges designed for student
             creators. Build your portfolio, grow your network.</p>
-        <div class="search-wrap">
-            <input type="text" placeholder="Search events, tech stacks, or colleges..." id="event-search">
-            <button class="btn-primary"><i data-lucide="search"></i> Search</button>
-        </div>
+        <form method="GET" action="" class="search-wrap" id="search-form">
+            <input type="text" name="q" placeholder="Search events, tech stacks, or colleges..." id="event-search" value="{{ q }}">
+            <button type="submit" class="btn-primary"><i data-lucide="search"></i> Search</button>
+        </form>
         <div class="stats-row">
             <div><strong>50+</strong><span>Events</span></div>
             <div><strong>2000+</strong><span>Participants</span></div>
@@ -371,6 +371,7 @@
 
         {% if featured_events %}
 
+<<<<<<< HEAD
             <div class="event-badge">{{ featured_events.0.category }}</div>
             <h2 style="font-size:1.25rem;">{{ featured_events.0.title }}</h2>
 
@@ -392,6 +393,27 @@
             <div class="hero-prize-row">
                 <i data-lucide="trophy" style="width:15px;height:15px;color:#f59e0b;flex-shrink:0;"></i>
                 <span>Prize: {{ featured_events.0.prize }}</span>
+=======
+            <div class="event-badge">{{ featured_events.0.get_category_display }}</div>
+            <h2 style="font-size:1.25rem;">{{ featured_events.0.title }}</h2>
+
+            <div class="event-meta">
+                <span><i data-lucide="calendar"></i> {{ featured_events.0.event_start|date:"M d, Y" }}</span>
+                <span><i data-lucide="radio"></i> {{ featured_events.0.get_mode_display }}</span>
+            </div>
+
+            <div>
+                <div class="progress-track">
+                    <div class="progress-fill" style="width:{% widthratio featured_events.0.registered_count featured_events.0.capacity 100 %}%;"></div>
+                </div>
+                <div class="progress-label"><span>{{ featured_events.0.registered_count }}/{{ featured_events.0.capacity }} spots filled</span></div>
+            </div>
+
+            {% if featured_events.0.prize_pool %}
+            <div class="hero-prize-row">
+                <i data-lucide="trophy" style="width:15px;height:15px;color:#f59e0b;flex-shrink:0;"></i>
+                <span>Prize: ₹{{ featured_events.0.prize_pool|floatformat:0 }}</span>
+>>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
             </div>
             {% endif %}
 
@@ -416,7 +438,7 @@
         <div class="chip-row" style="margin-top:.5rem;">
             {% for event in featured_events %}
             <a class="chip" href="{% url 'events:event_detail' event.id %}">
-                {{ event.title }} · <strong>{{ event.status }}</strong>
+                {{ event.title }} · <strong>{{ event.get_status_display }}</strong>
             </a>
             {% empty %}
             <span class="muted">No featured events available.</span>
@@ -429,41 +451,59 @@
 <section class="section reveal">
     <div class="section-head split">
         <h2><i data-lucide="grid-3x3"></i> Browse All Events</h2>
-        <div class="filters">
-            <button class="chip active"><i data-lucide="layers"></i> All</button>
-            <button class="chip"><i data-lucide="code-2"></i> Hackathons</button>
-            <button class="chip"><i data-lucide="book-open"></i> Workshops</button>
-            <button class="chip"><i data-lucide="brain"></i> Quizzes</button>
-            <button class="chip"><i data-lucide="award"></i> Competitions</button>
-        </div>
+        <form method="GET" action="" id="filter-form" style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+            {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+            <div class="filters">
+                <a href="?{% if q %}q={{ q }}&{% endif %}sort={{ active_sort }}"
+                   class="chip {% if not active_category %}active{% endif %}"><i data-lucide="layers"></i> All</a>
+                {% for val, label in categories %}
+                <a href="?{% if q %}q={{ q }}&{% endif %}category={{ val }}&sort={{ active_sort }}"
+                   class="chip {% if active_category == val %}active{% endif %}">{{ label }}</a>
+                {% endfor %}
+            </div>
+            <select name="sort" onchange="this.form.submit()" style="padding:.35rem .7rem;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.88rem;">
+                {% if active_category %}<input type="hidden" name="category" value="{{ active_category }}">{% endif %}
+                <option value="newest" {% if active_sort == 'newest' %}selected{% endif %}>Newest</option>
+                <option value="deadline" {% if active_sort == 'deadline' %}selected{% endif %}>Deadline Soon</option>
+                <option value="popular" {% if active_sort == 'popular' %}selected{% endif %}>Most Popular</option>
+            </select>
+        </form>
     </div>
 
     <div class="card-grid">
         {% for event in event_grid %}
         <article class="event-card reveal">
             <div class="event-card-banner">
-                <span class="event-badge">{{ event.category }}</span>
+                <span class="event-badge">{{ event.get_category_display }}</span>
             </div>
             <div class="event-card-body">
                 <h3>{{ event.title }}</h3>
                 
                 <div class="event-meta">
-                    <span><i data-lucide="calendar"></i> {{ event.date }}</span>
-                    <span><i data-lucide="radio"></i> {{ event.mode }}</span>
-                    <span><i data-lucide="users"></i> {{ event.type }}</span>
+                    <span><i data-lucide="calendar"></i> {{ event.event_start|date:"M d" }}{% if event.event_end and event.event_end != event.event_start %}–{{ event.event_end|date:"M d" }}{% endif %}</span>
+                    <span><i data-lucide="radio"></i> {{ event.get_mode_display }}</span>
+                    <span><i data-lucide="users"></i> {{ event.get_participation_type_display }}</span>
                 </div>
                 
                 <div class="event-card-footer">
                     
                     <div class="footer-left">
+<<<<<<< HEAD
                         <span class="status {{ event.status|lower }}">
                             {% if event.status == 'Open' %}
                                 <i data-lucide="circle-check" style="width: 14px; height: 14px;"></i>
                             {% elif event.status == 'Closed' %}
+=======
+                        <span class="status {% if event.status == 'registration_open' %}open{% elif event.status == 'completed' or event.status == 'registration_closed' %}closed{% endif %}">
+                            {% if event.status == 'registration_open' %}
+                                <i data-lucide="circle-check" style="width: 14px; height: 14px;"></i>
+                            {% elif event.status == 'completed' or event.status == 'registration_closed' %}
+>>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
                                 <i data-lucide="circle-x" style="width: 14px; height: 14px;"></i>
                             {% else %}
                                 <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
                             {% endif %}
+<<<<<<< HEAD
                             {{ event.status }}
                         </span>
                         
@@ -471,11 +511,24 @@
                         <span class="prize-badge" data-prize="{{ event.prize }}">
                             <i data-lucide="trophy" style="width: 14px; height: 14px;"></i> 
                             <span>{{ event.prize }}</span>
+=======
+                            {{ event.get_status_display }}
+                        </span>
+                        
+                        {% if event.prize_pool %}
+                        <span class="prize-badge" data-prize="₹{{ event.prize_pool|floatformat:0 }}">
+                            <i data-lucide="trophy" style="width: 14px; height: 14px;"></i> 
+                            <span>₹{{ event.prize_pool|floatformat:0 }}</span>
+>>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
                         </span>
                         {% endif %}
                     </div>
 
+<<<<<<< HEAD
                     {% if event.status == 'Closed' %}
+=======
+                    {% if event.status == 'completed' or event.status == 'registration_closed' %}
+>>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
                         <button class="btn-closed" disabled>
                             Closed <i data-lucide="lock" style="width: 16px; height: 16px;"></i>
                         </button>

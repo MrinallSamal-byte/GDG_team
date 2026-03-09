@@ -6,32 +6,38 @@
 <!-- Event Header -->
 <section class="event-header reveal">
     <div>
-        <p class="eyebrow"><i data-lucide="tag"></i> {{ event.category }} · {{ event.mode }}</p>
+        <p class="eyebrow"><i data-lucide="tag"></i> {{ event.get_category_display }} · {{ event.get_mode_display }}</p>
         <h1>{{ event.title }}</h1>
-        <p class="text-soft" style="max-width:600px;">{{ event.description }}</p>
+        <p class="text-soft" style="max-width:600px;">{{ event.description|truncatewords:50 }}</p>
         <div class="meta-row">
-            <span><i data-lucide="calendar"></i> {{ event.timeline }}</span>
-            <span><i data-lucide="users"></i> {{ event.registration }}</span>
-            <span><i data-lucide="clock"></i> Deadline in {{ event.countdown }}</span>
+            <span><i data-lucide="calendar"></i> {{ event.event_start|date:"M d" }}–{{ event.event_end|date:"M d, Y" }}</span>
+            <span><i data-lucide="users"></i> {{ event.registered_count }}/{{ event.capacity }} registered</span>
+            <span><i data-lucide="clock"></i> Reg closes {{ event.registration_end|date:"M d, Y" }}</span>
         </div>
         <!-- Progress bar -->
+        {% widthratio event.registered_count event.capacity 100 as registration_percent %}
         <div style="margin-top:.8rem;max-width:400px;">
             <div class="progress-track">
-                <div class="progress-fill" style="width:41%;"></div>
+                <div class="progress-fill" data-progress="{{ registration_percent }}"></div>
             </div>
-            <div class="progress-label"><span>124 registered</span><span>300 max</span></div>
+            <div class="progress-label"><span>{{ event.registered_count }} registered</span><span>{{ event.capacity }} max</span></div>
         </div>
     </div>
     <div class="event-actions">
+        {% if is_registered %}
+        <button class="btn-secondary" disabled><i data-lucide="check-circle"></i> Already Registered</button>
+        {% elif event.is_registration_open %}
         <a href="{% url 'registration:register_event' event.id %}" class="btn-primary"><i data-lucide="pen-line"></i>
             Register Now</a>
-        <button class="btn-secondary" data-already-registered><i data-lucide="check-circle"></i> Already Registered</button>
+        {% else %}
+        <button class="btn-secondary" disabled><i data-lucide="lock"></i> Registration {{ event.get_status_display }}</button>
+        {% endif %}
         <!-- Countdown -->
-        <div class="countdown" data-deadline="2026-04-18T00:00:00">
-            <div class="countdown-unit"><strong data-days>12</strong><span>Days</span></div>
-            <div class="countdown-unit"><strong data-hours>05</strong><span>Hours</span></div>
-            <div class="countdown-unit"><strong data-mins>28</strong><span>Mins</span></div>
-            <div class="countdown-unit"><strong data-secs>00</strong><span>Secs</span></div>
+        <div class="countdown" data-deadline="{{ event.registration_end|date:'c' }}">
+            <div class="countdown-unit"><strong data-days>--</strong><span>Days</span></div>
+            <div class="countdown-unit"><strong data-hours>--</strong><span>Hours</span></div>
+            <div class="countdown-unit"><strong data-mins>--</strong><span>Mins</span></div>
+            <div class="countdown-unit"><strong data-secs>--</strong><span>Secs</span></div>
         </div>
     </div>
 </section>
@@ -59,10 +65,19 @@
     <div id="tab-about" class="tab-panel active" role="tabpanel" aria-labelledby="tab-about">
         <article class="surface reveal">
             <h2><i data-lucide="info"></i> About This Event</h2>
-            <p class="text-soft">Eligibility: Open to all branches. Team size 2-4. Bring your own idea or pick from
-                challenge tracks.</p>
-            <p class="text-soft" style="margin-top:.5rem;">Rules: Original work only, no plagiarism, all submissions
-                before final deadline.</p>
+            <p class="text-soft">{{ event.description }}</p>
+            {% if event.eligibility %}
+            <p class="text-soft" style="margin-top:.5rem;"><strong>Eligibility:</strong> {{ event.eligibility }}</p>
+            {% endif %}
+            {% if event.rules %}
+            <p class="text-soft" style="margin-top:.5rem;"><strong>Rules:</strong> {{ event.rules }}</p>
+            {% endif %}
+            {% if event.participation_type == 'team' or event.participation_type == 'both' %}
+            <p class="text-soft" style="margin-top:.5rem;"><strong>Team Size:</strong> {{ event.min_team_size }}–{{ event.max_team_size }} members</p>
+            {% endif %}
+            {% if event.registration_fee %}
+            <p class="text-soft" style="margin-top:.5rem;"><strong>Registration Fee:</strong> ₹{{ event.registration_fee|floatformat:0 }}</p>
+            {% endif %}
         </article>
     </div>
 
@@ -72,9 +87,10 @@
             <h2><i data-lucide="milestone"></i> Rounds & Timeline</h2>
             <div class="timeline">
                 {% for round in rounds %}
-                <div class="timeline-item{% if round.status == 'Completed' %} completed{% endif %}">
+                <div class="timeline-item{% if round.status == 'completed' %} completed{% endif %}">
                     <strong>{{ round.name }}</strong>
-                    <span><i data-lucide="calendar-days"></i> {{ round.date }} · {{ round.status }}</span>
+                    <span><i data-lucide="calendar-days"></i> {{ round.start_date|date:"M d" }}–{{ round.end_date|date:"M d" }} · {{ round.get_status_display }}</span>
+                    {% if round.description %}<p class="text-soft" style="margin-top:.25rem;">{{ round.description }}</p>{% endif %}
                 </div>
                 {% empty %}
                 <div class="empty-state"><i data-lucide="calendar-x"></i>
@@ -90,24 +106,43 @@
         <article class="surface reveal">
             <h2><i data-lucide="trophy"></i> Prizes & Certificates</h2>
             <div class="prize-grid">
+                {% if event.prize_1st %}
                 <div class="surface prize-card">
                     <span class="prize-icon">🥇</span>
                     <strong>1st Place</strong>
-                    <span>₹1,50,000 + Internship Fast Track</span>
+                    <span>{{ event.prize_1st }}</span>
                 </div>
+                {% endif %}
+                {% if event.prize_2nd %}
                 <div class="surface prize-card">
                     <span class="prize-icon">🥈</span>
                     <strong>2nd Place</strong>
-                    <span>₹70,000 + Cloud Credits</span>
+                    <span>{{ event.prize_2nd }}</span>
                 </div>
+                {% endif %}
+                {% if event.prize_3rd %}
                 <div class="surface prize-card">
                     <span class="prize-icon">🥉</span>
                     <strong>3rd Place</strong>
-                    <span>₹30,000 + Swag Kits</span>
+                    <span>{{ event.prize_3rd }}</span>
                 </div>
+                {% endif %}
             </div>
-            <p class="muted" style="margin-top:1rem;"><i data-lucide="badge-check"></i> Participation + Merit
-                certificates available for all participants.</p>
+            {% if event.prize_special %}
+            <p class="muted" style="margin-top:.75rem;"><i data-lucide="star"></i> Special: {{ event.prize_special }}</p>
+            {% endif %}
+            <p class="muted" style="margin-top:1rem;">
+                <i data-lucide="badge-check"></i>
+                {% if event.participation_certificate and event.merit_certificate %}
+                    Participation + Merit certificates available for all participants.
+                {% elif event.participation_certificate %}
+                    Participation certificates available for all participants.
+                {% elif event.merit_certificate %}
+                    Merit certificates available for top performers.
+                {% else %}
+                    No certificates for this event.
+                {% endif %}
+            </p>
         </article>
     </div>
 
@@ -117,13 +152,15 @@
             <article class="surface reveal">
                 <h2><i data-lucide="users"></i> Registered Participants</h2>
                 <ul class="list">
-                    {% for person in participants %}
+                    {% for reg in participants %}
                     <li>
                         <div style="display:flex;align-items:center;gap:.55rem;">
-                            <div class="avatar avatar-sm">{{ person.name|first }}</div>
+                            <div class="avatar avatar-sm">{{ reg.user.get_full_name|first }}</div>
                             <div>
-                                <strong>{{ person.name }}</strong>
-                                <span style="display:block;">{{ person.college }}</span>
+                                <strong>{{ reg.user.get_full_name|default:reg.user.username }}</strong>
+                                {% if reg.user.profile.college %}
+                                <span style="display:block;">{{ reg.user.profile.college }}</span>
+                                {% endif %}
                             </div>
                         </div>
                     </li>
@@ -141,14 +178,53 @@
                     {% for team in teams_open %}
                     <li>
                         <strong>{{ team.name }}</strong>
-                        <span><i data-lucide="users"></i> {{ team.members }} · Need: {{ team.needs }}</span>
+                        <span><i data-lucide="users"></i> {{ team.current_members }}/{{ event.max_team_size }} members · Need: {{ team.looking_for|default:"teammates" }}</span>
                         <div class="inline-actions">
-                    <button class="btn-primary btn-small" data-action="request-join"><i data-lucide="user-plus"></i> Request to Join</button>
+                    <button class="btn-primary btn-small" data-action="request-join" data-team-id="{{ team.id }}"><i data-lucide="user-plus"></i> Request to Join</button>
                         </div>
                     </li>
                     {% empty %}
                     <li class="empty-state"><i data-lucide="users-round"></i>
                         <p>No open teams yet</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </article>
+
+            <article class="surface reveal">
+                <h2><i data-lucide="search"></i> Looking for Team</h2>
+                <ul class="list">
+                    {% for reg in looking_for_team_regs %}
+                    <li>
+                        <div style="display:flex;align-items:center;gap:.55rem;">
+                            <div class="avatar avatar-sm">{{ reg.user.get_full_name|default:reg.user.username|first }}</div>
+                            <div>
+                                <strong>{{ reg.user.get_full_name|default:reg.user.username }}</strong>
+                                <span style="display:block;">{{ reg.user.profile.college|default:'College not shared' }}</span>
+                                {% if reg.preferred_role %}<span style="display:block;">{{ reg.preferred_role }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="empty-state"><i data-lucide="search-x"></i>
+                        <p>No participants are currently looking for a team.</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </article>
+
+            <article class="surface reveal">
+                <h2><i data-lucide="megaphone"></i> Announcements</h2>
+                <ul class="list">
+                    {% for announcement in announcements %}
+                    <li>
+                        <strong>{{ announcement.title }}</strong>
+                        <span style="display:block;">{{ announcement.content|truncatewords:30 }}</span>
+                        <span style="display:block;">{{ announcement.created_at|date:'M d, Y H:i' }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="empty-state"><i data-lucide="megaphone-off"></i>
+                        <p>No announcements have been posted yet.</p>
                     </li>
                     {% endfor %}
                 </ul>
@@ -160,37 +236,60 @@
     <div id="tab-judges" class="tab-panel" role="tabpanel" aria-labelledby="tab-judges">
         <article class="surface reveal">
             <h2><i data-lucide="award"></i> Judges & Sponsors</h2>
-            <p class="text-soft"><strong>Judges:</strong> Product leaders, founders, and senior engineers from top
-                startups.</p>
-            <p class="text-soft" style="margin-top:.5rem;"><strong>Sponsors:</strong> Cloud partners, developer tools,
-                and student communities.</p>
+            {% if judges %}
+            <h3 style="margin-top:.5rem;">Judges</h3>
+            <ul class="list">
+                {% for judge in judges %}
+                <li>
+                    <div style="display:flex;align-items:center;gap:.55rem;">
+                        <div class="avatar avatar-sm">{{ judge.name|first }}</div>
+                        <div>
+                            <strong>{{ judge.name }}</strong>
+                            {% if judge.designation %}<span style="display:block;">{{ judge.designation }}</span>{% endif %}
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-soft"><strong>Judges:</strong> To be announced.</p>
+            {% endif %}
+
+            {% if sponsors %}
+            <h3 style="margin-top:1rem;">Sponsors</h3>
+            <ul class="list">
+                {% for sponsor in sponsors %}
+                <li>
+                    <strong>{{ sponsor.name }}</strong>
+                    <span> · {{ sponsor.get_sponsor_type_display }}</span>
+                    {% if sponsor.website_url %}
+                    <a href="{{ sponsor.website_url }}" target="_blank" rel="noopener noreferrer" class="btn-small">Visit</a>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-soft" style="margin-top:.5rem;"><strong>Sponsors:</strong> To be announced.</p>
+            {% endif %}
         </article>
     </div>
 
     <!-- FAQs -->
     <div id="tab-faq" class="tab-panel" role="tabpanel" aria-labelledby="tab-faq">
         <article class="reveal" style="display:grid;gap:.5rem;">
-            <div class="faq-item open">
-                <button class="faq-toggle" aria-expanded="true">Can first-year students join? <i
+            {% for faq in event.faqs %}
+            <div class="faq-item{% if forloop.first %} open{% endif %}">
+                <button class="faq-toggle" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">{{ faq.q }} <i
                         data-lucide="chevron-down"></i></button>
                 <div class="faq-body">
-                    <p>Yes, absolutely. All are welcome regardless of year of study.</p>
+                    <p>{{ faq.a }}</p>
                 </div>
             </div>
-            <div class="faq-item">
-                <button class="faq-toggle" aria-expanded="false">Is prior hackathon experience required? <i
-                        data-lucide="chevron-down"></i></button>
-                <div class="faq-body">
-                    <p>No, beginner-friendly tracks are included alongside advanced challenges.</p>
-                </div>
+            {% empty %}
+            <div class="empty-state"><i data-lucide="help-circle"></i>
+                <p>No FAQs yet for this event.</p>
             </div>
-            <div class="faq-item">
-                <button class="faq-toggle" aria-expanded="false">What tools can we use? <i
-                        data-lucide="chevron-down"></i></button>
-                <div class="faq-body">
-                    <p>Any programming language, framework, or tool. Open-source libraries are encouraged.</p>
-                </div>
-            </div>
+            {% endfor %}
         </article>
     </div>
 
@@ -198,10 +297,9 @@
     <div id="tab-contact" class="tab-panel" role="tabpanel" aria-labelledby="tab-contact">
         <article class="surface reveal">
             <h2><i data-lucide="mail"></i> Contact Organizers</h2>
-            <div class="event-meta" style="margin-bottom:.8rem;">
-                <span><i data-lucide="mail"></i> hackfest@campusarena.in</span>
-                <span><i data-lucide="phone"></i> +91 98765 43210</span>
-            </div>
+            {% if event.contact_info %}
+            <p class="text-soft" style="margin-bottom:.8rem;">{{ event.contact_info }}</p>
+            {% endif %}
             <div class="search-wrap">
                 <input type="text" placeholder="Ask a question to organizers..." id="contact-msg">
                 <button class="btn-primary" data-action="contact-organizer"><i data-lucide="send"></i> Send</button>

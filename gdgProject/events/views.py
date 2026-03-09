@@ -1,146 +1,141 @@
-from django.shortcuts import render
+import logging
+
+from django.db.models import Count, Q
+from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
+
+from .models import Event, EventStatus
+
+logger = logging.getLogger(__name__)
+
 
 def home(request):
-	featured_events = [
-		{
-			'id': 1,
-			'title': 'HackFest 2026',
-			'category': 'Hackathon',
-			'mode': 'Hybrid',
-			'date': 'Apr 18-20, 2026',
-			'prize': '₹2,50,000',
-			'status': 'Open',
-			'spots': '124/300',
-		},
-		{
-			'id': 2,
-			'title': 'CloudSprint Workshop',
-			'category': 'Workshop',
-			'mode': 'Online',
-			'date': 'Mar 22, 2026',
-			'prize': 'Certificates + Swag',
-			'status': 'Open',
-			'spots': '218/500',
-		},
-		{
-			'id': 3,
-			'title': 'Design Jam Pro',
-			'category': 'Design Challenge',
-			'mode': 'Offline',
-			'date': 'Apr 2, 2026',
-			'prize': '₹75,000',
-			'status': 'Closing Soon',
-			'spots': '95/100',
-		},
-	]
+    """Event listing page with filtering and featured carousel."""
+    now = timezone.now()
 
-	event_grid = [
-		{
-			'id': 1,
-			'title': 'HackFest 2026',
-			'category': 'Hackathon',
-			'date': 'Apr 18-20',
-			'mode': 'Hybrid',
-			'type': 'Team',
-			'prize': '₹2,50,000',
-			'status': 'Open',
-		},
-		{
-			'id': 2,
-			'title': 'AlgoRush',
-			'category': 'Coding Contest',
-			'date': 'Mar 27',
-			'mode': 'Online',
-			'type': 'Individual',
-			'prize': '₹40,000',
-			'status': 'Open',
-		},
-		{
-			'id': 3,
-			'title': 'PitchCraft',
-			'category': 'Case Study',
-			'date': 'Apr 5',
-			'mode': 'Offline',
-			'type': 'Both',
-			'prize': '₹1,00,000',
-			'status': 'Open',
-		},
-		{
-			'id': 4,
-			'title': 'QuizMania',
-			'category': 'Quiz',
-			'date': 'Mar 19',
-			'mode': 'Online',
-			'type': 'Individual',
-			'prize': '₹15,000',
-			'status': 'Closed',
-		},
-		{
-			'id': 5,
-			'title': 'BuildOps Sprint',
-			'category': 'Workshop',
-			'date': 'Apr 11',
-			'mode': 'Hybrid',
-			'type': 'Team',
-			'prize': 'Goodies + Internship',
-			'status': 'Open',
-		},
-		{
-			'id': 6,
-			'title': 'VisionX AI Challenge',
-			'category': 'Ideathon',
-			'date': 'Apr 29',
-			'mode': 'Offline',
-			'type': 'Team',
-			'prize': '₹1,20,000',
-			'status': 'Open',
-		},
-	]
-	return render(
-		request,
-		'events/home.html',
-		{
-			'featured_events': featured_events,
-			'event_grid': event_grid,
-		},
-	)
+    # ── Filters from query params ──────────────────────────────────────────
+    category = request.GET.get('category', '')
+    mode = request.GET.get('mode', '')
+    status_filter = request.GET.get('status', '')
+    search = request.GET.get('q', '')
+
+    base_qs = Event.objects.filter(
+        status__in=[
+            EventStatus.PUBLISHED,
+            EventStatus.REGISTRATION_OPEN,
+            EventStatus.REGISTRATION_CLOSED,
+            EventStatus.ONGOING,
+            EventStatus.COMPLETED,
+        ]
+    ).annotate(
+        registered_count=Count(
+            'registrations',
+            filter=Q(registrations__status__in=['confirmed', 'submitted']),
+        )
+    )
+
+    grid_qs = base_qs
+
+    if category:
+        grid_qs = grid_qs.filter(category=category)
+    if mode:
+        grid_qs = grid_qs.filter(mode=mode)
+    if status_filter == 'open':
+        grid_qs = grid_qs.filter(
+            status=EventStatus.REGISTRATION_OPEN,
+            registration_start__lte=now,
+            registration_end__gte=now,
+        )
+    elif status_filter == 'closed':
+        grid_qs = grid_qs.filter(
+            status__in=[EventStatus.REGISTRATION_CLOSED, EventStatus.COMPLETED]
+        )
+    if search:
+        grid_qs = grid_qs.filter(
+            Q(title__icontains=search) | Q(description__icontains=search)
+        )
+
+    event_grid = grid_qs.order_by('-event_start')[:24]
+
+    # ── Featured events ────────────────────────────────────────────────────
+    featured_events = base_qs.filter(is_featured=True).order_by('-event_start')[:6]
+    # Fallback: if no featured events, show upcoming ones
+    if not featured_events.exists():
+        featured_events = base_qs.order_by('-event_start')[:3]
+
+    return render(
+        request,
+        'events/home.html',
+        {
+            'featured_events': featured_events,
+            'event_grid': event_grid,
+            'current_category': category,
+            'current_mode': mode,
+            'current_status': status_filter,
+            'search_query': search,
+        },
+    )
 
 
 def event_detail(request, event_id):
-	event = {
-		'id': event_id,
-		'title': 'HackFest 2026',
-		'category': 'Hackathon',
-		'mode': 'Hybrid',
-		'timeline': 'Apr 18-20, 2026',
-		'registration': '124/300 spots filled',
-		'countdown': '12d 05h 28m',
-		'description': (
-			'A 36-hour campus hackathon focused on solving real student-life '
-			'and sustainability problems.'
-		),
-	}
-	rounds = [
-		{'name': 'Round 1: Idea Screening', 'date': 'Apr 10', 'status': 'Upcoming'},
-		{'name': 'Round 2: Prototype Review', 'date': 'Apr 18', 'status': 'Upcoming'},
-		{'name': 'Round 3: Final Demo', 'date': 'Apr 20', 'status': 'Upcoming'},
-	]
-	participants = [
-		{'name': 'Priya Verma', 'college': 'NIT Rourkela'},
-		{'name': 'Rahul S.', 'college': 'KIIT University'},
-		{'name': 'Neha Kulkarni', 'college': 'VIT Chennai'},
-	]
-	teams_open = [
-		{'name': 'Team Alpha', 'members': '3/4', 'needs': 'ML/AI'},
-		{'name': 'Binary Builders', 'members': '2/5', 'needs': 'Backend, DevOps'},
-	]
-	return render(
-		request,
-		'events/event_detail.html',
-		{
-			'event': event,
-			'rounds': rounds,
-			'participants': participants,
-			'teams_open': teams_open,
-		},
-	)
+    """Full event detail page with all tab data."""
+    event = get_object_or_404(
+        Event.objects.annotate(
+            registered_count=Count(
+                'registrations',
+                filter=Q(registrations__status__in=['confirmed', 'submitted']),
+            )
+        ),
+        pk=event_id,
+    )
+
+    rounds = event.rounds.all().order_by('order')
+
+    # Registered participants (confirmed/submitted)
+    participants = event.registrations.filter(
+        status__in=['confirmed', 'submitted']
+    ).select_related('user', 'user__profile')[:50]
+
+    # Open teams for this event
+    teams_open = event.teams.filter(
+        status='open', is_deleted=False,
+    ).select_related('leader').annotate(
+        current_members=Count('memberships'),
+    )
+
+    # Judges and sponsors
+    judges = event.judges.all()
+    sponsors = event.sponsors.all()
+
+    # Announcements
+    announcements = event.announcements.all()[:10]
+
+    # Check if current user is already registered
+    is_registered = False
+    user_registration = None
+    if request.user.is_authenticated:
+        user_registration = event.registrations.filter(user=request.user).first()
+        is_registered = user_registration is not None
+
+    # Participants looking for a team
+    looking_for_team_regs = event.registrations.filter(
+        looking_for_team=True,
+        status__in=['confirmed', 'submitted'],
+    ).select_related('user', 'user__profile')[:30]
+
+    return render(
+        request,
+        'events/event_detail.html',
+        {
+            'event': event,
+            'rounds': rounds,
+            'participants': participants,
+            'teams_open': teams_open,
+            'judges': judges,
+            'sponsors': sponsors,
+            'announcements': announcements,
+            'is_registered': is_registered,
+            'user_registration': user_registration,
+            'looking_for_team_regs': looking_for_team_regs,
+        },
+    )

@@ -195,6 +195,15 @@
 
     <!-- MAIN -->
     <main id="main-content" class="container main-content">
+        {% if messages %}
+        <div class="messages-container" style="margin-bottom:1rem;">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert" style="padding:.75rem 1rem;border-radius:var(--radius-md);margin-bottom:.4rem;background:var(--surface-2);border:1px solid var(--border);color:var(--text);">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 
