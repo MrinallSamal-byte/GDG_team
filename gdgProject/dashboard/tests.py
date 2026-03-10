@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from notification.models import Notification
 from users.models import UserProfile
 
 
@@ -93,3 +94,9 @@ class DashboardViewsTest(TestCase):
         resp = self.client.get(reverse('dashboard:user_dashboard'))
         self.assertContains(resp, 'Dash Test')
         self.assertContains(resp, 'CSE')
+
+    def test_mark_all_read_marks_notifications(self):
+        Notification.objects.create(user=self.user, title='Ping', body='Unread notification')
+        resp = self.client.post(reverse('dashboard:mark_all_read'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertJSONEqual(resp.content, {'ok': True, 'updated': 1})

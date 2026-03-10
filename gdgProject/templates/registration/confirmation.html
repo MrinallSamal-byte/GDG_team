@@ -14,16 +14,16 @@
         <h2><i data-lucide="receipt-text"></i> Registration Summary</h2>
         <dl class="info-grid">
             <dt><i data-lucide="hash"></i> Ref #</dt>
-            <dd>REG-{{ registration.id }}</dd>
+            <dd>{{ registration.registration_id }}</dd>
 
             <dt><i data-lucide="calendar-days"></i> Date</dt>
-            <dd>{{ registration.created_at|date:"N j, Y" }}</dd>
+            <dd>{{ registration.registered_at|date:"N j, Y" }}</dd>
 
             <dt><i data-lucide="layers"></i> Event</dt>
             <dd>{{ registration.event.title }}</dd>
 
             <dt><i data-lucide="calendar-clock"></i> Event Date</dt>
-            <dd>{{ registration.event.start_date|date:"N j, Y" }}</dd>
+            <dd>{{ registration.event.event_start|date:"N j, Y" }}</dd>
 
             <dt><i data-lucide="map-pin"></i> Venue</dt>
             <dd>{{ registration.event.venue|default:"Online" }}</dd>

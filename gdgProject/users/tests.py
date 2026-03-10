@@ -188,6 +188,37 @@ class LogoutViewTest(TestCase):
         self.assertRedirects(resp, reverse('events:home'))
 
 
+class ChangePasswordViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='changepass', email='change@example.com', password='testpass12345',
+        )
+        self.url = reverse('users:change_password')
+
+    def test_requires_login(self):
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn('/auth/login/', resp.url)
+
+    def test_page_renders(self):
+        self.client.login(username='changepass', password='testpass12345')
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Change Password')
+
+    def test_updates_password(self):
+        self.client.login(username='changepass', password='testpass12345')
+        resp = self.client.post(self.url, {
+            'current_password': 'testpass12345',
+            'new_password': 'updatedpass12345',
+            'confirm_password': 'updatedpass12345',
+        })
+        self.assertRedirects(resp, reverse('dashboard:settings'))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('updatedpass12345'))
+
+
 class ForgotPasswordViewTest(TestCase):
     """Tests for the forgot password view."""
 
