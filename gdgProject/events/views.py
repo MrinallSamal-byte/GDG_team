@@ -1,8 +1,11 @@
 import logging
 
+from django.contrib import messages
+from django.core.mail import send_mail
 from django.db.models import Count, Q
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_http_methods
 
 from .models import Event, EventStatus
 
@@ -139,3 +142,49 @@ def event_detail(request, event_id):
             'looking_for_team_regs': looking_for_team_regs,
         },
     )
+
+
+@require_http_methods(['GET', 'POST'])
+def contact_organizer(request, event_id):
+    """Send a message to the event organizer or redirect back to the event page."""
+    event = get_object_or_404(Event.objects.select_related('created_by'), pk=event_id)
+
+    if request.method == 'GET':
+        return redirect('events:event_detail', event_id=event.pk)
+
+    message_body = request.POST.get('message', '').strip()
+    if not message_body:
+        messages.error(request, 'Enter a message before contacting the organizers.')
+        return redirect('events:event_detail', event_id=event.pk)
+
+    organizer_email = event.created_by.email
+    if not organizer_email:
+        messages.info(request, 'Organizer contact email is not available for this event yet.')
+        return redirect('events:event_detail', event_id=event.pk)
+
+    sender_name = 'Anonymous user'
+    sender_email = 'No email provided'
+    if request.user.is_authenticated:
+        sender_name = request.user.get_full_name() or request.user.username
+        sender_email = request.user.email or sender_email
+
+    try:
+        send_mail(
+            subject=f'CampusArena event inquiry: {event.title}',
+            message=(
+                f'Event: {event.title}\n'
+                f'From: {sender_name}\n'
+                f'Email: {sender_email}\n\n'
+                f'{message_body}'
+            ),
+            from_email=None,
+            recipient_list=[organizer_email],
+            fail_silently=False,
+        )
+    except Exception:
+        logger.exception('Failed to send organizer contact email for event %s', event.pk)
+        messages.error(request, 'We could not send your message right now. Please try again later.')
+        return redirect('events:event_detail', event_id=event.pk)
+
+    messages.success(request, 'Your message has been sent to the organizers.')
+    return redirect('events:event_detail', event_id=event.pk)

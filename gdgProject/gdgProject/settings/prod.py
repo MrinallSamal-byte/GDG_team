@@ -19,11 +19,12 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
 
-# ─── Database (PostgreSQL) ──────────────────────────────────────────────────
-DATABASES["default"]["ENGINE"] = "django.db.backends.postgresql"  # noqa: F405
+# ─── Database (MySQL) ───────────────────────────────────────────────────────
+DATABASES["default"]["ENGINE"] = "django.db.backends.mysql"  # noqa: F405
 DATABASES["default"]["CONN_MAX_AGE"] = 600  # noqa: F405
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True  # noqa: F405
 DATABASES["default"]["OPTIONS"] = {  # noqa: F405
+    **DATABASES["default"].get("OPTIONS", {}),  # noqa: F405
     "connect_timeout": 5,
 }
 

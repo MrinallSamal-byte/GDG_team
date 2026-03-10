@@ -61,8 +61,8 @@ class RegistrationViewTest(TestCase):
             'looking_for_team': 'on',
             'skills': 'Python,Django',
         })
-        self.assertRedirects(resp, reverse('events:event_detail', args=[self.event.pk]))
         registration = Registration.objects.get(event=self.event, user=self.user)
+        self.assertRedirects(resp, reverse('registration:confirmation', args=[registration.pk]))
         self.assertEqual(registration.type, RegistrationType.INDIVIDUAL)
         self.assertEqual(registration.preferred_role, 'backend')
         self.assertTrue(registration.looking_for_team)
@@ -90,11 +90,23 @@ class RegistrationViewTest(TestCase):
         })
 
         team = Team.objects.get(event=self.event, name='CodeCrafters')
-        self.assertRedirects(resp, reverse('team:team_management', args=[team.pk]))
         self.assertTrue(TeamMembership.objects.filter(team=team, user=self.user, role='backend').exists())
         registration = Registration.objects.get(event=self.event, user=self.user)
+        self.assertRedirects(resp, reverse('registration:confirmation', args=[registration.pk]))
         self.assertEqual(registration.team, team)
         self.assertCountEqual(
             RegistrationTechStack.objects.filter(registration=registration).values_list('tech_name', flat=True),
             ['Python', 'Django'],
         )
+
+    def test_confirmation_requires_owning_user(self):
+        registration = Registration.objects.create(
+            event=self.event,
+            user=self.user,
+            type=RegistrationType.INDIVIDUAL,
+            status='confirmed',
+        )
+        self.client.login(username='regtest', password='testpass123')
+        resp = self.client.get(reverse('registration:confirmation', args=[registration.pk]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, registration.registration_id)

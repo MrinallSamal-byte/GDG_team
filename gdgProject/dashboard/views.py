@@ -1,7 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_POST, require_http_methods
 
 from events.models import Event
 from notification.models import Notification
@@ -196,6 +197,14 @@ def notifications_view(request):
         'notifications': notifications,
         'current_page': 'notifications',
     })
+
+
+@login_required
+@require_POST
+def mark_all_read(request):
+    """Mark all of the current user's notifications as read."""
+    updated_count = Notification.objects.filter(user=request.user, read=False).update(read=True)
+    return JsonResponse({'ok': True, 'updated': updated_count})
 
 
 @login_required

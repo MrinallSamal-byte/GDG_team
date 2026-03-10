@@ -13,7 +13,7 @@ from decouple import Csv, config
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # gdgProject/
 
 # ─── Security ─────────────────────────────────────────────────────────────────
-SECRET_KEY = config("SECRET_KEY")
+SECRET_KEY = config("SECRET_KEY", default="dev-only-insecure-secret-key-change-me")
 DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="", cast=Csv())
 
@@ -81,14 +81,17 @@ WSGI_APPLICATION = "gdgProject.wsgi.application"
 # Overridden in dev.py / prod.py
 DATABASES = {
     "default": {
-        "ENGINE": config("DB_ENGINE", default="django.db.backends.sqlite3"),
-        "NAME": config("DB_NAME", default=str(BASE_DIR / "db.sqlite3")),
-        "USER": config("DB_USER", default=""),
-        "PASSWORD": config("DB_PASSWORD", default=""),
-        "HOST": config("DB_HOST", default=""),
-        "PORT": config("DB_PORT", default=""),
+        "ENGINE": config("DB_ENGINE", default="django.db.backends.mysql"),
+        "NAME": config("DB_NAME", default="campusarena"),
+        "USER": config("DB_USER", default="campusarena"),
+        "PASSWORD": config("DB_PASSWORD", default="changeme"),
+        "HOST": config("DB_HOST", default="127.0.0.1"),
+        "PORT": config("DB_PORT", default="3306"),
         "ATOMIC_REQUESTS": True,
-        "OPTIONS": {},
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 

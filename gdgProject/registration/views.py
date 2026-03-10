@@ -149,6 +149,21 @@ def _save_custom_responses(registration, custom_fields, post_data):
 
 
 @login_required
+@require_http_methods(['GET'])
+def registration_confirmation(request, registration_id):
+    """Render the post-registration confirmation page for the owning user."""
+    registrations = Registration.objects.select_related('event', 'team')
+    lookup = {'pk': registration_id}
+    if not request.user.is_staff:
+        lookup['user'] = request.user
+
+    registration = get_object_or_404(registrations, **lookup)
+    return render(request, 'registration/confirmation.html', {
+        'registration': registration,
+    })
+
+
+@login_required
 @require_http_methods(['GET', 'POST'])
 def register_event(request, event_id):
     """Register the current user for an event (solo or team)."""
@@ -275,7 +290,7 @@ def register_event(request, event_id):
                 request,
                 f'Registered for {event.title}! ID: {registration.registration_id}.',
             )
-            return redirect('events:event_detail', event_id=event.pk)
+            return redirect('registration:confirmation', registration_id=registration.pk)
 
         # ── Create a new team ──────────────────────────────────────────────
         if reg_type == RegistrationType.TEAM and team_action == 'create':
@@ -329,7 +344,7 @@ def register_event(request, event_id):
                 request,
                 f'Team "{team_name}" created and you are registered! ID: {registration.registration_id}.',
             )
-            return redirect('team:team_management', team_id=team.pk)
+            return redirect('registration:confirmation', registration_id=registration.pk)
 
         # ── Send join request to an existing team ─────────────────────────
         if reg_type == RegistrationType.TEAM and team_action == 'join' and team_id:

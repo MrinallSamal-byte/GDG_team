@@ -1,8 +1,9 @@
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, password_validation, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import redirect, render
 from django.utils.encoding import force_bytes, force_str
@@ -243,3 +244,95 @@ def logout_view(request):
     logout(request)
     messages.info(request, 'You have been signed out.')
     return redirect('events:home')
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def edit_profile(request):
+    profile = _get_or_create_profile(request.user)
+    branches = ['CSE', 'IT', 'ECE', 'EEE', 'Mechanical', 'Civil', 'Biotech']
+    years = [1, 2, 3, 4, 5]
+    skills = [
+        'React', 'Node.js', 'Python', 'Django', 'Flutter',
+        'Figma', 'TensorFlow', 'Docker', 'AWS', 'MongoDB',
+    ]
+
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name', '').strip()
+        email = request.POST.get('email', '').strip()
+
+        if email and User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
+            messages.error(request, 'That email is already in use by another account.')
+            return render(request, 'users/edit_profile.html', {
+                'profile': profile,
+                'branches': branches,
+                'years': years,
+                'skills': skills,
+                'active_skills': profile.skills_list,
+            })
+
+        if full_name:
+            parts = full_name.split(' ', 1)
+            request.user.first_name = parts[0]
+            request.user.last_name = parts[1] if len(parts) > 1 else ''
+        if email:
+            request.user.email = email
+        request.user.save(update_fields=['first_name', 'last_name', 'email'])
+
+        profile.phone = request.POST.get('phone', '').strip()
+        profile.college = request.POST.get('college', '').strip()
+        profile.branch = request.POST.get('branch', '').strip()
+        profile.github = request.POST.get('github', '').strip()
+        profile.linkedin = request.POST.get('linkedin', '').strip()
+        profile.bio = request.POST.get('bio', '').strip()
+        profile.skills = request.POST.get('skills', '').strip()
+
+        year = request.POST.get('year', '').strip()
+        try:
+            profile.year = int(year) if year else None
+        except ValueError:
+            profile.year = None
+
+        profile.save()
+        messages.success(request, 'Your profile has been updated successfully.')
+        return redirect('dashboard:my_profile')
+
+    return render(request, 'users/edit_profile.html', {
+        'profile': profile,
+        'branches': branches,
+        'years': years,
+        'skills': skills,
+        'active_skills': profile.skills_list,
+    })
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def change_password(request):
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password', '')
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+
+        if not request.user.check_password(current_password):
+            messages.error(request, 'Your current password is incorrect.')
+            return render(request, 'users/change_password.html')
+
+        if new_password != confirm_password:
+            messages.error(request, 'New password and confirmation do not match.')
+            return render(request, 'users/change_password.html')
+
+        try:
+            password_validation.validate_password(new_password, request.user)
+        except ValidationError as exc:
+            for error in exc.messages:
+                messages.error(request, error)
+            return render(request, 'users/change_password.html')
+
+        request.user.set_password(new_password)
+        request.user.save(update_fields=['password'])
+        update_session_auth_hash(request, request.user)
+        messages.success(request, 'Your password has been updated successfully.')
+        return redirect('dashboard:settings')
+
+    return render(request, 'users/change_password.html')
