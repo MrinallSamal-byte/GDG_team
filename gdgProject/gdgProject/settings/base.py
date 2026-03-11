@@ -88,12 +88,14 @@ DATABASES = {
         "HOST": config("DB_HOST", default="127.0.0.1"),
         "PORT": config("DB_PORT", default="3306"),
         "ATOMIC_REQUESTS": True,
-        "OPTIONS": {
-            "charset": "utf8mb4",
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
     }
 }
+
+if DATABASES["default"]["ENGINE"] == "django.db.backends.mysql":
+    DATABASES["default"]["OPTIONS"] = {
+        "charset": "utf8mb4",
+        "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+    }
 
 # ─── Auth & Password Validation ──────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [

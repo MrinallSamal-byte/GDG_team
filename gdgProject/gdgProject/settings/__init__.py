@@ -1,4 +1,7 @@
 # Settings package — import from base, then environment-specific overlay.
-import pymysql
-
-pymysql.install_as_MySQLdb()
+try:
+    import pymysql
+except ModuleNotFoundError:
+    pymysql = None
+else:
+    pymysql.install_as_MySQLdb()
