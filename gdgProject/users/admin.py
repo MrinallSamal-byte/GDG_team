@@ -8,8 +8,8 @@ from .models import UserProfile, UserTechStack
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
-    verbose_name_plural = 'Profile'
-    fk_name = 'user'
+    verbose_name_plural = "Profile"
+    fk_name = "user"
 
 
 class UserTechStackInline(admin.TabularInline):
@@ -19,8 +19,8 @@ class UserTechStackInline(admin.TabularInline):
 
 class UserAdmin(BaseUserAdmin):
     inlines = (UserProfileInline, UserTechStackInline)
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff')
-    list_select_related = ('profile',)
+    list_display = ("username", "email", "first_name", "last_name", "is_staff")
+    list_select_related = ("profile",)
 
 
 admin.site.unregister(User)

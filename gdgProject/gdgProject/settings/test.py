@@ -4,6 +4,7 @@ Test settings — fast, hermetic, in-memory.
 Usage:
     DJANGO_SETTINGS_MODULE=gdgProject.settings.test pytest
 """
+
 from .base import *  # noqa: F401, F403
 
 # ── Database ─────────────────────────────────────────────────────────────────

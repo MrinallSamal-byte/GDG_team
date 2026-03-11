@@ -3,6 +3,7 @@ Domain models for the team app.
 
 Team, TeamMembership (through model), JoinRequest, and ChatMessage.
 """
+
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -15,6 +16,7 @@ class TeamStatus(models.TextChoices):
 
 
 # ── Managers ─────────────────────────────────────────────────────────────────
+
 
 class ActiveTeamManager(models.Manager):
     """Default manager — excludes soft-deleted / disbanded teams."""
@@ -31,6 +33,7 @@ class AllTeamManager(models.Manager):
 
 
 # ── Models ────────────────────────────────────────────────────────────────────
+
 
 class Team(models.Model):
     """
@@ -64,7 +67,7 @@ class Team(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     # ── Managers ──────────────────────────────────────────────────────────
-    objects = ActiveTeamManager()   # default — excludes soft-deleted
+    objects = ActiveTeamManager()  # default — excludes soft-deleted
     all_objects = AllTeamManager()  # includes soft-deleted
 
     class Meta:
@@ -173,6 +176,7 @@ class JoinRequestStatus(models.TextChoices):
         pending → approved | declined | cancelled
         (terminal states: approved, declined, cancelled)
     """
+
     PENDING = "pending", _("Pending")
     APPROVED = "approved", _("Approved")
     DECLINED = "declined", _("Declined")

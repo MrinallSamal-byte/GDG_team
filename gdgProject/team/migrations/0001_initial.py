@@ -10,106 +10,267 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('events', '0001_initial'),
+        ("events", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Team',
+            name="Team",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=100)),
-                ('status', models.CharField(choices=[('open', 'Open'), ('closed', 'Closed'), ('disbanded', 'Disbanded')], db_index=True, default='open', max_length=12)),
-                ('is_deleted', models.BooleanField(db_index=True, default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='teams', to='events.event')),
-                ('leader', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='led_teams', to=settings.AUTH_USER_MODEL)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("name", models.CharField(max_length=100)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("open", "Open"),
+                            ("closed", "Closed"),
+                            ("disbanded", "Disbanded"),
+                        ],
+                        db_index=True,
+                        default="open",
+                        max_length=12,
+                    ),
+                ),
+                ("is_deleted", models.BooleanField(db_index=True, default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "event",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="teams",
+                        to="events.event",
+                    ),
+                ),
+                (
+                    "leader",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="led_teams",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='JoinRequest',
+            name="JoinRequest",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('role', models.CharField(choices=[('frontend', 'Frontend Developer'), ('backend', 'Backend Developer'), ('fullstack', 'Full Stack Developer'), ('mobile', 'Mobile Developer'), ('uiux', 'UI/UX Designer'), ('ml_ai', 'ML/AI Engineer'), ('data', 'Data Scientist'), ('devops', 'DevOps Engineer'), ('pm', 'Project Manager'), ('other', 'Other')], default='other', max_length=15)),
-                ('skills', models.CharField(blank=True, default='', max_length=500)),
-                ('message', models.TextField(blank=True, default='', help_text='Optional message to the team leader', max_length=500)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('approved', 'Approved'), ('declined', 'Declined'), ('cancelled', 'Cancelled')], db_index=True, default='pending', max_length=12)),
-                ('reviewed_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('reviewed_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reviewed_requests', to=settings.AUTH_USER_MODEL)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='join_requests_sent', to=settings.AUTH_USER_MODEL)),
-                ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='join_requests', to='team.team')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                (
+                    "role",
+                    models.CharField(
+                        choices=[
+                            ("frontend", "Frontend Developer"),
+                            ("backend", "Backend Developer"),
+                            ("fullstack", "Full Stack Developer"),
+                            ("mobile", "Mobile Developer"),
+                            ("uiux", "UI/UX Designer"),
+                            ("ml_ai", "ML/AI Engineer"),
+                            ("data", "Data Scientist"),
+                            ("devops", "DevOps Engineer"),
+                            ("pm", "Project Manager"),
+                            ("other", "Other"),
+                        ],
+                        default="other",
+                        max_length=15,
+                    ),
+                ),
+                ("skills", models.CharField(blank=True, default="", max_length=500)),
+                (
+                    "message",
+                    models.TextField(
+                        blank=True,
+                        default="",
+                        help_text="Optional message to the team leader",
+                        max_length=500,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("approved", "Approved"),
+                            ("declined", "Declined"),
+                            ("cancelled", "Cancelled"),
+                        ],
+                        db_index=True,
+                        default="pending",
+                        max_length=12,
+                    ),
+                ),
+                ("reviewed_at", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "reviewed_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="reviewed_requests",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="join_requests_sent",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "team",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="join_requests",
+                        to="team.team",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='ChatMessage',
+            name="ChatMessage",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('body', models.TextField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('edited_at', models.DateTimeField(blank=True, null=True)),
-                ('is_deleted', models.BooleanField(default=False)),
-                ('sender', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='team_messages', to=settings.AUTH_USER_MODEL)),
-                ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='team.team')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("body", models.TextField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("edited_at", models.DateTimeField(blank=True, null=True)),
+                ("is_deleted", models.BooleanField(default=False)),
+                (
+                    "sender",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="team_messages",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "team",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="messages",
+                        to="team.team",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['team', 'created_at'],
+                "ordering": ["team", "created_at"],
             },
         ),
         migrations.CreateModel(
-            name='TeamMembership',
+            name="TeamMembership",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('role', models.CharField(choices=[('frontend', 'Frontend Developer'), ('backend', 'Backend Developer'), ('fullstack', 'Full Stack Developer'), ('mobile', 'Mobile Developer'), ('uiux', 'UI/UX Designer'), ('ml_ai', 'ML/AI Engineer'), ('data', 'Data Scientist'), ('devops', 'DevOps Engineer'), ('pm', 'Project Manager'), ('other', 'Other')], default='other', max_length=15)),
-                ('skills', models.CharField(blank=True, default='', help_text='Comma-separated skills for this event context', max_length=500)),
-                ('joined_at', models.DateTimeField(auto_now_add=True)),
-                ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='memberships', to='team.team')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='team_memberships', to=settings.AUTH_USER_MODEL)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                (
+                    "role",
+                    models.CharField(
+                        choices=[
+                            ("frontend", "Frontend Developer"),
+                            ("backend", "Backend Developer"),
+                            ("fullstack", "Full Stack Developer"),
+                            ("mobile", "Mobile Developer"),
+                            ("uiux", "UI/UX Designer"),
+                            ("ml_ai", "ML/AI Engineer"),
+                            ("data", "Data Scientist"),
+                            ("devops", "DevOps Engineer"),
+                            ("pm", "Project Manager"),
+                            ("other", "Other"),
+                        ],
+                        default="other",
+                        max_length=15,
+                    ),
+                ),
+                (
+                    "skills",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="Comma-separated skills for this event context",
+                        max_length=500,
+                    ),
+                ),
+                ("joined_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "team",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="memberships",
+                        to="team.team",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="team_memberships",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.AddIndex(
-            model_name='team',
-            index=models.Index(fields=['event', 'status'], name='idx_team_event_status'),
+            model_name="team",
+            index=models.Index(
+                fields=["event", "status"], name="idx_team_event_status"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='team',
-            constraint=models.UniqueConstraint(fields=('event', 'name'), name='uniq_team_name_per_event'),
+            model_name="team",
+            constraint=models.UniqueConstraint(
+                fields=("event", "name"), name="uniq_team_name_per_event"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='team',
-            constraint=models.UniqueConstraint(fields=('event', 'leader'), name='uniq_leader_per_event'),
+            model_name="team",
+            constraint=models.UniqueConstraint(
+                fields=("event", "leader"), name="uniq_leader_per_event"
+            ),
         ),
         migrations.AddIndex(
-            model_name='joinrequest',
-            index=models.Index(fields=['team', 'status'], name='idx_joinreq_team_status'),
+            model_name="joinrequest",
+            index=models.Index(
+                fields=["team", "status"], name="idx_joinreq_team_status"
+            ),
         ),
         migrations.AddIndex(
-            model_name='joinrequest',
-            index=models.Index(fields=['user', 'status'], name='idx_joinreq_user_status'),
+            model_name="joinrequest",
+            index=models.Index(
+                fields=["user", "status"], name="idx_joinreq_user_status"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='joinrequest',
-            constraint=models.UniqueConstraint(condition=models.Q(('status', 'pending')), fields=('team', 'user'), name='uniq_pending_request_per_team_user'),
+            model_name="joinrequest",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("status", "pending")),
+                fields=("team", "user"),
+                name="uniq_pending_request_per_team_user",
+            ),
         ),
         migrations.AddIndex(
-            model_name='chatmessage',
-            index=models.Index(fields=['team', 'created_at'], name='idx_chat_team_time'),
+            model_name="chatmessage",
+            index=models.Index(
+                fields=["team", "created_at"], name="idx_chat_team_time"
+            ),
         ),
         migrations.AddIndex(
-            model_name='teammembership',
-            index=models.Index(fields=['user'], name='idx_membership_user'),
+            model_name="teammembership",
+            index=models.Index(fields=["user"], name="idx_membership_user"),
         ),
         migrations.AddConstraint(
-            model_name='teammembership',
-            constraint=models.UniqueConstraint(fields=('team', 'user'), name='uniq_user_per_team'),
+            model_name="teammembership",
+            constraint=models.UniqueConstraint(
+                fields=("team", "user"), name="uniq_user_per_team"
+            ),
         ),
     ]
