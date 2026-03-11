@@ -1,28 +1,52 @@
+# ===============================
 # Python
+# ===============================
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyd
 
-# Virtual env
+# ===============================
+# Virtual Environment
+# ===============================
 env/
 venv/
+.venv/
 
+# ===============================
 # Django
+# ===============================
 db.sqlite3
-*.log
-staticfiles/
 *.sqlite3
 *.log
 staticfiles/
-/staticfiles/
-/mediafiles/
+mediafiles/
 
-# Environment variables
+# ===============================
+# Environment Variables
+# ===============================
 .env
 
+# ===============================
 # VS Code
-.vscode/
+# ===============================
 .vscode/
 
-# OS files
+# ===============================
+# OS Files
+# ===============================
 .DS_Store
+Thumbs.db
+
+# ===============================
+# Python build files
+# ===============================
+build/
+dist/
+*.egg-info/
+
+# ===============================
+# Cache
+# ===============================
+.cache/
+.pytest_cache/
