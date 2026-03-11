@@ -4,7 +4,7 @@ Base settings — shared across all environments.
 All secrets and environment-specific values are loaded from env vars.
 In dev, load them from a .env file via python-decouple or similar.
 """
-import os
+
 from pathlib import Path
 
 from decouple import Csv, config
@@ -97,8 +97,13 @@ DATABASES = {
 
 # ─── Auth & Password Validation ──────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 10}},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 10},
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]

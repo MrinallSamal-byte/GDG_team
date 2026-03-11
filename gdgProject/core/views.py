@@ -4,6 +4,7 @@ Health-check endpoint — Deliverable #10.
 Returns HTTP 200 with component status when the system is healthy.
 Returns HTTP 503 with details when a critical component is down.
 """
+
 import time
 
 from django.db import connection

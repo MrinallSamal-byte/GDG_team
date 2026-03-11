@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from .models import CustomFormField, Registration, RegistrationResponse, RegistrationTechStack
+from .models import (
+    CustomFormField,
+    Registration,
+    RegistrationResponse,
+    RegistrationTechStack,
+)
 
 
 class RegistrationResponseInline(admin.TabularInline):
@@ -21,7 +26,15 @@ class RegistrationTechStackInline(admin.TabularInline):
 class RegistrationAdmin(admin.ModelAdmin):
     """Admin for participant registrations."""
 
-    list_display = ("registration_id", "user", "event", "type", "status", "looking_for_team", "registered_at")
+    list_display = (
+        "registration_id",
+        "user",
+        "event",
+        "type",
+        "status",
+        "looking_for_team",
+        "registered_at",
+    )
     list_filter = ("status", "type", "looking_for_team")
     search_fields = ("registration_id", "user__username", "user__email", "event__title")
     readonly_fields = ("registration_id", "registered_at", "updated_at")
@@ -33,7 +46,13 @@ class RegistrationAdmin(admin.ModelAdmin):
 class CustomFormFieldAdmin(admin.ModelAdmin):
     """Admin for organizer-defined registration form fields."""
 
-    list_display = ("field_label", "event", "field_type", "is_required", "display_order")
+    list_display = (
+        "field_label",
+        "event",
+        "field_type",
+        "is_required",
+        "display_order",
+    )
     list_filter = ("field_type", "is_required")
     search_fields = ("field_label", "event__title")
     raw_id_fields = ("event",)

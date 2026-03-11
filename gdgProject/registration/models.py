@@ -1,6 +1,7 @@
 """
 Domain model for event registrations.
 """
+
 import uuid
 
 from django.conf import settings
@@ -91,9 +92,7 @@ class Registration(models.Model):
                 name="uniq_reg_per_event",
             ),
             models.CheckConstraint(
-                condition=(
-                    ~models.Q(type="team") | models.Q(team__isnull=False)
-                ),
+                condition=(~models.Q(type="team") | models.Q(team__isnull=False)),
                 name="chk_team_reg_requires_team",
             ),
         ]
@@ -107,6 +106,7 @@ class Registration(models.Model):
 
 
 # ── Custom Registration Form Fields ──────────────────────────────────────────
+
 
 class FieldType(models.TextChoices):
     """Supported input types for organizer-defined registration form fields."""
@@ -143,7 +143,9 @@ class CustomFormField(models.Model):
     field_options = models.JSONField(
         default=list,
         blank=True,
-        help_text=_('["Option A", "Option B"] — for dropdown/radio/multi-select fields'),
+        help_text=_(
+            '["Option A", "Option B"] — for dropdown/radio/multi-select fields'
+        ),
     )
     is_required = models.BooleanField(default=False)
     display_order = models.PositiveSmallIntegerField(default=0, db_index=True)

@@ -3,18 +3,13 @@ Baseline tests — unit, integration, and permission.
 
 Deliverable #6: Three test archetypes demonstrating the test pyramid strategy.
 """
+
 from unittest.mock import MagicMock, patch
 
+from core.exceptions import ConflictError, ValidationError
 from django.contrib.auth.models import User
-from django.test import Client, RequestFactory, TestCase, TransactionTestCase
+from django.test import Client, TestCase
 from django.utils import timezone
-
-from core.exceptions import (
-    ConflictError,
-    NotFoundError,
-    PermissionDeniedError,
-    ValidationError,
-)
 from events.models import Event, EventRound, EventStatus
 
 
@@ -74,9 +69,7 @@ class TestTeamJoinRequestServiceUnit(TestCase):
 
         service = TeamJoinRequestService(repo=repo)
         with self.assertRaises(ValidationError) as ctx:
-            service.create_join_request(
-                team_id=1, user=self.user, role="backend"
-            )
+            service.create_join_request(team_id=1, user=self.user, role="backend")
         self.assertIn("full", ctx.exception.message.lower())
 
     @patch("team.services.TeamRepository")
@@ -89,9 +82,7 @@ class TestTeamJoinRequestServiceUnit(TestCase):
 
         service = TeamJoinRequestService(repo=repo)
         with self.assertRaises(ConflictError):
-            service.create_join_request(
-                team_id=1, user=self.user, role="frontend"
-            )
+            service.create_join_request(team_id=1, user=self.user, role="frontend")
 
     @patch("team.services.TeamRepository")
     def test_leader_cannot_join_own_team(self, MockRepo):
@@ -104,9 +95,7 @@ class TestTeamJoinRequestServiceUnit(TestCase):
 
         service = TeamJoinRequestService(repo=repo)
         with self.assertRaises(ValidationError):
-            service.create_join_request(
-                team_id=1, user=self.user, role="backend"
-            )
+            service.create_join_request(team_id=1, user=self.user, role="backend")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -121,12 +110,12 @@ class TestEventDetailIntegration(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username='detailuser', password='pass1234')
+        self.user = User.objects.create_user(username="detailuser", password="pass1234")
         now = timezone.now()
         self.event = Event.objects.create(
-            title='HackFest 2026',
-            slug='hackfest-2026-baseline',
-            description='A great hackathon',
+            title="HackFest 2026",
+            slug="hackfest-2026-baseline",
+            description="A great hackathon",
             status=EventStatus.REGISTRATION_OPEN,
             registration_start=now - timezone.timedelta(days=1),
             registration_end=now + timezone.timedelta(days=10),
@@ -135,7 +124,9 @@ class TestEventDetailIntegration(TestCase):
             created_by=self.user,
         )
         EventRound.objects.create(
-            event=self.event, name='Round 1', order=1,
+            event=self.event,
+            name="Round 1",
+            order=1,
             start_date=now + timezone.timedelta(days=15),
             end_date=now + timezone.timedelta(days=16),
         )
