@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}CampusArena | My Teams{% endblock %}
+{% block title %}CampusArena | Dashboard{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -509,18 +509,18 @@
 <section class="dashboard-layout">
     <!-- Desktop Sidebar (Hidden on Mobile via .desktop-sidebar class) -->
     <div class="desktop-sidebar">
-        {% include 'dashboard/_sidebar.html' with current_page='teams' %}
+        {% include 'dashboard/_sidebar.html' with current_page='overview' %}
     </div>
 
     <!-- Main Content -->
     <div>
         <div class="welcome-header reveal">
-            <h1><i data-lucide="users"></i> My Teams</h1>
-            <p>Teams you've created or joined across events.</p>
+            <h1>Welcome back, {{ request.user.first_name|default:request.user.username }}</h1>
+            <p>Here’s a quick look at your recent activity across events, teams, and notifications.</p>
         </div>
 
         <div class="teams-grid reveal">
-            {% for team in teams %}
+            {% for team in my_teams %}
             <article class="team-card">
 
                 <div class="team-header">
@@ -539,6 +539,7 @@
                     <span>Your role: <strong>{{ team.role }}</strong></span>
                 </div>
 
+                {% if team.members %}
                 <div class="members-section-title">Members</div>
                 <div class="members-list">
                     {% for member in team.members %}
@@ -548,22 +549,23 @@
                     </div>
                     {% endfor %}
                 </div>
+                {% endif %}
 
                 <div class="team-actions">
-                    <button class="action-btn" data-action="team-chat">
-                        <i data-lucide="message-circle"></i> Chat
-                    </button>
-                    <button class="action-btn" data-action="team-invite">
-                        <i data-lucide="user-plus"></i> Invite
-                    </button>
+                    <a href="{% url 'dashboard:my_teams' %}" class="action-btn">
+                        <i data-lucide="users"></i> View Team
+                    </a>
+                    <a href="{% url 'dashboard:my_events' %}" class="action-btn">
+                        <i data-lucide="calendar"></i> Event
+                    </a>
                 </div>
 
             </article>
             {% empty %}
             <div class="teams-empty">
                 <i data-lucide="users"></i>
-                <h3>No Teams Yet</h3>
-                <p>Not part of any team yet. Join an event and form your squad!</p>
+                <h3>No Recent Teams Yet</h3>
+                <p>You’re not part of any teams yet. Explore events and build your squad.</p>
             </div>
             {% endfor %}
         </div>
