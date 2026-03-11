@@ -2,7 +2,281 @@
 
 {% block title %}CampusArena | Edit {{ event.title }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* ==========================================================================
+       GLOBAL REVEAL ANIMATIONS
+       ========================================================================== */
+    .reveal {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .reveal.active { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+
+    /* ==========================================================================
+       MOBILE OPTIMIZATION (max-width: 768px)
+       ========================================================================== */
+    .mobile-only { display: none !important; }
+
+    @media (max-width: 768px) {
+        .mobile-only { display: flex !important; }
+
+        /* Hide default base.html navbar */
+        body > header, .navbar:not(.mobile-bottom-nav) { 
+            display: none !important; 
+        }
+
+        body { padding-bottom: 100px; padding-top: 60px; /* space for fixed navs */ }
+
+        .welcome-header { margin-top: 1rem; text-align: center; }
+
+        /* Form Layout Fixes for Mobile */
+        .field-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 1rem !important;
+        }
+
+        /* Make bottom action buttons full width on mobile */
+        .create-event-form > div:last-child {
+            flex-direction: column !important;
+            gap: 0.75rem !important;
+        }
+        
+        .create-event-form > div:last-child .btn-primary,
+        .create-event-form > div:last-child .btn-secondary {
+            width: 100% !important;
+            justify-content: center !important;
+        }
+
+        /* 1. Navbar Mobile Setup */
+        .mobile-top-nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border-color);
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.25rem;
+            z-index: 1000;
+        }
+
+        .mobile-brand {
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text-main);
+        }
+
+        .mobile-actions { display: flex; align-items: center; gap: 1rem; }
+        .mobile-icon-btn { 
+            background: none; border: none; padding: 0.25rem;
+            color: var(--text-main); cursor: pointer;
+            display: flex; align-items: center; position: relative;
+        }
+
+        /* 2. Hamburger Menu Drawer */
+        .mobile-drawer-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
+            z-index: 1001; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+            display: block !important;
+        }
+
+        .mobile-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .mobile-drawer {
+            position: fixed; top: 0; right: -85%;
+            width: 75%; max-width: 320px; height: 100vh;
+            background: var(--surface); z-index: 1002;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex !important; flex-direction: column;
+            box-shadow: -4px 0 24px rgba(0,0,0,0.5); overflow-y: auto;
+        }
+
+        .mobile-drawer.open { right: 0; }
+
+        .drawer-header {
+            padding: 2.5rem 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex; flex-direction: column;
+        }
+
+        .drawer-header h4 {
+            margin: 0 0 1rem 0; font-size: 0.8rem; text-transform: uppercase; 
+            letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700;
+        }
+
+        .profile-card-drawer {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 1rem; background: var(--bg-input, rgba(128,128,128,0.05));
+            border: 1px solid var(--border-color); border-radius: 16px;
+            text-decoration: none; transition: all 0.2s;
+        }
+
+        .profile-card-drawer:active { background: var(--border-color); }
+
+        .drawer-avatar {
+            width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--primary, #8b5cf6), #6d28d9); color: white;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.25rem; font-weight: bold; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+        }
+
+        .drawer-user-info { flex-grow: 1; }
+        .drawer-user-info h3 { margin: 0 0 0.2rem 0; font-size: 1.05rem; color: var(--text-main); font-weight: 700; }
+        .drawer-user-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.2rem; }
+
+        .drawer-nav { padding: 1.5rem 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; flex-grow: 1; }
+        
+        .drawer-link {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 1rem 1.15rem; color: var(--text-main);
+            text-decoration: none; font-size: 1rem; font-weight: 600;
+            border-radius: 14px; transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            background: var(--surface);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .drawer-link:active { transform: scale(0.98); background: var(--bg-input, rgba(128,128,128,0.05)); }
+        .drawer-link i { color: var(--primary, #8b5cf6); width: 20px; height: 20px; }
+        .drawer-divider { height: 1px; background: var(--border-color); margin: 0.5rem 0; }
+        
+        .drawer-logout { 
+            border-color: rgba(239, 68, 68, 0.3) !important; 
+            background: rgba(239, 68, 68, 0.05) !important; 
+            color: #ef4444 !important; 
+        }
+        .drawer-logout i { color: #ef4444 !important; }
+
+        /* 3. Floating Bottom Nav */
+        .mobile-bottom-nav {
+            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            padding: 0.5rem 1rem; gap: 0.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15); z-index: 1000;
+        }
+
+        .bottom-nav-item {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.6rem 1rem; border-radius: 30px;
+            color: var(--text-muted);
+            text-decoration: none; font-size: 0.95rem; font-weight: 600;
+        }
+
+        .bottom-nav-item.active { background: rgba(139, 92, 246, 0.15); color: var(--primary, #8b5cf6); }
+        .bottom-nav-item i { width: 18px; height: 18px; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
+
+<!-- ==========================================================================
+     MOBILE SPECIFIC NAVIGATION LAYERS
+     ========================================================================== -->
+
+<!-- 1. Top Navbar (Mobile Only) -->
+<div class="mobile-top-nav mobile-only">
+    <a href="{% url 'events:home' %}" class="brand mobile-brand">
+        <i data-lucide="trophy" style="width: 20px; height: 20px;"></i>
+        CampusArena
+    </a>
+    <div class="mobile-actions">
+        <button class="mobile-icon-btn" id="mobile-theme-toggle">
+            <i data-lucide="moon"></i>
+        </button>
+        <a href="{% url 'dashboard:notifications' %}" class="mobile-icon-btn" style="text-decoration: none;">
+            <i data-lucide="bell"></i>
+            <span style="position: absolute; top: 3px; right: 5px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
+        </a>
+        <button class="mobile-icon-btn" id="hamburger-menu-btn">
+            <i data-lucide="menu"></i>
+        </button>
+    </div>
+</div>
+
+<!-- 2. Hamburger Drawer (Mobile Only) -->
+<div class="mobile-drawer-overlay mobile-only" id="drawer-overlay"></div>
+<div class="mobile-drawer mobile-only" id="mobile-drawer">
+    <div class="drawer-header">
+        <h4>Account</h4>
+        {% if user.is_authenticated %}
+        <a href="{% url 'dashboard:my_profile' %}" class="profile-card-drawer">
+            <div class="drawer-avatar">
+                {{ user.first_name|default:"U"|make_list|first|upper }}
+            </div>
+            <div class="drawer-user-info">
+                <h3>
+                {% if user.is_staff %}
+                Admin User
+                {% else %}
+                {{ user.get_full_name|default:"Student User" }}
+                {% endif %}
+                </h3>
+                <p>View Profile <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i></p>
+            </div>
+        </a>
+        {% else %}
+        <div class="profile-card-drawer" style="justify-content: center; text-align: center;">
+            <div class="drawer-user-info">
+                <h3>Guest User</h3>
+                <p style="justify-content: center;">Join the community</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="drawer-nav">
+        {% if user.is_authenticated %}
+            {% if user.is_staff %}
+            <a href="{% url 'eventManagement:organizer_dashboard' %}" class="drawer-link"><i data-lucide="settings-2"></i> Organizer Panel</a>
+            {% endif %}
+            <a href="{% url 'dashboard:user_dashboard' %}" class="drawer-link"><i data-lucide="layout-dashboard"></i> Overview</a>
+            <a href="{% url 'dashboard:my_events' %}" class="drawer-link"><i data-lucide="calendar"></i> My Events</a>
+            <a href="{% url 'dashboard:my_teams' %}" class="drawer-link"><i data-lucide="users"></i> My Teams</a>
+            <a href="{% url 'team:find_teammates' %}" class="drawer-link"><i data-lucide="user-plus"></i> Find Teammates</a>
+            <a href="{% url 'dashboard:pending_requests' %}" class="drawer-link"><i data-lucide="clock"></i> Pending Requests</a>
+            <a href="{% url 'dashboard:settings' %}" class="drawer-link"><i data-lucide="settings"></i> Settings</a>
+            <div class="drawer-divider"></div>
+            <form method="POST" action="{% url 'users:logout' %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="drawer-link drawer-logout" style="width:100%; text-align:left; background:none; border:none; font-family:inherit; cursor:pointer;">
+                    <i data-lucide="log-out"></i> Logout
+                </button>
+            </form>
+        {% else %}
+            <a href="{% url 'users:login' %}" class="drawer-link"><i data-lucide="log-in"></i> Login</a>
+            <a href="{% url 'users:register' %}" class="drawer-link"><i data-lucide="user-plus"></i> Register</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 3. Bottom Navigation Bar (Mobile Only) -->
+<div class="mobile-bottom-nav mobile-only">
+    <a href="{% url 'events:home' %}" class="bottom-nav-item">
+        <i data-lucide="home"></i> Events
+    </a>
+    <a href="{% url 'eventManagement:organizer_dashboard' %}" class="bottom-nav-item active">
+        <i data-lucide="settings-2"></i> Organizer
+    </a>
+</div>
+
+<!-- ==========================================================================
+     STANDARD PAGE CONTENT
+     ========================================================================== -->
+
 <section class="section">
     <div class="welcome-header reveal">
         <p class="eyebrow"><i data-lucide="edit-3"></i> Event Management</p>
@@ -142,4 +416,123 @@
         </div>
     </form>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        /* ==========================================================================
+           REVEAL ANIMATIONS
+           ========================================================================== */
+        const revealElements = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { 
+            threshold: 0.08, 
+            rootMargin: '0px 0px -20px 0px' 
+        });
+
+        revealElements.forEach(el => observer.observe(el));
+
+        /* ==========================================================================
+           MOBILE DRAWER LOGIC
+           ========================================================================== */
+        const hamburgerBtn = document.getElementById('hamburger-menu-btn');
+        const drawerOverlay = document.getElementById('drawer-overlay');
+        const mobileDrawer = document.getElementById('mobile-drawer');
+        
+        if (hamburgerBtn && drawerOverlay && mobileDrawer) {
+            function toggleDrawer() {
+                const isOpen = mobileDrawer.classList.contains('open');
+                if (isOpen) {
+                    mobileDrawer.classList.remove('open');
+                    drawerOverlay.classList.remove('open');
+                    document.body.style.overflow = ''; // Restore scroll
+                } else {
+                    mobileDrawer.classList.add('open');
+                    drawerOverlay.classList.add('open');
+                    document.body.style.overflow = 'hidden'; // Prevent body scroll while menu is open
+                }
+            }
+
+            hamburgerBtn.addEventListener('click', toggleDrawer);
+            drawerOverlay.addEventListener('click', toggleDrawer);
+
+            const drawerLinks = mobileDrawer.querySelectorAll('.drawer-link');
+            drawerLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileDrawer.classList.remove('open');
+                    drawerOverlay.classList.remove('open');
+                    document.body.style.overflow = ''; 
+                });
+            });
+        }
+
+        /* ==========================================================================
+           MOBILE THEME TOGGLE LOGIC
+           ========================================================================== */
+        const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+        if (mobileThemeToggle) {
+            mobileThemeToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const nextTheme = isDark ? 'light' : 'dark';
+
+                const updateTheme = () => {
+                    document.documentElement.setAttribute('data-theme', nextTheme);
+                    localStorage.setItem('campusarena-theme', nextTheme);
+                    const label = document.getElementById('theme-label');
+                    if(label) label.textContent = nextTheme === 'dark' ? 'Dark' : 'Light';
+                };
+
+                if (!document.startViewTransition) {
+                    updateTheme();
+                    return;
+                }
+
+                const x = e.clientX || (e.touches && e.touches[0].clientX) || window.innerWidth / 2;
+                const y = e.clientY || (e.touches && e.touches[0].clientY) || 30;
+
+                const endRadius = Math.hypot(
+                    Math.max(x, window.innerWidth - x),
+                    Math.max(y, window.innerHeight - y)
+                );
+
+                document.documentElement.classList.add('vt-active');
+                const transition = document.startViewTransition(updateTheme);
+
+                transition.ready.then(() => {
+                    const animation = document.documentElement.animate(
+                        {
+                            clipPath: [
+                                `circle(0px at ${x}px ${y}px)`,
+                                `circle(${endRadius}px at ${x}px ${y}px)`
+                            ]
+                        },
+                        {
+                            duration: 600,
+                            easing: 'cubic-bezier(0.34, 1.2, 0.64, 1)', 
+                            pseudoElement: '::view-transition-new(root)'
+                        }
+                    );
+
+                    animation.onfinish = () => {
+                        document.documentElement.classList.remove('vt-active');
+                    };
+                });
+                
+                transition.finished.finally(() => {
+                    document.documentElement.classList.remove('vt-active');
+                });
+            });
+        }
+    });
+</script>
 {% endblock %}

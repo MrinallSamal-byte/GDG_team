@@ -55,7 +55,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # Custom middleware
-    "core.middleware.ErrorHandlerMiddleware",
+    # "core.middleware.ErrorHandlerMiddleware",
 ]
 
 ROOT_URLCONF = "gdgProject.urls"

@@ -358,3 +358,7 @@ def remove_member(request, team_id, user_id):
 
     messages.success(request, f'{removed_username} has been removed from the team.')
     return redirect('team:team_management', team_id=team.pk)
+
+
+def find_teammates(request):
+    return render(request, "dashboard/find_teammates.html")

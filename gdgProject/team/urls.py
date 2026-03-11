@@ -11,4 +11,5 @@ urlpatterns = [
     path('<int:team_id>/leave/', views.leave_team, name='leave_team'),
     path('<int:team_id>/toggle-status/', views.toggle_team_status, name='toggle_team_status'),
     path('<int:team_id>/remove/<int:user_id>/', views.remove_member, name='remove_member'),
+    path('find/', views.find_teammates, name='find_teammates'),
 ]

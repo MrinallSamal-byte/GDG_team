@@ -5,6 +5,18 @@
 {% block extra_css %}
 <style>
     /* ==========================================================================
+       GLOBAL LAYOUT FIXES
+       ========================================================================== */
+    * { box-sizing: border-box; }
+    
+    body, html {
+        overflow-x: hidden;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* ==========================================================================
        GLOBAL REVEAL ANIMATIONS
        ========================================================================== */
     .reveal {
@@ -207,7 +219,6 @@
         border: 1px solid var(--border, var(--border-color, rgba(255,255,255,0.08)));
         padding: 28px 20px; 
         border-radius: var(--radius-md, 12px); 
-        /* Match standard event card "pop" transition */
         transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.4s ease, box-shadow 0.45s ease;
     }
     
@@ -232,105 +243,23 @@
     @keyframes pulse-green { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
 
     /* ==========================================================================
-       HERO CARD — EXTRA ELEMENTS
+       HERO CARD
        ========================================================================== */
-
-    /* Stop the card from stretching to full hero height */
-    .hero {
-        align-items: start !important;
-    }
-
-    .hero-card {
-        align-self: start !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
-    /* Push the "Also Upcoming" section to naturally fill remaining space */
-    .hero-also-upcoming {
-        margin-top: auto !important;
-        padding-top: .85rem;
-        border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));
-    }
+    .hero { align-items: start !important; }
+    .hero-card { align-self: start !important; display: flex !important; flex-direction: column !important; }
 
     .hero-prize-row {
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        padding: .55rem .75rem;
-        background: rgba(245, 158, 11, 0.08);
-        border: 1px solid rgba(245, 158, 11, 0.2);
-        border-radius: 8px;
-        margin-top: .5rem;
-        font-size: .82rem;
-        font-weight: 700;
-        color: #f59e0b;
+        display: flex; align-items: center; gap: .5rem; padding: .55rem .75rem;
+        background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 8px; margin-top: .5rem; font-size: .82rem; font-weight: 700; color: #f59e0b;
     }
 
-    .hero-upcoming-label {
-        font-size: .72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .06em;
-        color: var(--text-muted, #9ba1a6);
-        margin-bottom: .6rem;
-    }
-
-    .hero-upcoming-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: .75rem;
-        padding: .5rem .6rem;
-        border-radius: 8px;
-        margin-bottom: .35rem;
-        text-decoration: none;
-        transition: background .2s ease;
-    }
-
-    .hero-upcoming-row:hover {
-        background: var(--bg-input, rgba(255,255,255,0.05));
-    }
-
-    .hero-upcoming-name {
-        display: flex;
-        align-items: center;
-        gap: .55rem;
-        min-width: 0;
-        font-size: .84rem;
-        font-weight: 600;
-        color: var(--text-main, #f3f4f6);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .hero-upcoming-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: var(--primary, #8b5cf6);
-        flex-shrink: 0;
-    }
-
-    .hero-upcoming-status {
-        font-size: .75rem;
-        font-weight: 700;
-        padding: .2rem .55rem;
-        border-radius: 20px;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    .hero-upcoming-status.status-open {
-        background: rgba(16, 185, 129, 0.1);
-        color: #10b981;
-    }
-
-    .hero-upcoming-status.status-closed {
-        background: rgba(239, 68, 68, 0.1);
-        color: #ef4444;
-    }
+    /* ==========================================================================
+       MOBILE OPTIMIZATION (max-width: 768px)
+       ========================================================================== */
+    
+    /* Default Hidden Desktop Classes */
+    .mobile-only { display: none !important; }
 
     @media (max-width: 1200px) {
         .how-it-works-grid { gap: 15px; }
@@ -338,13 +267,512 @@
     }
 
     @media (max-width: 768px) {
+        /* Enable Mobile Elements */
+        .mobile-only { display: flex !important; }
+
+        /* 1. Navbar Mobile Setup */
+        /* Hide default base.html navbar to prevent duplicate navs */
+        body > header, .navbar:not(.mobile-bottom-nav) { display: none !important; }
+
+        .mobile-top-nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border-color);
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.25rem;
+            z-index: 1000;
+        }
+
+        .mobile-brand {
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text-main);
+        }
+
+        .mobile-actions { display: flex; align-items: center; gap: 1rem; }
+        .mobile-icon-btn { 
+            background: none; border: none; padding: 0.25rem;
+            color: var(--text-main); cursor: pointer;
+            display: flex; align-items: center; position: relative;
+        }
+
+        /* 2. Hamburger Menu Drawer */
+        .mobile-drawer-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
+            z-index: 1001; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+            display: block !important;
+        }
+
+        .mobile-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .mobile-drawer {
+            position: fixed; top: 0; right: -85%;
+            width: 75%; max-width: 320px; height: 100vh;
+            background: var(--surface); z-index: 1002;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex !important; flex-direction: column;
+            box-shadow: -4px 0 24px rgba(0,0,0,0.5); overflow-y: auto;
+        }
+
+        .mobile-drawer.open { right: 0; }
+
+        .drawer-header {
+            padding: 2.5rem 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex; flex-direction: column;
+        }
+
+        .drawer-header h4 {
+            margin: 0 0 1rem 0; font-size: 0.8rem; text-transform: uppercase; 
+            letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700;
+        }
+
+        .profile-card {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 1rem; background: var(--bg-input, rgba(128,128,128,0.05));
+            border: 1px solid var(--border-color); border-radius: 16px;
+            text-decoration: none; transition: all 0.2s;
+        }
+
+        .profile-card:active { background: var(--border-color); }
+
+        .drawer-avatar {
+            width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--primary, #8b5cf6), #6d28d9); color: white;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.25rem; font-weight: bold; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+        }
+
+        .drawer-user-info { flex-grow: 1; }
+        .drawer-user-info h3 { margin: 0 0 0.2rem 0; font-size: 1.05rem; color: var(--text-main); font-weight: 700; }
+        .drawer-user-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.2rem; }
+
+        .drawer-nav { padding: 1.5rem 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; flex-grow: 1; }
+        
+        .drawer-link {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 1rem 1.15rem; color: var(--text-main);
+            text-decoration: none; font-size: 1rem; font-weight: 600;
+            border-radius: 14px; transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            background: var(--surface);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .drawer-link:active { transform: scale(0.98); background: var(--bg-input, rgba(128,128,128,0.05)); }
+        .drawer-link i { color: var(--primary, #8b5cf6); width: 20px; height: 20px; }
+        .drawer-divider { height: 1px; background: var(--border-color); margin: 0.5rem 0; }
+        
+        .drawer-logout { 
+            border-color: rgba(239, 68, 68, 0.3) !important; 
+            background: rgba(239, 68, 68, 0.05) !important; 
+            color: #ef4444 !important; 
+        }
+        .drawer-logout i { color: #ef4444 !important; }
+
+        /* 3. Floating Bottom Nav */
+        .mobile-bottom-nav {
+            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            padding: 0.5rem 1rem; gap: 0.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15); z-index: 1000;
+        }
+
+        .bottom-nav-item {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.6rem 1rem; border-radius: 30px;
+            color: var(--text-muted);
+            text-decoration: none; font-size: 0.95rem; font-weight: 600;
+        }
+
+        .bottom-nav-item.active { background: rgba(139, 92, 246, 0.15); color: var(--primary, #8b5cf6); }
+        .bottom-nav-item i { width: 18px; height: 18px; }
+
+        /* Dashboard Layout Rules Fixes */
+        body { padding-bottom: 100px; padding-top: 60px; /* space for fixed navs */ }
+        
+        /* HERO SECTION MOBILE PROFESSIONAL LAYOUT */
+        .hero { 
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+            margin-top: 20px !important; 
+            padding-top: 1rem !important;
+        }
+
+        .hero > div:first-child {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .hero p.eyebrow {
+            justify-content: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .hero h1 {
+            font-size: 2.6rem !important;
+            line-height: 1.15 !important;
+            margin-bottom: 1.25rem !important;
+            text-align: center !important;
+        }
+
+        .hero p.muted {
+            text-align: center !important;
+            margin: 0 auto 2rem auto !important;
+            font-size: 1.05rem !important;
+            line-height: 1.6 !important;
+        }
+
+        .hero .search-wrap {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            gap: 0.75rem !important;
+        }
+
+        .hero .search-wrap input {
+            width: 100% !important;
+            padding: 1rem 1.25rem !important;
+            border-radius: 12px !important;
+            border: 1px solid var(--border-color) !important;
+            background: var(--surface) !important;
+            color: var(--text-main) !important;
+            font-size: 1rem !important;
+        }
+
+        .hero .search-wrap button {
+            width: 100% !important;
+            padding: 1rem !important;
+            border-radius: 12px !important;
+            justify-content: center !important;
+            font-size: 1.05rem !important;
+        }
+
+        /* Fix the weird vertical stacking of stats on mobile */
+        .hero .stats-row {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-around !important;
+            width: 100% !important;
+            margin-top: 3rem !important;
+            background: var(--surface) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 16px !important;
+            padding: 1.5rem 0.5rem !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+        }
+
+        .hero .stats-row div {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            flex: 1 !important;
+        }
+
+        .hero .stats-row div strong {
+            font-size: 1.4rem !important;
+            color: var(--text-main) !important;
+            margin-bottom: 0.2rem !important;
+        }
+
+        .hero .stats-row div span {
+            font-size: 0.75rem !important;
+            color: var(--text-muted) !important;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .hero .hero-card { 
+            width: 100% !important;
+            align-self: center !important;
+            margin-top: 3.5rem !important;
+            text-align: left !important;
+        }
+
+        /* Rest of the layout fixes */
         .how-it-works-grid, .why-us-grid { grid-template-columns: 1fr; }
         .feature-header.center { align-items: flex-start; text-align: left; }
+
+        /* Collapse Event Grids neatly to exactly Two-Columns */
+        .card-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 1rem !important;
+        }
+        
+        /* Increase padding for visual breathability */
+        .event-card { padding: 1.25rem !important; }
+        
+        .event-card-body h3 { font-size: 1.05rem; white-space: normal; line-height: 1.3; }
+        .event-meta span { font-size: 0.75rem; }
+
+        /* Cleanly stack the card footer vertically on mobile inside 2 cols */
+        .event-card-footer {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.75rem;
+        }
+        .footer-left { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+        .event-card .btn-primary, .event-card .btn-closed { width: 100%; justify-content: center; }
+
+        /* More Vertical Spacing Between Sections */
+        .section, .feature-section {
+            margin-top: 90px !important;
+            margin-bottom: 70px !important;
+        }
     }
+
+    /* Fallback if phone is exceptionally thin (under 400px), drop to 1 col so text doesn't crush */
+    @media (max-width: 400px) {
+        .card-grid { grid-template-columns: 1fr !important; }
+    }
+
+       .drawer-header {
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.drawer-section-title {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin: 10px 12px;
+}
+
+.drawer-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.75rem 0.9rem;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text-main);
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.drawer-link:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.drawer-link i {
+    width: 18px;
+    height: 18px;
+}
+
+.logout-section {
+    margin-top: 10px;
+}
+
+.drawer-logout {
+    color: #ef4444;
+}
+
+.drawer-logout:hover {
+    background: rgba(239,68,68,0.1);
+}
+
+
 </style>
 {% endblock %}
 
 {% block content %}
+
+<!-- ==========================================================================
+     MOBILE SPECIFIC NAVIGATION LAYERS
+     Visible only on Mobile (<768px). 
+     Note: You can later extract these to base.html if needed globally.
+     ========================================================================== -->
+
+<!-- 1. Top Navbar (Mobile Only) -->
+<div class="mobile-top-nav mobile-only">
+    <a href="{% url 'events:home' %}" class="brand mobile-brand">
+        <i data-lucide="trophy" style="width: 20px; height: 20px;"></i>
+        CampusArena
+    </a>
+    <div class="mobile-actions">
+        <button class="mobile-icon-btn" id="mobile-theme-toggle">
+            <i data-lucide="moon"></i>
+        </button>
+        <a href="{% url 'dashboard:notifications' %}" class="mobile-icon-btn" style="text-decoration: none;">
+            <i data-lucide="bell"></i>
+            <span style="position: absolute; top: 3px; right: 5px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
+        </a>
+        <button class="mobile-icon-btn" id="hamburger-menu-btn">
+            <i data-lucide="menu"></i>
+        </button>
+    </div>
+</div>
+
+<!-- 2. Hamburger Drawer (Mobile Only) -->
+    <div class="mobile-drawer-overlay mobile-only" id="drawer-overlay"></div>
+
+<div class="mobile-drawer mobile-only" id="mobile-drawer">
+        <div class="drawer-header">
+    <h4>Account</h4>
+
+    {% if user.is_authenticated %}
+
+    <!-- Logged in user -->
+    <a href="{% url 'dashboard:my_profile' %}" class="profile-card">
+        <div class="drawer-avatar">
+            {{ user.first_name|first|upper }}
+        </div>
+
+        <div class="drawer-user-info">
+            <h3>{{ user.get_full_name|default:"Student User" }}</h3>
+            <p>
+                View Profile
+                <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+            </p>
+        </div>
+    </a>
+
+    {% else %}
+
+<a href="{% url 'users:login' %}" class="profile-card">
+
+    <div style="
+width:48px;
+height:48px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+border:1.5px solid #c0c3c8;
+background:rgba(0,0,0,0.03);
+flex-shrink:0;
+">
+    <i data-lucide="user" style="
+    width:20px;
+    height:20px;
+    color:var(--text-muted);
+    "></i>
+</div>
+
+    <div class="drawer-user-info">
+        <h3>Account</h3>
+        <p>
+            Login to continue
+            <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+        </p>
+    </div>
+
+</a>
+
+{% endif %}
+</div>
+    
+
+    <div class="drawer-nav">
+
+    <!-- DASHBOARD SECTION -->
+    <div class="drawer-section">
+        <p class="drawer-section-title">Dashboard</p>
+
+        <a href="{% url 'dashboard:user_dashboard' %}" class="drawer-link">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Overview</span>
+        </a>
+
+        <a href="#" class="drawer-link">
+            <i data-lucide="calendar"></i>
+            <span>My Events</span>
+        </a>
+
+        <a href="#" class="drawer-link">
+            <i data-lucide="users"></i>
+            <span>My Teams</span>
+        </a>
+
+        <a href="#" class="drawer-link">
+            <i data-lucide="user-plus"></i>
+            <span>Find Teammates</span>
+        </a>
+
+        <a href="#" class="drawer-link">
+            <i data-lucide="clock"></i>
+            <span>Pending Requests</span>
+        </a>
+    </div>
+
+    <!-- SETTINGS SECTION -->
+    <div class="drawer-section">
+        <p class="drawer-section-title">Preferences</p>
+
+        <a href="#" class="drawer-link">
+            <i data-lucide="settings"></i>
+            <span>Settings</span>
+        </a>
+    </div>
+
+    <!-- LOGOUT SECTION -->
+    <div class="drawer-section logout-section">
+        <form method="POST" action="{% url 'users:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="drawer-link drawer-logout">
+                <i data-lucide="log-out"></i>
+                <span>Logout</span>
+            </button>
+        </form>
+    </div>
+
+</div>
+</div>
+
+<!-- 3. Bottom Navigation Bar (Mobile Only) -->
+<div class="mobile-bottom-nav mobile-only">
+
+    <a href="{% url 'events:home' %}" class="bottom-nav-item">
+        <i data-lucide="home"></i> Events
+    </a>
+
+    {% if user.is_authenticated %}
+
+        {% if user.is_staff %}
+        <!-- Admin / Organizer -->
+        <a href="{% url 'eventManagement:organizer_dashboard' %}" class="bottom-nav-item active">
+            <i data-lucide="layout-dashboard"></i> Dashboard
+        </a>
+
+        {% else %}
+        <!-- Student -->
+        <a href="{% url 'dashboard:user_dashboard' %}" class="bottom-nav-item active">
+            <i data-lucide="layout-dashboard"></i> Dashboard
+        </a>
+        {% endif %}
+
+    {% else %}
+        <a href="{% url 'users:login' %}" class="bottom-nav-item active">
+            <i data-lucide="layout-dashboard"></i> Dashboard
+        </a>
+    {% endif %}
+
+</div>
+<!-- ==========================================================================
+     STANDARD PAGE CONTENT
+     ========================================================================== -->
+
 <!-- Hero Section -->
 <section class="hero reveal">
     <div class="hero-decor hero-decor-1"></div>
@@ -371,29 +799,6 @@
 
         {% if featured_events %}
 
-<<<<<<< HEAD
-            <div class="event-badge">{{ featured_events.0.category }}</div>
-            <h2 style="font-size:1.25rem;">{{ featured_events.0.title }}</h2>
-
-            <div class="event-meta">
-                <span><i data-lucide="calendar"></i> {{ featured_events.0.date }}</span>
-                <span><i data-lucide="radio"></i> {{ featured_events.0.mode }}</span>
-            </div>
-
-            {% if featured_events.0.spots %}
-            <div>
-                <div class="progress-track">
-                    <div class="progress-fill" style="width:41%;"></div>
-                </div>
-                <div class="progress-label"><span>{{ featured_events.0.spots }} spots filled</span></div>
-            </div>
-            {% endif %}
-
-            {% if featured_events.0.prize %}
-            <div class="hero-prize-row">
-                <i data-lucide="trophy" style="width:15px;height:15px;color:#f59e0b;flex-shrink:0;"></i>
-                <span>Prize: {{ featured_events.0.prize }}</span>
-=======
             <div class="event-badge">{{ featured_events.0.get_category_display }}</div>
             <h2 style="font-size:1.25rem;">{{ featured_events.0.title }}</h2>
 
@@ -413,7 +818,6 @@
             <div class="hero-prize-row">
                 <i data-lucide="trophy" style="width:15px;height:15px;color:#f59e0b;flex-shrink:0;"></i>
                 <span>Prize: ₹{{ featured_events.0.prize_pool|floatformat:0 }}</span>
->>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
             </div>
             {% endif %}
 
@@ -448,7 +852,7 @@
 </section>
 
 <!-- Browse All Events -->
-<section class="section reveal">
+<section class="section reveal" id="events-section">
     <div class="section-head split">
         <h2><i data-lucide="grid-3x3"></i> Browse All Events</h2>
         <form method="GET" action="" id="filter-form" style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
@@ -488,30 +892,14 @@
                 <div class="event-card-footer">
                     
                     <div class="footer-left">
-<<<<<<< HEAD
-                        <span class="status {{ event.status|lower }}">
-                            {% if event.status == 'Open' %}
-                                <i data-lucide="circle-check" style="width: 14px; height: 14px;"></i>
-                            {% elif event.status == 'Closed' %}
-=======
                         <span class="status {% if event.status == 'registration_open' %}open{% elif event.status == 'completed' or event.status == 'registration_closed' %}closed{% endif %}">
                             {% if event.status == 'registration_open' %}
                                 <i data-lucide="circle-check" style="width: 14px; height: 14px;"></i>
                             {% elif event.status == 'completed' or event.status == 'registration_closed' %}
->>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
                                 <i data-lucide="circle-x" style="width: 14px; height: 14px;"></i>
                             {% else %}
                                 <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
                             {% endif %}
-<<<<<<< HEAD
-                            {{ event.status }}
-                        </span>
-                        
-                        {% if event.prize %}
-                        <span class="prize-badge" data-prize="{{ event.prize }}">
-                            <i data-lucide="trophy" style="width: 14px; height: 14px;"></i> 
-                            <span>{{ event.prize }}</span>
-=======
                             {{ event.get_status_display }}
                         </span>
                         
@@ -519,16 +907,11 @@
                         <span class="prize-badge" data-prize="₹{{ event.prize_pool|floatformat:0 }}">
                             <i data-lucide="trophy" style="width: 14px; height: 14px;"></i> 
                             <span>₹{{ event.prize_pool|floatformat:0 }}</span>
->>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
                         </span>
                         {% endif %}
                     </div>
 
-<<<<<<< HEAD
-                    {% if event.status == 'Closed' %}
-=======
                     {% if event.status == 'completed' or event.status == 'registration_closed' %}
->>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
                         <button class="btn-closed" disabled>
                             Closed <i data-lucide="lock" style="width: 16px; height: 16px;"></i>
                         </button>
@@ -620,6 +1003,109 @@
     document.addEventListener('DOMContentLoaded', () => {
         // Ensure top again after DOM ready
         window.scrollTo(0, 0);
+
+        /* ==========================================================================
+           MOBILE DRAWER LOGIC
+           ========================================================================== */
+        const hamburgerBtn = document.getElementById('hamburger-menu-btn');
+        const drawerOverlay = document.getElementById('drawer-overlay');
+        const mobileDrawer = document.getElementById('mobile-drawer');
+        
+        if (hamburgerBtn && drawerOverlay && mobileDrawer) {
+            function toggleDrawer() {
+                const isOpen = mobileDrawer.classList.contains('open');
+                if (isOpen) {
+                    mobileDrawer.classList.remove('open');
+                    drawerOverlay.classList.remove('open');
+                    document.body.style.overflow = ''; // Restore scroll
+                } else {
+                    mobileDrawer.classList.add('open');
+                    drawerOverlay.classList.add('open');
+                    document.body.style.overflow = 'hidden'; // Prevent body scroll while menu is open
+                }
+            }
+
+            hamburgerBtn.addEventListener('click', toggleDrawer);
+            drawerOverlay.addEventListener('click', toggleDrawer);
+
+            // Close automatically when a menu link is clicked
+            const drawerLinks = mobileDrawer.querySelectorAll('.drawer-link');
+            drawerLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileDrawer.classList.remove('open');
+                    drawerOverlay.classList.remove('open');
+                    document.body.style.overflow = ''; 
+                });
+            });
+        }
+
+
+        /* ==========================================================================
+           MOBILE THEME TOGGLE LOGIC
+           ========================================================================== */
+        const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+        if (mobileThemeToggle) {
+            mobileThemeToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const nextTheme = isDark ? 'light' : 'dark';
+
+                const updateTheme = () => {
+                    document.documentElement.setAttribute('data-theme', nextTheme);
+                    localStorage.setItem('campusarena-theme', nextTheme);
+                    const label = document.getElementById('theme-label');
+                    if(label) label.textContent = nextTheme === 'dark' ? 'Dark' : 'Light';
+                };
+
+                if (!document.startViewTransition) {
+                    updateTheme();
+                    return;
+                }
+
+                // Get coordinates for the ripple effect from mobile click/touch
+                const x = e.clientX || (e.touches && e.touches[0].clientX) || window.innerWidth / 2;
+                const y = e.clientY || (e.touches && e.touches[0].clientY) || 30;
+
+                const endRadius = Math.hypot(
+                    Math.max(x, window.innerWidth - x),
+                    Math.max(y, window.innerHeight - y)
+                );
+
+                document.documentElement.classList.add('vt-active');
+                const transition = document.startViewTransition(updateTheme);
+
+                transition.ready.then(() => {
+                    const animation = document.documentElement.animate(
+                        {
+                            clipPath: [
+                                `circle(0px at ${x}px ${y}px)`,
+                                `circle(${endRadius}px at ${x}px ${y}px)`
+                            ]
+                        },
+                        {
+                            duration: 600,
+                            easing: 'cubic-bezier(0.34, 1.2, 0.64, 1)', 
+                            pseudoElement: '::view-transition-new(root)'
+                        }
+                    );
+
+                    animation.onfinish = () => {
+                        document.documentElement.classList.remove('vt-active');
+                    };
+                });
+                
+                transition.finished.finally(() => {
+                    document.documentElement.classList.remove('vt-active');
+                });
+            });
+        }
+
+
+        /* ==========================================================================
+           EXISTING FUNCTIONALITY
+           ========================================================================== */
 
         // --- Activation logic for .reveal class ---
         const revealElements = document.querySelectorAll('.reveal');

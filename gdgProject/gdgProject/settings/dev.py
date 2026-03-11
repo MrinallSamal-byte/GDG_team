@@ -33,3 +33,18 @@ CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
 
 # ─── Logging — human-readable in dev ────────────────────────────────────────
 LOGGING["handlers"]["console"]["formatter"] = "verbose"  # noqa: F405
+
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "campusarena",
+        "USER": "campusarena",
+        "PASSWORD": "CampusArena@2026",
+        "HOST": "localhost",
+        "PORT": "3306",
+        "OPTIONS": {
+            "charset": "utf8mb4",
+        },
+    }
+}

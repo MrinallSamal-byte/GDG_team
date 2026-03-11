@@ -241,13 +241,6 @@ def settings_view(request):
         'profile': profile,
     })
 
-<<<<<<< HEAD
-def find_teammates(request):
-    return render(request, "dashboard/find_teammates.html", {
-        "current_page": "find_teammates"
-    })
-
-=======
 
 @login_required
 def find_teammates(request):
@@ -262,22 +255,12 @@ def find_teammates(request):
     })
 
 
->>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit_profile(request):
     profile = _get_profile(request.user)
 
     if request.method == "POST":
-<<<<<<< HEAD
-        profile.phone = request.POST.get("phone")
-        profile.github = request.POST.get("github")
-        profile.linkedin = request.POST.get("linkedin")
-        profile.bio = request.POST.get("bio")
-        profile.college = request.POST.get("college")
-        profile.branch = request.POST.get("branch")
-        profile.year = request.POST.get("year")
-=======
         profile.phone = request.POST.get("phone", "").strip()
         profile.github = request.POST.get("github", "").strip()
         profile.linkedin = request.POST.get("linkedin", "").strip()
@@ -309,7 +292,6 @@ def edit_profile(request):
         skills = request.POST.get("skills", "").strip()
         if skills:
             profile.skills = skills
->>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
 
         profile.save()
 
@@ -318,9 +300,5 @@ def edit_profile(request):
 
     return render(request, "dashboard/edit_profile.html", {
         "profile": profile,
-<<<<<<< HEAD
-        "current_page": "profile"
-=======
         "current_page": "profile",
->>>>>>> 53c2e5801508465340b5156bfa0cf9c7a645481a
     })
