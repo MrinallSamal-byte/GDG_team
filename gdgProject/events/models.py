@@ -3,7 +3,6 @@ Domain models for the events app.
 
 Event and EventRound are the core domain entities driving the platform.
 """
-import uuid
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
@@ -45,6 +44,7 @@ class EventStatus(models.TextChoices):
         draft → cancelled (from any mutable state)
         published → archived (soft-delete)
     """
+
     DRAFT = "draft", _("Draft")
     PUBLISHED = "published", _("Published")
     REGISTRATION_OPEN = "registration_open", _("Registration Open")
@@ -56,6 +56,7 @@ class EventStatus(models.TextChoices):
 
 
 # ── Managers ─────────────────────────────────────────────────────────────────
+
 
 class ActiveEventManager(models.Manager):
     """Default manager — excludes soft-deleted events."""
@@ -72,6 +73,7 @@ class AllEventManager(models.Manager):
 
 
 # ── Models ────────────────────────────────────────────────────────────────────
+
 
 class Event(models.Model):
     """
@@ -155,7 +157,8 @@ class Event(models.Model):
     banner = models.ImageField(upload_to="events/banners/", blank=True)
     rules = models.TextField(blank=True, default="")
     faqs = models.JSONField(
-        default=list, blank=True,
+        default=list,
+        blank=True,
         help_text='[{"q": "...", "a": "..."}]',
     )
     contact_info = models.TextField(blank=True, default="")
@@ -174,7 +177,7 @@ class Event(models.Model):
     is_deleted = models.BooleanField(default=False, db_index=True)
 
     # ── Managers ──────────────────────────────────────────────────────────
-    objects = ActiveEventManager()   # default — excludes soft-deleted
+    objects = ActiveEventManager()  # default — excludes soft-deleted
     all_objects = AllEventManager()  # includes soft-deleted (admin)
 
     class Meta:
@@ -191,7 +194,9 @@ class Event(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(registration_end__gte=models.F("registration_start")),
+                condition=models.Q(
+                    registration_end__gte=models.F("registration_start")
+                ),
                 name="chk_reg_dates",
             ),
             models.CheckConstraint(
@@ -243,6 +248,7 @@ class Event(models.Model):
     def save(self, *args, **kwargs) -> None:  # type: ignore[override]
         if not self.slug:
             from django.utils.text import slugify
+
             base_slug = slugify(self.title)
             slug = base_slug
             n = 1

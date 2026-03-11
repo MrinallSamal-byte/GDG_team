@@ -4,15 +4,15 @@ Global exception-handler middleware.
 Catches AppError subclasses and unhandled exceptions, returning either
 JSON (for XHR/API requests) or rendered HTML error pages.
 """
+
 import logging
 import traceback
 import uuid
 
-from django.http import Http404, JsonResponse
-from django.core.exceptions import PermissionDenied
-from django.shortcuts import render
-
 from core.exceptions import AppError
+from django.core.exceptions import PermissionDenied
+from django.http import Http404, JsonResponse
+from django.shortcuts import render
 
 logger = logging.getLogger("campusarena.middleware")
 

@@ -9,22 +9,22 @@ from .models import Notification
 def unread_count(request):
     """Lightweight endpoint for notification badge polling."""
     if not request.user.is_authenticated:
-        return JsonResponse({'count': 0})
+        return JsonResponse({"count": 0})
 
     count = Notification.objects.filter(user=request.user, read=False).count()
-    return JsonResponse({'count': count})
+    return JsonResponse({"count": count})
 
 
 @login_required
 @require_POST
 def mark_read(request, notification_id):
     """Mark a single notification as read for the current user."""
-    updated = Notification.objects.filter(
-        pk=notification_id, user=request.user
-    ).update(read=True)
+    updated = Notification.objects.filter(pk=notification_id, user=request.user).update(
+        read=True
+    )
     if not updated:
-        return JsonResponse({'error': 'not_found'}, status=404)
-    return JsonResponse({'ok': True})
+        return JsonResponse({"error": "not_found"}, status=404)
+    return JsonResponse({"ok": True})
 
 
 @login_required
@@ -32,4 +32,4 @@ def mark_read(request, notification_id):
 def mark_all_read(request):
     """Mark all notifications as read for the current user."""
     Notification.objects.filter(user=request.user, read=False).update(read=True)
-    return JsonResponse({'ok': True})
+    return JsonResponse({"ok": True})

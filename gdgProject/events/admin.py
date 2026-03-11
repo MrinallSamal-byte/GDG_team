@@ -21,8 +21,24 @@ class EventSponsorInline(admin.TabularInline):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("title", "category", "status", "mode", "event_start", "capacity", "is_featured", "created_by")
-    list_filter = ("status", "category", "mode", "participation_type", "is_featured", "is_deleted")
+    list_display = (
+        "title",
+        "category",
+        "status",
+        "mode",
+        "event_start",
+        "capacity",
+        "is_featured",
+        "created_by",
+    )
+    list_filter = (
+        "status",
+        "category",
+        "mode",
+        "participation_type",
+        "is_featured",
+        "is_deleted",
+    )
     search_fields = ("title", "description", "slug")
     prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("created_at", "updated_at")

@@ -16,107 +16,239 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Event',
+            name="Event",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('slug', models.SlugField(max_length=255, unique=True)),
-                ('title', models.CharField(db_index=True, max_length=255)),
-                ('description', models.TextField()),
-                ('category', models.CharField(choices=[('hackathon', 'Hackathon'), ('workshop', 'Workshop'), ('coding_contest', 'Coding Contest'), ('quiz', 'Quiz / Competition'), ('paper_presentation', 'Paper Presentation'), ('design_challenge', 'Design Challenge'), ('ideathon', 'Ideathon'), ('case_study', 'Case Study'), ('cultural', 'Cultural'), ('sports', 'Sports'), ('other', 'Other')], db_index=True, default='other', max_length=30)),
-                ('mode', models.CharField(choices=[('online', 'Online'), ('offline', 'Offline'), ('hybrid', 'Hybrid')], default='offline', max_length=10)),
-                ('participation_type', models.CharField(choices=[('individual', 'Individual'), ('team', 'Team'), ('both', 'Both')], default='individual', max_length=12)),
-                ('status', models.CharField(choices=[('draft', 'Draft'), ('published', 'Published'), ('registration_open', 'Registration Open'), ('registration_closed', 'Registration Closed'), ('ongoing', 'Ongoing'), ('completed', 'Completed'), ('cancelled', 'Cancelled'), ('archived', 'Archived')], db_index=True, default='draft', max_length=25)),
-                ('registration_start', models.DateTimeField()),
-                ('registration_end', models.DateTimeField()),
-                ('event_start', models.DateTimeField()),
-                ('event_end', models.DateTimeField()),
-                ('submission_deadline', models.DateTimeField(blank=True, null=True)),
-                ('venue', models.CharField(blank=True, default='', max_length=300)),
-                ('platform_link', models.URLField(blank=True, default='')),
-                ('capacity', models.PositiveIntegerField(default=100, help_text='Maximum number of participants or teams', validators=[django.core.validators.MinValueValidator(1)])),
-                ('min_team_size', models.PositiveSmallIntegerField(default=1)),
-                ('max_team_size', models.PositiveSmallIntegerField(default=1)),
-                ('allow_team_creation', models.BooleanField(default=True)),
-                ('allow_join_requests', models.BooleanField(default=True)),
-                ('prize_pool', models.DecimalField(decimal_places=2, default=0, max_digits=12)),
-                ('prize_1st', models.CharField(blank=True, default='', max_length=200)),
-                ('prize_2nd', models.CharField(blank=True, default='', max_length=200)),
-                ('prize_3rd', models.CharField(blank=True, default='', max_length=200)),
-                ('prize_special', models.CharField(blank=True, default='', max_length=500)),
-                ('participation_certificate', models.BooleanField(default=False)),
-                ('merit_certificate', models.BooleanField(default=False)),
-                ('registration_fee', models.DecimalField(decimal_places=2, default=0, max_digits=8)),
-                ('eligibility', models.TextField(blank=True, default='Open to all')),
-                ('banner', models.ImageField(blank=True, upload_to='events/banners/')),
-                ('rules', models.TextField(blank=True, default='')),
-                ('faqs', models.JSONField(blank=True, default=list, help_text='[{"q": "...", "a": "..."}]')),
-                ('contact_info', models.TextField(blank=True, default='')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('is_deleted', models.BooleanField(db_index=True, default=False)),
-                ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='created_events', to=settings.AUTH_USER_MODEL)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("slug", models.SlugField(max_length=255, unique=True)),
+                ("title", models.CharField(db_index=True, max_length=255)),
+                ("description", models.TextField()),
+                (
+                    "category",
+                    models.CharField(
+                        choices=[
+                            ("hackathon", "Hackathon"),
+                            ("workshop", "Workshop"),
+                            ("coding_contest", "Coding Contest"),
+                            ("quiz", "Quiz / Competition"),
+                            ("paper_presentation", "Paper Presentation"),
+                            ("design_challenge", "Design Challenge"),
+                            ("ideathon", "Ideathon"),
+                            ("case_study", "Case Study"),
+                            ("cultural", "Cultural"),
+                            ("sports", "Sports"),
+                            ("other", "Other"),
+                        ],
+                        db_index=True,
+                        default="other",
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "mode",
+                    models.CharField(
+                        choices=[
+                            ("online", "Online"),
+                            ("offline", "Offline"),
+                            ("hybrid", "Hybrid"),
+                        ],
+                        default="offline",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "participation_type",
+                    models.CharField(
+                        choices=[
+                            ("individual", "Individual"),
+                            ("team", "Team"),
+                            ("both", "Both"),
+                        ],
+                        default="individual",
+                        max_length=12,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("draft", "Draft"),
+                            ("published", "Published"),
+                            ("registration_open", "Registration Open"),
+                            ("registration_closed", "Registration Closed"),
+                            ("ongoing", "Ongoing"),
+                            ("completed", "Completed"),
+                            ("cancelled", "Cancelled"),
+                            ("archived", "Archived"),
+                        ],
+                        db_index=True,
+                        default="draft",
+                        max_length=25,
+                    ),
+                ),
+                ("registration_start", models.DateTimeField()),
+                ("registration_end", models.DateTimeField()),
+                ("event_start", models.DateTimeField()),
+                ("event_end", models.DateTimeField()),
+                ("submission_deadline", models.DateTimeField(blank=True, null=True)),
+                ("venue", models.CharField(blank=True, default="", max_length=300)),
+                ("platform_link", models.URLField(blank=True, default="")),
+                (
+                    "capacity",
+                    models.PositiveIntegerField(
+                        default=100,
+                        help_text="Maximum number of participants or teams",
+                        validators=[django.core.validators.MinValueValidator(1)],
+                    ),
+                ),
+                ("min_team_size", models.PositiveSmallIntegerField(default=1)),
+                ("max_team_size", models.PositiveSmallIntegerField(default=1)),
+                ("allow_team_creation", models.BooleanField(default=True)),
+                ("allow_join_requests", models.BooleanField(default=True)),
+                (
+                    "prize_pool",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=12),
+                ),
+                ("prize_1st", models.CharField(blank=True, default="", max_length=200)),
+                ("prize_2nd", models.CharField(blank=True, default="", max_length=200)),
+                ("prize_3rd", models.CharField(blank=True, default="", max_length=200)),
+                (
+                    "prize_special",
+                    models.CharField(blank=True, default="", max_length=500),
+                ),
+                ("participation_certificate", models.BooleanField(default=False)),
+                ("merit_certificate", models.BooleanField(default=False)),
+                (
+                    "registration_fee",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=8),
+                ),
+                ("eligibility", models.TextField(blank=True, default="Open to all")),
+                ("banner", models.ImageField(blank=True, upload_to="events/banners/")),
+                ("rules", models.TextField(blank=True, default="")),
+                (
+                    "faqs",
+                    models.JSONField(
+                        blank=True, default=list, help_text='[{"q": "...", "a": "..."}]'
+                    ),
+                ),
+                ("contact_info", models.TextField(blank=True, default="")),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("is_deleted", models.BooleanField(db_index=True, default=False)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="created_events",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-event_start'],
+                "ordering": ["-event_start"],
             },
         ),
         migrations.CreateModel(
-            name='EventRound',
+            name="EventRound",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=200)),
-                ('description', models.TextField(blank=True, default='')),
-                ('order', models.PositiveSmallIntegerField(default=1)),
-                ('start_date', models.DateTimeField()),
-                ('end_date', models.DateTimeField()),
-                ('status', models.CharField(choices=[('upcoming', 'Upcoming'), ('ongoing', 'Ongoing'), ('completed', 'Completed'), ('cancelled', 'Cancelled')], default='upcoming', max_length=15)),
-                ('elimination_criteria', models.TextField(blank=True, default='')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='rounds', to='events.event')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("name", models.CharField(max_length=200)),
+                ("description", models.TextField(blank=True, default="")),
+                ("order", models.PositiveSmallIntegerField(default=1)),
+                ("start_date", models.DateTimeField()),
+                ("end_date", models.DateTimeField()),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("upcoming", "Upcoming"),
+                            ("ongoing", "Ongoing"),
+                            ("completed", "Completed"),
+                            ("cancelled", "Cancelled"),
+                        ],
+                        default="upcoming",
+                        max_length=15,
+                    ),
+                ),
+                ("elimination_criteria", models.TextField(blank=True, default="")),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "event",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="rounds",
+                        to="events.event",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['event', 'order'],
+                "ordering": ["event", "order"],
             },
         ),
         migrations.AddIndex(
-            model_name='event',
-            index=models.Index(fields=['status', 'category'], name='idx_event_status_cat'),
+            model_name="event",
+            index=models.Index(
+                fields=["status", "category"], name="idx_event_status_cat"
+            ),
         ),
         migrations.AddIndex(
-            model_name='event',
-            index=models.Index(fields=['registration_end'], name='idx_event_reg_end'),
+            model_name="event",
+            index=models.Index(fields=["registration_end"], name="idx_event_reg_end"),
         ),
         migrations.AddIndex(
-            model_name='event',
-            index=models.Index(fields=['created_by', '-created_at'], name='idx_event_owner'),
+            model_name="event",
+            index=models.Index(
+                fields=["created_by", "-created_at"], name="idx_event_owner"
+            ),
         ),
         migrations.AddIndex(
-            model_name='event',
-            index=models.Index(condition=models.Q(('is_deleted', False)), fields=['status'], name='idx_event_active'),
+            model_name="event",
+            index=models.Index(
+                condition=models.Q(("is_deleted", False)),
+                fields=["status"],
+                name="idx_event_active",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='event',
-            constraint=models.CheckConstraint(condition=models.Q(('registration_end__gte', models.F('registration_start'))), name='chk_reg_dates'),
+            model_name="event",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    ("registration_end__gte", models.F("registration_start"))
+                ),
+                name="chk_reg_dates",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='event',
-            constraint=models.CheckConstraint(condition=models.Q(('event_end__gte', models.F('event_start'))), name='chk_event_dates'),
+            model_name="event",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("event_end__gte", models.F("event_start"))),
+                name="chk_event_dates",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='event',
-            constraint=models.CheckConstraint(condition=models.Q(('max_team_size__gte', models.F('min_team_size'))), name='chk_team_size'),
+            model_name="event",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("max_team_size__gte", models.F("min_team_size"))),
+                name="chk_team_size",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='event',
-            constraint=models.CheckConstraint(condition=models.Q(('capacity__gte', 1)), name='chk_capacity_positive'),
+            model_name="event",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("capacity__gte", 1)), name="chk_capacity_positive"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='eventround',
-            constraint=models.UniqueConstraint(fields=('event', 'order'), name='uniq_event_round_order'),
+            model_name="eventround",
+            constraint=models.UniqueConstraint(
+                fields=("event", "order"), name="uniq_event_round_order"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='eventround',
-            constraint=models.CheckConstraint(condition=models.Q(('end_date__gte', models.F('start_date'))), name='chk_round_dates'),
+            model_name="eventround",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("end_date__gte", models.F("start_date"))),
+                name="chk_round_dates",
+            ),
         ),
     ]
