@@ -9,22 +9,20 @@ Demonstrates the Controller → Service → Repository → Model pattern with:
 - Idempotency handling
 - Structured logging
 """
+
 import logging
 from dataclasses import dataclass
 
-from django.db import IntegrityError, transaction
-from django.utils import timezone
-
-logger = logging.getLogger("campusarena.team")
-
-
-# ─── Exceptions (from core.exceptions taxonomy) ─────────────────────────────
 from core.exceptions import (
     ConflictError,
     NotFoundError,
     PermissionDeniedError,
     ValidationError,
 )
+from django.db import IntegrityError, transaction
+from django.utils import timezone
+
+logger = logging.getLogger("campusarena.team")
 
 
 # ─── Data Transfer Objects ──────────────────────────────────────────────────
@@ -45,9 +43,7 @@ class TeamRepository:
         from team.models import Team
 
         try:
-            return Team.objects.select_related("event", "leader").get(
-                id=team_id
-            )
+            return Team.objects.select_related("event", "leader").get(id=team_id)
         except Team.DoesNotExist:
             raise NotFoundError(f"Team {team_id} not found")
 
@@ -134,6 +130,7 @@ class TeamJoinRequestService:
 
         # Rule 1: Team open
         from team.models import TeamStatus
+
         if team.status != TeamStatus.OPEN:
             raise ValidationError("This team is not accepting new members.")
 
@@ -218,7 +215,9 @@ class TeamJoinRequestService:
             join_request.status = JoinRequestStatus.DECLINED
             join_request.reviewed_by = approver
             join_request.reviewed_at = timezone.now()
-            join_request.save(update_fields=["status", "reviewed_by", "reviewed_at", "updated_at"])
+            join_request.save(
+                update_fields=["status", "reviewed_by", "reviewed_at", "updated_at"]
+            )
             raise ConflictError("Requester has already joined another team.")
 
         # Approve
@@ -311,17 +310,19 @@ class TeamJoinRequestService:
         """Create an in-app notification for the team leader about a new join request."""
         try:
             from notification.models import Notification
+
             Notification.objects.create(
                 user=team.leader,
-                type='join_request',
-                title=f'New join request for {team.name}',
+                type="join_request",
+                title=f"New join request for {team.name}",
                 body=f'{requester.get_full_name() or requester.username} wants to join your team "{team.name}".',
                 actor=requester,
             )
         except Exception:
             logger.error(
                 "Failed to create join_request notification for leader %d",
-                team.leader_id, exc_info=True,
+                team.leader_id,
+                exc_info=True,
             )
 
     @staticmethod
@@ -329,17 +330,19 @@ class TeamJoinRequestService:
         """Notify the requester that their join request was approved."""
         try:
             from notification.models import Notification
+
             Notification.objects.create(
                 user=requester,
-                type='request_approved',
-                title=f'Join request approved — {team.name}',
+                type="request_approved",
+                title=f"Join request approved — {team.name}",
                 body=f'You have been added to team "{team.name}" for {team.event.title}.',
                 actor=team.leader,
             )
         except Exception:
             logger.error(
                 "Failed to create approval notification for user %d",
-                requester.id, exc_info=True,
+                requester.id,
+                exc_info=True,
             )
 
     @staticmethod
@@ -347,15 +350,17 @@ class TeamJoinRequestService:
         """Notify the requester that their join request was declined."""
         try:
             from notification.models import Notification
+
             Notification.objects.create(
                 user=requester,
-                type='request_declined',
-                title=f'Join request declined — {team.name}',
+                type="request_declined",
+                title=f"Join request declined — {team.name}",
                 body=f'Your request to join team "{team.name}" was declined.',
                 actor=team.leader,
             )
         except Exception:
             logger.error(
                 "Failed to create decline notification for user %d",
-                requester.id, exc_info=True,
+                requester.id,
+                exc_info=True,
             )

@@ -4,6 +4,7 @@ Add CustomFormField and RegistrationResponse models.
 These allow organizers to define custom registration form fields
 and store participant responses per field.
 """
+
 import django.db.models.deletion
 from django.db import migrations, models
 

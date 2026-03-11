@@ -11,7 +11,15 @@ class TeamMembershipInline(admin.TabularInline):
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ("name", "event", "leader", "status", "member_count", "is_deleted", "created_at")
+    list_display = (
+        "name",
+        "event",
+        "leader",
+        "status",
+        "member_count",
+        "is_deleted",
+        "created_at",
+    )
     list_filter = ("status", "is_deleted")
     search_fields = ("name", "event__title", "leader__username")
     raw_id_fields = ("leader", "event")
@@ -49,4 +57,5 @@ class ChatMessageAdmin(admin.ModelAdmin):
     def body_preview(self, obj):
         """Show first 50 chars of message."""
         return obj.body[:50] + "..." if len(obj.body) > 50 else obj.body
+
     body_preview.short_description = "Message"

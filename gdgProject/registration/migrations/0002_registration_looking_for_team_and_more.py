@@ -7,23 +7,36 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('registration', '0001_initial'),
+        ("registration", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='registration',
-            name='looking_for_team',
-            field=models.BooleanField(default=False, help_text='User is looking for a team to join'),
+            model_name="registration",
+            name="looking_for_team",
+            field=models.BooleanField(
+                default=False, help_text="User is looking for a team to join"
+            ),
         ),
         migrations.AddField(
-            model_name='registration',
-            name='preferred_role',
-            field=models.CharField(blank=True, default='', help_text='Preferred role in a team, e.g. Frontend Developer', max_length=50),
+            model_name="registration",
+            name="preferred_role",
+            field=models.CharField(
+                blank=True,
+                default="",
+                help_text="Preferred role in a team, e.g. Frontend Developer",
+                max_length=50,
+            ),
         ),
         migrations.AddField(
-            model_name='registration',
-            name='registration_id',
-            field=models.CharField(default=registration.models._generate_registration_id, editable=False, help_text='Auto-generated unique readable ID, e.g. EVT-2026-00123', max_length=20, unique=True),
+            model_name="registration",
+            name="registration_id",
+            field=models.CharField(
+                default=registration.models._generate_registration_id,
+                editable=False,
+                help_text="Auto-generated unique readable ID, e.g. EVT-2026-00123",
+                max_length=20,
+                unique=True,
+            ),
         ),
     ]

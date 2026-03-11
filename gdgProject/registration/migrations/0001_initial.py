@@ -10,28 +10,90 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('events', '0001_initial'),
-        ('team', '0001_initial'),
+        ("events", "0001_initial"),
+        ("team", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Registration',
+            name="Registration",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('type', models.CharField(choices=[('individual', 'Individual'), ('team', 'Team')], default='individual', max_length=12)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('confirmed', 'Confirmed'), ('cancelled', 'Cancelled'), ('submitted', 'Submitted')], db_index=True, default='pending', max_length=12)),
-                ('registered_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='registrations', to='events.event')),
-                ('team', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='registrations', to='team.team')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='registrations', to=settings.AUTH_USER_MODEL)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[("individual", "Individual"), ("team", "Team")],
+                        default="individual",
+                        max_length=12,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("confirmed", "Confirmed"),
+                            ("cancelled", "Cancelled"),
+                            ("submitted", "Submitted"),
+                        ],
+                        db_index=True,
+                        default="pending",
+                        max_length=12,
+                    ),
+                ),
+                ("registered_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "event",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="registrations",
+                        to="events.event",
+                    ),
+                ),
+                (
+                    "team",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="registrations",
+                        to="team.team",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="registrations",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-registered_at'],
-                'indexes': [models.Index(fields=['user', '-registered_at'], name='idx_reg_user_time'), models.Index(fields=['event', 'status'], name='idx_reg_event_status')],
-                'constraints': [models.UniqueConstraint(fields=('event', 'user'), name='uniq_reg_per_event'), models.CheckConstraint(condition=models.Q(models.Q(('type', 'team'), _negated=True), ('team__isnull', False), _connector='OR'), name='chk_team_reg_requires_team')],
+                "ordering": ["-registered_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["user", "-registered_at"], name="idx_reg_user_time"
+                    ),
+                    models.Index(
+                        fields=["event", "status"], name="idx_reg_event_status"
+                    ),
+                ],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("event", "user"), name="uniq_reg_per_event"
+                    ),
+                    models.CheckConstraint(
+                        condition=models.Q(
+                            models.Q(("type", "team"), _negated=True),
+                            ("team__isnull", False),
+                            _connector="OR",
+                        ),
+                        name="chk_team_reg_requires_team",
+                    ),
+                ],
             },
         ),
     ]

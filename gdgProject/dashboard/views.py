@@ -2,9 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_POST, require_http_methods
-
-from events.models import Event
+from django.views.decorators.http import require_http_methods, require_POST
 from notification.models import Notification
 from registration.models import Registration
 from team.models import JoinRequest, JoinRequestStatus, Team, TeamMembership
@@ -20,43 +18,44 @@ def _get_profile(user):
 @login_required
 def user_dashboard(request):
     # Recent registrations
-    my_regs = Registration.objects.filter(user=request.user).select_related('event')[:5]
+    my_regs = Registration.objects.filter(user=request.user).select_related("event")[:5]
     my_events = [
         {
-            'title': reg.event.title,
-            'status': reg.get_status_display(),
-            'id': reg.event.pk,
+            "title": reg.event.title,
+            "status": reg.get_status_display(),
+            "id": reg.event.pk,
         }
         for reg in my_regs
     ]
 
     # Teams
     my_memberships = TeamMembership.objects.filter(
-        user=request.user, team__is_deleted=False,
-    ).select_related('team', 'team__event')[:5]
+        user=request.user,
+        team__is_deleted=False,
+    ).select_related("team", "team__event")[:5]
     my_teams = [
         {
-            'name': m.team.name,
-            'event': m.team.event.title,
-            'role': m.get_role_display(),
-            'id': m.team.pk,
+            "name": m.team.name,
+            "event": m.team.event.title,
+            "role": m.get_role_display(),
+            "id": m.team.pk,
         }
         for m in my_memberships
     ]
 
     # Recent notifications
-    notifications = Notification.objects.filter(
-        user=request.user
-    ).order_by('-created_at')[:5]
+    notifications = Notification.objects.filter(user=request.user).order_by(
+        "-created_at"
+    )[:5]
 
     return render(
         request,
-        'dashboard/user_dashboard.html',
+        "dashboard/user_dashboard.html",
         {
-            'my_events': my_events,
-            'my_teams': my_teams,
-            'notifications': notifications,
-            'current_page': 'overview',
+            "my_events": my_events,
+            "my_teams": my_teams,
+            "notifications": notifications,
+            "current_page": "overview",
         },
     )
 
@@ -67,84 +66,106 @@ def my_profile(request):
     user = request.user
 
     profile_data = {
-        'name': user.get_full_name() or user.username,
-        'email': user.email,
-        'phone': profile.phone or 'Not set',
-        'college': profile.college or 'Not set',
-        'branch': profile.branch or 'Not set',
-        'year': profile.year_display or 'Not set',
-        'github': profile.github or 'Not set',
-        'linkedin': profile.linkedin or 'Not set',
-        'bio': profile.bio or 'No bio yet. Click Edit Profile to add one.',
-        'skills': profile.skills_list or [],
+        "name": user.get_full_name() or user.username,
+        "email": user.email,
+        "phone": profile.phone or "Not set",
+        "college": profile.college or "Not set",
+        "branch": profile.branch or "Not set",
+        "year": profile.year_display or "Not set",
+        "github": profile.github or "Not set",
+        "linkedin": profile.linkedin or "Not set",
+        "bio": profile.bio or "No bio yet. Click Edit Profile to add one.",
+        "skills": profile.skills_list or [],
     }
     stats = {
-        'events_joined': Registration.objects.filter(user=user).count(),
-        'teams': TeamMembership.objects.filter(user=user, team__is_deleted=False).count(),
-        'certificates': 0,
+        "events_joined": Registration.objects.filter(user=user).count(),
+        "teams": TeamMembership.objects.filter(
+            user=user, team__is_deleted=False
+        ).count(),
+        "certificates": 0,
     }
-    return render(request, 'dashboard/my_profile.html', {
-        'profile': profile_data,
-        'stats': stats,
-        'current_page': 'profile',
-    })
+    return render(
+        request,
+        "dashboard/my_profile.html",
+        {
+            "profile": profile_data,
+            "stats": stats,
+            "current_page": "profile",
+        },
+    )
 
 
 @login_required
 def my_events(request):
-    registrations = Registration.objects.filter(
-        user=request.user
-    ).select_related('event', 'team')
+    registrations = Registration.objects.filter(user=request.user).select_related(
+        "event", "team"
+    )
 
     events = []
     for reg in registrations:
-        membership = TeamMembership.objects.filter(
-            user=request.user, team__event=reg.event, team__is_deleted=False,
-        ).select_related('team').first()
+        membership = (
+            TeamMembership.objects.filter(
+                user=request.user,
+                team__event=reg.event,
+                team__is_deleted=False,
+            )
+            .select_related("team")
+            .first()
+        )
 
-        events.append({
-            'id': reg.event.pk,
-            'title': reg.event.title,
-            'category': reg.event.get_category_display(),
-            'mode': reg.event.get_mode_display(),
-            'date': reg.event.event_start,
-            'status': reg.get_status_display(),
-            'team': membership.team.name if membership else None,
-            'role': membership.get_role_display() if membership else None,
-        })
+        events.append(
+            {
+                "id": reg.event.pk,
+                "title": reg.event.title,
+                "category": reg.event.get_category_display(),
+                "mode": reg.event.get_mode_display(),
+                "date": reg.event.event_start,
+                "status": reg.get_status_display(),
+                "team": membership.team.name if membership else None,
+                "role": membership.get_role_display() if membership else None,
+            }
+        )
 
-    return render(request, 'dashboard/my_events.html', {
-        'events': events,
-        'current_page': 'events',
-    })
+    return render(
+        request,
+        "dashboard/my_events.html",
+        {
+            "events": events,
+            "current_page": "events",
+        },
+    )
 
 
 @login_required
 def my_teams(request):
     memberships = TeamMembership.objects.filter(
-        user=request.user, team__is_deleted=False,
-    ).select_related('team', 'team__event')
+        user=request.user,
+        team__is_deleted=False,
+    ).select_related("team", "team__event")
 
     teams = []
     for m in memberships:
-        members = TeamMembership.objects.filter(
-            team=m.team
-        ).select_related('user')
-        teams.append({
-            'id': m.team.pk,
-            'name': m.team.name,
-            'event': m.team.event.title,
-            'role': m.get_role_display(),
-            'members': [
-                mem.user.get_full_name() or mem.user.username
-                for mem in members
-            ],
-        })
+        members = TeamMembership.objects.filter(team=m.team).select_related("user")
+        teams.append(
+            {
+                "id": m.team.pk,
+                "name": m.team.name,
+                "event": m.team.event.title,
+                "role": m.get_role_display(),
+                "members": [
+                    mem.user.get_full_name() or mem.user.username for mem in members
+                ],
+            }
+        )
 
-    return render(request, 'dashboard/my_teams.html', {
-        'teams': teams,
-        'current_page': 'teams',
-    })
+    return render(
+        request,
+        "dashboard/my_teams.html",
+        {
+            "teams": teams,
+            "current_page": "teams",
+        },
+    )
 
 
 @login_required
@@ -154,92 +175,117 @@ def pending_requests(request):
     incoming = JoinRequest.objects.filter(
         team__in=led_teams,
         status=JoinRequestStatus.PENDING,
-    ).select_related('user', 'team', 'team__event')
+    ).select_related("user", "team", "team__event")
 
     incoming_data = [
         {
-            'id': jr.pk,
-            'from': jr.user.get_full_name() or jr.user.username,
-            'team': jr.team.name,
-            'event': jr.team.event.title,
+            "id": jr.pk,
+            "from": jr.user.get_full_name() or jr.user.username,
+            "team": jr.team.name,
+            "event": jr.team.event.title,
         }
         for jr in incoming
     ]
 
     # Outgoing: requests the user has sent
-    outgoing = JoinRequest.objects.filter(
-        user=request.user,
-    ).select_related('team', 'team__event').order_by('-created_at')[:20]
+    outgoing = (
+        JoinRequest.objects.filter(
+            user=request.user,
+        )
+        .select_related("team", "team__event")
+        .order_by("-created_at")[:20]
+    )
 
     outgoing_data = [
         {
-            'team': jr.team.name,
-            'event': jr.team.event.title,
-            'status': jr.get_status_display(),
+            "team": jr.team.name,
+            "event": jr.team.event.title,
+            "status": jr.get_status_display(),
         }
         for jr in outgoing
     ]
 
-    return render(request, 'dashboard/pending_requests.html', {
-        'incoming': incoming_data,
-        'outgoing': outgoing_data,
-        'current_page': 'requests',
-    })
+    return render(
+        request,
+        "dashboard/pending_requests.html",
+        {
+            "incoming": incoming_data,
+            "outgoing": outgoing_data,
+            "current_page": "requests",
+        },
+    )
 
 
 @login_required
 def notifications_view(request):
-    notifications = Notification.objects.filter(
-        user=request.user
-    ).order_by('-created_at')[:30]
+    notifications = Notification.objects.filter(user=request.user).order_by(
+        "-created_at"
+    )[:30]
 
-    return render(request, 'dashboard/notifications.html', {
-        'notifications': notifications,
-        'current_page': 'notifications',
-    })
+    return render(
+        request,
+        "dashboard/notifications.html",
+        {
+            "notifications": notifications,
+            "current_page": "notifications",
+        },
+    )
 
 
 @login_required
 @require_POST
 def mark_all_read(request):
     """Mark all of the current user's notifications as read."""
-    updated_count = Notification.objects.filter(user=request.user, read=False).update(read=True)
-    return JsonResponse({'ok': True, 'updated': updated_count})
+    updated_count = Notification.objects.filter(user=request.user, read=False).update(
+        read=True
+    )
+    return JsonResponse({"ok": True, "updated": updated_count})
 
 
 @login_required
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(["GET", "POST"])
 def settings_view(request):
     profile = _get_profile(request.user)
 
-    if request.method == 'POST':
-        display_name = request.POST.get('display_name', '').strip()
-        email = request.POST.get('email', '').strip()
+    if request.method == "POST":
+        display_name = request.POST.get("display_name", "").strip()
+        email = request.POST.get("email", "").strip()
 
         if display_name:
-            parts = display_name.split(' ', 1)
+            parts = display_name.split(" ", 1)
             request.user.first_name = parts[0]
-            request.user.last_name = parts[1] if len(parts) > 1 else ''
-            request.user.save(update_fields=['first_name', 'last_name'])
+            request.user.last_name = parts[1] if len(parts) > 1 else ""
+            request.user.save(update_fields=["first_name", "last_name"])
 
         if email and email != request.user.email:
             from django.contrib.auth.models import User
+
             if User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
-                messages.error(request, 'That email is already in use by another account.')
+                messages.error(
+                    request, "That email is already in use by another account."
+                )
             else:
                 request.user.email = email
-                request.user.save(update_fields=['email'])
+                request.user.save(update_fields=["email"])
 
-        messages.success(request, 'Settings saved successfully!')
-        return render(request, 'dashboard/settings.html', {
-            'current_page': 'settings',
-            'profile': profile,
-        })
+        messages.success(request, "Settings saved successfully!")
+        return render(
+            request,
+            "dashboard/settings.html",
+            {
+                "current_page": "settings",
+                "profile": profile,
+            },
+        )
 
-    return render(request, 'dashboard/settings.html', {
-        'current_page': 'settings',
-        'profile': profile,
-    })
+    return render(
+        request,
+        "dashboard/settings.html",
+        {
+            "current_page": "settings",
+            "profile": profile,
+        },
+    )
 
 
 @login_required
@@ -247,12 +293,18 @@ def find_teammates(request):
     # Find users looking for teams
     looking = Registration.objects.filter(
         looking_for_team=True,
-    ).select_related('user', 'user__profile', 'event')[:50]
+    ).select_related(
+        "user", "user__profile", "event"
+    )[:50]
 
-    return render(request, "dashboard/find_teammates.html", {
-        "current_page": "find_teammates",
-        "looking_users": looking,
-    })
+    return render(
+        request,
+        "dashboard/find_teammates.html",
+        {
+            "current_page": "find_teammates",
+            "looking_users": looking,
+        },
+    )
 
 
 @login_required
@@ -276,16 +328,24 @@ def edit_profile(request):
                     profile.year = year_int
                 else:
                     messages.error(request, "Year must be between 1 and 6.")
-                    return render(request, "dashboard/edit_profile.html", {
-                        "profile": profile,
-                        "current_page": "profile",
-                    })
+                    return render(
+                        request,
+                        "dashboard/edit_profile.html",
+                        {
+                            "profile": profile,
+                            "current_page": "profile",
+                        },
+                    )
             except ValueError:
                 messages.error(request, "Year must be a number.")
-                return render(request, "dashboard/edit_profile.html", {
-                    "profile": profile,
-                    "current_page": "profile",
-                })
+                return render(
+                    request,
+                    "dashboard/edit_profile.html",
+                    {
+                        "profile": profile,
+                        "current_page": "profile",
+                    },
+                )
         else:
             profile.year = None
 
@@ -298,7 +358,11 @@ def edit_profile(request):
         messages.success(request, "Profile updated successfully!")
         return redirect("dashboard:my_profile")
 
-    return render(request, "dashboard/edit_profile.html", {
-        "profile": profile,
-        "current_page": "profile",
-    })
+    return render(
+        request,
+        "dashboard/edit_profile.html",
+        {
+            "profile": profile,
+            "current_page": "profile",
+        },
+    )

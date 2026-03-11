@@ -1,6 +1,7 @@
 """
 Structured JSON log formatter — importable as core.logging.formatters.JSONFormatter.
 """
+
 import datetime
 import json
 import logging
@@ -12,13 +13,31 @@ class JSONFormatter(logging.Formatter):
     Produces structured JSON log records.
     """
 
-    RESERVED_ATTRS = frozenset({
-        "args", "created", "exc_info", "exc_text", "filename",
-        "funcName", "levelname", "levelno", "lineno", "module",
-        "msecs", "msg", "name", "pathname", "process", "processName",
-        "relativeCreated", "stack_info", "thread", "threadName",
-        "taskName",
-    })
+    RESERVED_ATTRS = frozenset(
+        {
+            "args",
+            "created",
+            "exc_info",
+            "exc_text",
+            "filename",
+            "funcName",
+            "levelname",
+            "levelno",
+            "lineno",
+            "module",
+            "msecs",
+            "msg",
+            "name",
+            "pathname",
+            "process",
+            "processName",
+            "relativeCreated",
+            "stack_info",
+            "thread",
+            "threadName",
+            "taskName",
+        }
+    )
 
     def format(self, record: logging.LogRecord) -> str:
         log_entry = {

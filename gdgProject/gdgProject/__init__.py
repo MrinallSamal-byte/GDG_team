@@ -1,5 +1,8 @@
-import pymysql
-
-pymysql.version_info = (2, 2, 1, 'final', 0)
-pymysql.__version__ = '2.2.1'
-pymysql.install_as_MySQLdb()
+try:
+    import pymysql
+except ModuleNotFoundError:
+    pymysql = None
+else:
+    pymysql.version_info = (2, 2, 1, "final", 0)
+    pymysql.__version__ = "2.2.1"
+    pymysql.install_as_MySQLdb()

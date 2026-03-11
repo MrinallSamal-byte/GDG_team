@@ -1,14 +1,19 @@
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout, password_validation, update_session_auth_hash
+from django.contrib.auth import (
+    authenticate,
+    login,
+    logout,
+    password_validation,
+    update_session_auth_hash,
+)
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
 from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_http_methods
 
 from .models import UserProfile
 
@@ -19,21 +24,21 @@ def _get_or_create_profile(user):
     return profile
 
 
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(["GET", "POST"])
 def login_view(request):
     if request.user.is_authenticated:
         if request.user.is_staff:
-            return redirect('eventManagement:organizer_dashboard')
-        return redirect('dashboard:user_dashboard')
+            return redirect("eventManagement:organizer_dashboard")
+        return redirect("dashboard:user_dashboard")
 
-    if request.method == 'POST':
-        email = request.POST.get('email', '').strip()
-        password = request.POST.get('password', '')
-        role = request.POST.get('roleLogin', 'student')
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip()
+        password = request.POST.get("password", "")
+        role = request.POST.get("roleLogin", "student")
 
         if not email or not password:
-            messages.error(request, 'Please fill in all required fields.')
-            return render(request, 'users/login.html', {'email': email})
+            messages.error(request, "Please fill in all required fields.")
+            return render(request, "users/login.html", {"email": email})
 
         user = None
         try:
@@ -44,72 +49,78 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
-            messages.success(request, f'Welcome back, {user.first_name or user.username}!')
-            next_url = request.GET.get('next', '')
+            messages.success(
+                request, f"Welcome back, {user.first_name or user.username}!"
+            )
+            next_url = request.GET.get("next", "")
             if next_url:
                 return redirect(next_url)
-            if role == 'admin' or user.is_staff:
-                return redirect('eventManagement:organizer_dashboard')
-            return redirect('dashboard:user_dashboard')
+            if role == "admin" or user.is_staff:
+                return redirect("eventManagement:organizer_dashboard")
+            return redirect("dashboard:user_dashboard")
         else:
-            messages.error(request, 'Invalid email or password. Please try again.')
-            return render(request, 'users/login.html', {'email': email})
+            messages.error(request, "Invalid email or password. Please try again.")
+            return render(request, "users/login.html", {"email": email})
 
-    return render(request, 'users/login.html')
+    return render(request, "users/login.html")
 
 
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(["GET", "POST"])
 def register_view(request):
     if request.user.is_authenticated:
-        return redirect('dashboard:user_dashboard')
+        return redirect("dashboard:user_dashboard")
 
-    branches = ['CSE', 'IT', 'ECE', 'EEE', 'Mechanical', 'Civil', 'Biotech']
+    branches = ["CSE", "IT", "ECE", "EEE", "Mechanical", "Civil", "Biotech"]
     years = [1, 2, 3, 4, 5]
 
-    if request.method == 'POST':
-        full_name = request.POST.get('full_name', '').strip()
-        email = request.POST.get('email', '').strip()
-        phone = request.POST.get('phone', '').strip()
-        college = request.POST.get('college', '').strip()
-        branch = request.POST.get('branch', '').strip()
-        year = request.POST.get('year', '').strip()
-        password = request.POST.get('password', '')
-        password_confirm = request.POST.get('password_confirm', '')
-        skills = request.POST.get('skills', '').strip()
+    if request.method == "POST":
+        full_name = request.POST.get("full_name", "").strip()
+        email = request.POST.get("email", "").strip()
+        phone = request.POST.get("phone", "").strip()
+        college = request.POST.get("college", "").strip()
+        branch = request.POST.get("branch", "").strip()
+        year = request.POST.get("year", "").strip()
+        password = request.POST.get("password", "")
+        password_confirm = request.POST.get("password_confirm", "")
+        skills = request.POST.get("skills", "").strip()
 
         errors = []
         if not all([full_name, email, college, branch, year, password]):
-            errors.append('Please fill in all required fields.')
+            errors.append("Please fill in all required fields.")
         if password and password_confirm and password != password_confirm:
-            errors.append('Passwords do not match.')
+            errors.append("Passwords do not match.")
         if password and len(password) < 10:
-            errors.append('Password must be at least 10 characters.')
+            errors.append("Password must be at least 10 characters.")
         if email and User.objects.filter(email=email).exists():
-            errors.append('An account with this email already exists. Try logging in.')
+            errors.append("An account with this email already exists. Try logging in.")
 
         if errors:
             for err in errors:
                 messages.error(request, err)
-            return render(request, 'users/register.html', {
-                'branches': branches,
-                'years': years,
-                'form_data': request.POST,
-            })
+            return render(
+                request,
+                "users/register.html",
+                {
+                    "branches": branches,
+                    "years": years,
+                    "form_data": request.POST,
+                },
+            )
 
-        base_username = email.split('@')[0]
+        base_username = email.split("@")[0]
         username = base_username
         i = 1
         while User.objects.filter(username=username).exists():
-            username = f'{base_username}{i}'
+            username = f"{base_username}{i}"
             i += 1
 
-        name_parts = full_name.split(' ', 1)
+        name_parts = full_name.split(" ", 1)
         user = User.objects.create_user(
             username=username,
             email=email,
             password=password,
             first_name=name_parts[0],
-            last_name=name_parts[1] if len(name_parts) > 1 else '',
+            last_name=name_parts[1] if len(name_parts) > 1 else "",
         )
 
         year_int = None
@@ -130,38 +141,43 @@ def register_view(request):
         login(request, user)
         messages.success(
             request,
-            f'Welcome to CampusArena, {user.first_name}! '
-            'Verify your email to get started.',
+            f"Welcome to CampusArena, {user.first_name}! "
+            "Verify your email to get started.",
         )
-        return redirect('users:verify_email')
+        return redirect("users:verify_email")
 
-    return render(request, 'users/register.html', {'branches': branches, 'years': years})
+    return render(
+        request, "users/register.html", {"branches": branches, "years": years}
+    )
 
 
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(["GET", "POST"])
 def forgot_password_view(request):
     """Send a password reset link to the user's email."""
-    if request.method == 'POST':
-        email = request.POST.get('email', '').strip()
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip()
         if not email:
-            messages.error(request, 'Please enter your email address.')
-            return redirect('users:forgot_password')
+            messages.error(request, "Please enter your email address.")
+            return redirect("users:forgot_password")
 
         try:
             user = User.objects.get(email=email)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            reset_url = request.build_absolute_uri(f'/auth/reset-password/{uid}/{token}/')
+            reset_url = request.build_absolute_uri(
+                f"/auth/reset-password/{uid}/{token}/"
+            )
             from django.core.mail import send_mail
+
             try:
                 send_mail(
-                    subject='CampusArena — Password Reset',
+                    subject="CampusArena — Password Reset",
                     message=(
-                        f'Hi {user.first_name or user.username},\n\n'
-                        f'Click the link below to reset your password:\n{reset_url}\n\n'
-                        'This link will expire in 24 hours.\n\n'
-                        'If you did not request this, you can ignore this email.\n\n'
-                        'Team CampusArena'
+                        f"Hi {user.first_name or user.username},\n\n"
+                        f"Click the link below to reset your password:\n{reset_url}\n\n"
+                        "This link will expire in 24 hours.\n\n"
+                        "If you did not request this, you can ignore this email.\n\n"
+                        "Team CampusArena"
                     ),
                     from_email=None,
                     recipient_list=[user.email],
@@ -169,6 +185,7 @@ def forgot_password_view(request):
                 )
             except Exception:
                 import logging
+
                 logging.getLogger(__name__).error(
                     "Failed to send password reset email to %s", email, exc_info=True
                 )
@@ -177,14 +194,14 @@ def forgot_password_view(request):
 
         messages.success(
             request,
-            'If that email is registered, a reset link has been sent. Check your inbox.',
+            "If that email is registered, a reset link has been sent. Check your inbox.",
         )
-        return redirect('users:forgot_password')
+        return redirect("users:forgot_password")
 
-    return render(request, 'users/forgot_password.html')
+    return render(request, "users/forgot_password.html")
 
 
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(["GET", "POST"])
 def reset_password_view(request, uidb64, token):
     """Reset password using the token from the email link."""
     try:
@@ -194,145 +211,164 @@ def reset_password_view(request, uidb64, token):
         user = None
 
     if user is None or not default_token_generator.check_token(user, token):
-        messages.error(request, 'This password reset link is invalid or has expired.')
-        return redirect('users:forgot_password')
+        messages.error(request, "This password reset link is invalid or has expired.")
+        return redirect("users:forgot_password")
 
-    if request.method == 'POST':
-        password = request.POST.get('password', '')
-        password_confirm = request.POST.get('password_confirm', '')
+    if request.method == "POST":
+        password = request.POST.get("password", "")
+        password_confirm = request.POST.get("password_confirm", "")
 
         if not password or not password_confirm:
-            messages.error(request, 'Please fill in both password fields.')
-            return render(request, 'users/reset_password.html', {'valid_link': True})
+            messages.error(request, "Please fill in both password fields.")
+            return render(request, "users/reset_password.html", {"valid_link": True})
 
         if password != password_confirm:
-            messages.error(request, 'Passwords do not match.')
-            return render(request, 'users/reset_password.html', {'valid_link': True})
+            messages.error(request, "Passwords do not match.")
+            return render(request, "users/reset_password.html", {"valid_link": True})
 
         if len(password) < 10:
-            messages.error(request, 'Password must be at least 10 characters.')
-            return render(request, 'users/reset_password.html', {'valid_link': True})
+            messages.error(request, "Password must be at least 10 characters.")
+            return render(request, "users/reset_password.html", {"valid_link": True})
 
         user.set_password(password)
         user.save()
-        messages.success(request, 'Your password has been reset. You can now log in.')
-        return redirect('users:login')
+        messages.success(request, "Your password has been reset. You can now log in.")
+        return redirect("users:login")
 
-    return render(request, 'users/reset_password.html', {'valid_link': True})
+    return render(request, "users/reset_password.html", {"valid_link": True})
 
 
 @login_required
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(["GET", "POST"])
 def email_verification_view(request):
-    if request.method == 'POST':
-        otp_parts = [request.POST.get(f'otp_{i}', '') for i in range(1, 7)]
-        otp = ''.join(otp_parts).strip()
+    if request.method == "POST":
+        otp_parts = [request.POST.get(f"otp_{i}", "") for i in range(1, 7)]
+        otp = "".join(otp_parts).strip()
         if len(otp) == 6 and otp.isdigit():
             profile = _get_or_create_profile(request.user)
             profile.email_verified = True
-            profile.save(update_fields=['email_verified'])
-            messages.success(request, 'Email verified! Welcome aboard.')
-            return redirect('dashboard:user_dashboard')
+            profile.save(update_fields=["email_verified"])
+            messages.success(request, "Email verified! Welcome aboard.")
+            return redirect("dashboard:user_dashboard")
         else:
-            messages.error(request, 'Invalid or incomplete code. Please try again.')
+            messages.error(request, "Invalid or incomplete code. Please try again.")
 
-    return render(request, 'users/email_verification.html')
+    return render(request, "users/email_verification.html")
 
 
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(["GET", "POST"])
 def logout_view(request):
     logout(request)
-    messages.info(request, 'You have been signed out.')
-    return redirect('events:home')
+    messages.info(request, "You have been signed out.")
+    return redirect("events:home")
 
 
 @login_required
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(["GET", "POST"])
 def edit_profile(request):
     profile = _get_or_create_profile(request.user)
-    branches = ['CSE', 'IT', 'ECE', 'EEE', 'Mechanical', 'Civil', 'Biotech']
+    branches = ["CSE", "IT", "ECE", "EEE", "Mechanical", "Civil", "Biotech"]
     years = [1, 2, 3, 4, 5]
     skills = [
-        'React', 'Node.js', 'Python', 'Django', 'Flutter',
-        'Figma', 'TensorFlow', 'Docker', 'AWS', 'MongoDB',
+        "React",
+        "Node.js",
+        "Python",
+        "Django",
+        "Flutter",
+        "Figma",
+        "TensorFlow",
+        "Docker",
+        "AWS",
+        "MongoDB",
     ]
 
-    if request.method == 'POST':
-        full_name = request.POST.get('full_name', '').strip()
-        email = request.POST.get('email', '').strip()
+    if request.method == "POST":
+        full_name = request.POST.get("full_name", "").strip()
+        email = request.POST.get("email", "").strip()
 
-        if email and User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
-            messages.error(request, 'That email is already in use by another account.')
-            return render(request, 'users/edit_profile.html', {
-                'profile': profile,
-                'branches': branches,
-                'years': years,
-                'skills': skills,
-                'active_skills': profile.skills_list,
-            })
+        if (
+            email
+            and User.objects.filter(email=email).exclude(pk=request.user.pk).exists()
+        ):
+            messages.error(request, "That email is already in use by another account.")
+            return render(
+                request,
+                "users/edit_profile.html",
+                {
+                    "profile": profile,
+                    "branches": branches,
+                    "years": years,
+                    "skills": skills,
+                    "active_skills": profile.skills_list,
+                },
+            )
 
         if full_name:
-            parts = full_name.split(' ', 1)
+            parts = full_name.split(" ", 1)
             request.user.first_name = parts[0]
-            request.user.last_name = parts[1] if len(parts) > 1 else ''
+            request.user.last_name = parts[1] if len(parts) > 1 else ""
         if email:
             request.user.email = email
-        request.user.save(update_fields=['first_name', 'last_name', 'email'])
+        request.user.save(update_fields=["first_name", "last_name", "email"])
 
-        profile.phone = request.POST.get('phone', '').strip()
-        profile.college = request.POST.get('college', '').strip()
-        profile.branch = request.POST.get('branch', '').strip()
-        profile.github = request.POST.get('github', '').strip()
-        profile.linkedin = request.POST.get('linkedin', '').strip()
-        profile.bio = request.POST.get('bio', '').strip()
-        profile.skills = request.POST.get('skills', '').strip()
+        profile.phone = request.POST.get("phone", "").strip()
+        profile.college = request.POST.get("college", "").strip()
+        profile.branch = request.POST.get("branch", "").strip()
+        profile.github = request.POST.get("github", "").strip()
+        profile.linkedin = request.POST.get("linkedin", "").strip()
+        profile.bio = request.POST.get("bio", "").strip()
+        profile.skills = request.POST.get("skills", "").strip()
 
-        year = request.POST.get('year', '').strip()
+        year = request.POST.get("year", "").strip()
         try:
             profile.year = int(year) if year else None
         except ValueError:
             profile.year = None
 
         profile.save()
-        messages.success(request, 'Your profile has been updated successfully.')
-        return redirect('dashboard:my_profile')
+        messages.success(request, "Your profile has been updated successfully.")
+        return redirect("dashboard:my_profile")
 
-    return render(request, 'users/edit_profile.html', {
-        'profile': profile,
-        'branches': branches,
-        'years': years,
-        'skills': skills,
-        'active_skills': profile.skills_list,
-    })
+    return render(
+        request,
+        "users/edit_profile.html",
+        {
+            "profile": profile,
+            "branches": branches,
+            "years": years,
+            "skills": skills,
+            "active_skills": profile.skills_list,
+        },
+    )
 
 
 @login_required
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(["GET", "POST"])
 def change_password(request):
-    if request.method == 'POST':
-        current_password = request.POST.get('current_password', '')
-        new_password = request.POST.get('new_password', '')
-        confirm_password = request.POST.get('confirm_password', '')
+    if request.method == "POST":
+        current_password = request.POST.get("current_password", "")
+        new_password = request.POST.get("new_password", "")
+        confirm_password = request.POST.get("confirm_password", "")
 
         if not request.user.check_password(current_password):
-            messages.error(request, 'Your current password is incorrect.')
-            return render(request, 'users/change_password.html')
+            messages.error(request, "Your current password is incorrect.")
+            return render(request, "users/change_password.html")
 
         if new_password != confirm_password:
-            messages.error(request, 'New password and confirmation do not match.')
-            return render(request, 'users/change_password.html')
+            messages.error(request, "New password and confirmation do not match.")
+            return render(request, "users/change_password.html")
 
         try:
             password_validation.validate_password(new_password, request.user)
         except ValidationError as exc:
             for error in exc.messages:
                 messages.error(request, error)
-            return render(request, 'users/change_password.html')
+            return render(request, "users/change_password.html")
 
         request.user.set_password(new_password)
-        request.user.save(update_fields=['password'])
+        request.user.save(update_fields=["password"])
         update_session_auth_hash(request, request.user)
-        messages.success(request, 'Your password has been updated successfully.')
-        return redirect('dashboard:settings')
+        messages.success(request, "Your password has been updated successfully.")
+        return redirect("dashboard:settings")
 
-    return render(request, 'users/change_password.html')
+    return render(request, "users/change_password.html")

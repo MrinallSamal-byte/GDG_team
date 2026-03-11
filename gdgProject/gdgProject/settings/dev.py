@@ -7,6 +7,7 @@ Usage:
 Or place a .env file in the project root with:
     DJANGO_SETTINGS_MODULE=gdgProject.settings.dev
 """
+
 from .base import *  # noqa: F401,F403
 
 # ─── Overrides ───────────────────────────────────────────────────────────────
@@ -21,7 +22,8 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # ─── Cache — in-memory for dev ───────────────────────────────────────────────
-CACHES["default"]["BACKEND"] = "django.core.cache.backends.locmem.LocMemCache"  # noqa: F405
+default_cache = CACHES["default"]  # noqa: F405
+default_cache["BACKEND"] = "django.core.cache.backends.locmem.LocMemCache"
 
 # ─── CORS / CSRF relaxation for local dev ────────────────────────────────────
 CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
@@ -33,18 +35,3 @@ CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
 
 # ─── Logging — human-readable in dev ────────────────────────────────────────
 LOGGING["handlers"]["console"]["formatter"] = "verbose"  # noqa: F405
-
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "campusarena",
-        "USER": "campusarena",
-        "PASSWORD": "CampusArena@2026",
-        "HOST": "localhost",
-        "PORT": "3306",
-        "OPTIONS": {
-            "charset": "utf8mb4",
-        },
-    }
-}
