@@ -33,7 +33,24 @@ from .base import *  # noqa: F401, F403
 
 # ── Core ─────────────────────────────────────────────────────────────────────
 DEBUG = False
-SECRET_KEY = os.environ["SECRET_KEY"]          # crash fast if missing
+
+# SECRET_KEY must be set in Vercel Dashboard → Project → Settings → Environment
+# Variables.  An insecure fallback is provided so the process can start and
+# return a meaningful error page rather than a raw Python traceback, but any
+# deployment running on the fallback key is INSECURE: sessions, CSRF tokens,
+# password-reset links and signed cookies will all be compromised.
+_secret_key = os.environ.get("SECRET_KEY", "").strip()
+if not _secret_key:
+    import logging as _logging
+    import secrets as _secrets
+    _secret_key = _secrets.token_urlsafe(50)
+    _logging.getLogger("django").critical(
+        "SECRET_KEY environment variable is not set. "
+        "Add it in Vercel Dashboard → Project → Settings → Environment Variables. "
+        "The application is running with an INSECURE ephemeral key — "
+        "sessions and CSRF tokens will be invalidated on every cold start."
+    )
+SECRET_KEY = _secret_key
 
 ALLOWED_HOSTS = [
     h.strip()
