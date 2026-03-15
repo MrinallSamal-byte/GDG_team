@@ -1,0 +1,50 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Vercel-specific requirements for CampusArena
+#
+# Differences from root requirements.txt:
+#   - NO mysqlclient  (Vercel has no MySQL headers; DB is PostgreSQL via DATABASE_URL)
+#   - NO daphne       (Vercel is WSGI/serverless — no ASGI/WebSocket support)
+#   - NO channels-redis (using InMemoryChannelLayer on Vercel)
+#   - NO dev/test tools (coverage, pytest, ruff, black, isort, safety, bandit)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Core ──────────────────────────────────────────────────────────────────────
+Django>=5.0,<7.0
+python-decouple>=3.8
+gunicorn>=22.0
+
+# ── Image handling ────────────────────────────────────────────────────────────
+Pillow>=10.0
+
+# ── Database ──────────────────────────────────────────────────────────────────
+# PostgreSQL only on Vercel (Neon / Supabase)
+psycopg2-binary>=2.9
+dj-database-url>=2.1
+
+# ── Static files ──────────────────────────────────────────────────────────────
+whitenoise>=6.6
+
+# ── Real-time (channels with InMemoryChannelLayer — no Redis on Vercel) ───────
+channels>=4.0
+
+# ── HTML sanitization ─────────────────────────────────────────────────────────
+bleach>=6.1
+
+# ── Calendar export ───────────────────────────────────────────────────────────
+icalendar>=5.0
+
+# ── Excel export ──────────────────────────────────────────────────────────────
+openpyxl>=3.1
+
+# ── Filtering ─────────────────────────────────────────────────────────────────
+django-filter>=24.0
+
+# ── Payment ───────────────────────────────────────────────────────────────────
+razorpay>=1.4
+
+# ── Certificate PDF generation ────────────────────────────────────────────────
+reportlab>=4.1
+qrcode[pil]>=7.4
+
+# ── OAuth ─────────────────────────────────────────────────────────────────────
+django-allauth>=0.61
