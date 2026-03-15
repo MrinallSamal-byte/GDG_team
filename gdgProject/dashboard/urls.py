@@ -6,7 +6,6 @@ app_name = "dashboard"
 
 urlpatterns = [
     path("", views.user_dashboard, name="user_dashboard"),
-    path("", views.user_dashboard, name="home"),  # alias used across templates
     path("profile/", views.my_profile, name="my_profile"),
     path("events/", views.my_events, name="my_events"),
     path("teams/", views.my_teams, name="my_teams"),

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | My Certificates{% endblock %}
+
+{% block content %}
+<section class="section" style="max-width:860px;margin:0 auto;">
+    <div class="section-head reveal">
+        <h1><i data-lucide="award"></i> My Certificates</h1>
+        <p class="muted">Download and share your certificates from events you've participated in.</p>
+    </div>
+
+    {% if certificates %}
+    <div class="grid-auto reveal">
+        {% for cert in certificates %}
+        <article class="surface" style="display:flex;flex-direction:column;gap:0.75rem;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;">
+                <div>
+                    <span class="chip {% if cert.cert_type == 'participation' %}chip-blue{% elif cert.cert_type == 'merit' %}chip-green{% else %}chip-gold{% endif %}"
+                          style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;">
+                        {% if cert.cert_type == 'participation' %}<i data-lucide="check-circle"></i>
+                        {% elif cert.cert_type == 'merit' %}<i data-lucide="star"></i>
+                        {% else %}<i data-lucide="trophy"></i>
+                        {% endif %}
+                        {{ cert.get_cert_type_display }}
+                    </span>
+                </div>
+                <time class="muted" style="font-size:0.78rem;white-space:nowrap;">
+                    {{ cert.issued_at|date:"M d, Y" }}
+                </time>
+            </div>
+
+            <h3 style="margin:0;font-size:1rem;">{{ cert.event.title }}</h3>
+            <p class="muted" style="font-size:0.85rem;margin:0;">
+                <i data-lucide="calendar-days" style="width:13px;height:13px;"></i>
+                {{ cert.event.event_start|date:"N j, Y" }}
+            </p>
+
+            <div style="display:flex;gap:0.5rem;margin-top:auto;flex-wrap:wrap;">
+                <a href="{% url 'certificates:download' cert.id %}" class="btn-primary btn-small">
+                    <i data-lucide="download"></i> Download PDF
+                </a>
+                <a href="{% url 'certificates:verify' cert.verification_token %}"
+                   class="btn-secondary btn-small" target="_blank" rel="noopener">
+                    <i data-lucide="shield-check"></i> Verify
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <article class="surface reveal">
+        <div class="empty-state">
+            <i data-lucide="award"></i>
+            <p>No certificates yet. Participate in events that offer certificates to earn them.</p>
+            <a href="{% url 'events:home' %}" class="btn-primary btn-small">
+                <i data-lucide="compass"></i> Browse Events
+            </a>
+        </div>
+    </article>
+    {% endif %}
+</section>
+{% endblock %}

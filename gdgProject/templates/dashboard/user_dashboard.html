@@ -1,693 +1,123 @@
 {% extends 'base.html' %}
-
 {% block title %}CampusArena | Dashboard{% endblock %}
-
 {% block extra_css %}
 <style>
-    /* ==========================================================================
-       GLOBAL REVEAL ANIMATIONS (Needed for dashboard elements)
-       ========================================================================== */
-    .reveal {
-        opacity: 0;
-        transform: translateY(40px);
-        transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    
-    .reveal.active { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
-
-    /* ── Explicit theme values so cards always render correctly ── */
-
-    [data-theme="dark"] {
-        --tc-bg:        #1a1b23;
-        --tc-bg-inner:  #13141c;
-        --tc-border:    rgba(255, 255, 255, 0.09);
-        --tc-border-hover: rgba(139, 92, 246, 0.5);
-        --tc-text:      #f3f4f6;
-        --tc-muted:     #9ca3af;
-        --tc-divider:   rgba(255, 255, 255, 0.07);
-        --tc-chip-bg:   rgba(255, 255, 255, 0.05);
-    }
-
-    [data-theme="light"] {
-        --tc-bg:        #ffffff;
-        --tc-bg-inner:  #f3f4f6;
-        --tc-border:    #e5e7eb;
-        --tc-border-hover: #8b5cf6;
-        --tc-text:      #111827;
-        --tc-muted:     #6b7280;
-        --tc-divider:   #e5e7eb;
-        --tc-chip-bg:   #f3f4f6;
-    }
-
-    /* Grid */
-    .teams-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1.5rem;
-    }
-
-    /* Card shell */
-    .team-card {
-        background-color: var(--tc-bg);
-        border: 1px solid var(--tc-border);
-        border-radius: 16px;
-        padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        min-height: 280px;
-        transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                    box-shadow 0.4s ease,
-                    border-color 0.3s ease;
-    }
-
-    .team-card:hover {
-        transform: translateY(-6px);
-        border-color: var(--tc-border-hover);
-        box-shadow: 0 16px 36px -8px rgba(139, 92, 246, 0.18),
-                    0 4px 12px -4px rgba(0, 0, 0, 0.12);
-    }
-
-    /* Header */
-    .team-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding-bottom: 1rem;
-        margin-bottom: 1rem;
-        border-bottom: 1px solid var(--tc-divider);
-    }
-
-    .team-avatar {
-        width: 52px;
-        height: 52px;
-        border-radius: 14px;
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.4rem;
-        font-weight: 700;
-        flex-shrink: 0;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-    }
-
-    .team-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin: 0 0 0.25rem;
-        color: var(--tc-text);
-    }
-
-    .team-event {
-        font-size: 0.82rem;
-        color: var(--tc-muted);
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
-
-    /* Role pill */
-    .team-role {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        background-color: var(--tc-chip-bg);
-        border: 1px solid var(--tc-border);
-        padding: 0.55rem 0.85rem;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        color: var(--tc-text);
-        margin-bottom: 1.1rem;
-        width: fit-content;
-    }
-
-    .team-role i {
-        width: 15px;
-        height: 15px;
-        color: #8b5cf6;
-        flex-shrink: 0;
-    }
-
-    /* Members */
-    .members-section-title {
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.07em;
-        color: var(--tc-muted);
-        margin-bottom: 0.6rem;
-        font-weight: 700;
-    }
-
-    .members-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.45rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .member-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        background-color: var(--tc-chip-bg);
-        border: 1px solid var(--tc-border);
-        border-radius: 20px;
-        padding: 0.22rem 0.7rem 0.22rem 0.22rem;
-        font-size: 0.82rem;
-        color: var(--tc-text);
-        transition: background-color 0.2s ease, border-color 0.2s ease;
-    }
-
-    .member-chip:hover {
-        border-color: var(--tc-border-hover);
-        background-color: var(--tc-bg-inner);
-    }
-
-    .member-avatar {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.68rem;
-        font-weight: 700;
-        flex-shrink: 0;
-    }
-
-    /* Action buttons */
-    .team-actions {
-        display: flex;
-        gap: 0.65rem;
-        margin-top: auto;
-        padding-top: 1rem;
-        border-top: 1px solid var(--tc-divider);
-    }
-
-    .action-btn {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.45rem;
-        background-color: var(--tc-chip-bg);
-        border: 1px solid var(--tc-border);
-        color: var(--tc-text);
-        padding: 0.6rem 1rem;
-        border-radius: 8px;
-        font-size: 0.88rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.22s ease;
-        text-decoration: none;
-        font-family: inherit;
-    }
-
-    .action-btn:hover {
-        background-color: #8b5cf6;
-        color: #ffffff;
-        border-color: #8b5cf6;
-    }
-
-    .action-btn i { width: 15px; height: 15px; }
-
-    /* Empty state */
-    .teams-empty {
-        grid-column: 1 / -1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 5rem 2rem;
-        background-color: var(--tc-bg);
-        border: 2px dashed var(--tc-border);
-        border-radius: 16px;
-        gap: 0.75rem;
-    }
-
-    .teams-empty i  { width: 52px; height: 52px; color: var(--tc-muted); opacity: 0.5; }
-    .teams-empty h3 { color: var(--tc-text); font-size: 1.2rem; margin: 0; }
-    .teams-empty p  { color: var(--tc-muted); font-size: 0.95rem; margin: 0; }
-
-    /* ==========================================================================
-       MOBILE OPTIMIZATION (max-width: 768px)
-       ========================================================================== */
-    .mobile-only { display: none !important; }
-
-    @media (max-width: 768px) {
-        .mobile-only { display: flex !important; }
-
-        /* Hide default base.html navbar AND the desktop dashboard sidebar */
-        body > header, .navbar:not(.mobile-bottom-nav), .desktop-sidebar { 
-            display: none !important; 
-        }
-
-        /* Dashboard specific mobile layout reset */
-        .dashboard-layout {
-            display: block !important;
-            grid-template-columns: 1fr !important;
-            padding: 0 0.5rem !important;
-        }
-
-        .welcome-header { margin-top: 1rem; }
-
-        /* Fix Grid layout on extremely small devices */
-        .teams-grid {
-            grid-template-columns: 1fr !important;
-        }
-
-        /* 1. Navbar Mobile Setup */
-        .mobile-top-nav {
-            position: fixed; top: 0; left: 0; right: 0;
-            height: 60px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border-color);
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 1.25rem;
-            z-index: 1000;
-        }
-
-        .mobile-brand {
-            font-size: 1.2rem;
-            font-weight: 800;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            color: var(--text-main);
-        }
-
-        .mobile-actions { display: flex; align-items: center; gap: 1rem; }
-        .mobile-icon-btn { 
-            background: none; border: none; padding: 0.25rem;
-            color: var(--text-main); cursor: pointer;
-            display: flex; align-items: center; position: relative;
-        }
-
-        /* 2. Hamburger Menu Drawer */
-        .mobile-drawer-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
-            z-index: 1001; opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease;
-            display: block !important;
-        }
-
-        .mobile-drawer-overlay.open { opacity: 1; pointer-events: auto; }
-
-        .mobile-drawer {
-            position: fixed; top: 0; right: -85%;
-            width: 75%; max-width: 320px; height: 100vh;
-            background: var(--surface); z-index: 1002;
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex !important; flex-direction: column;
-            box-shadow: -4px 0 24px rgba(0,0,0,0.5); overflow-y: auto;
-        }
-
-        .mobile-drawer.open { right: 0; }
-
-        .drawer-header {
-            padding: 2.5rem 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex; flex-direction: column;
-        }
-
-        .drawer-header h4 {
-            margin: 0 0 1rem 0; font-size: 0.8rem; text-transform: uppercase; 
-            letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700;
-        }
-
-        .profile-card {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem; background: var(--bg-input, rgba(128,128,128,0.05));
-            border: 1px solid var(--border-color); border-radius: 16px;
-            text-decoration: none; transition: all 0.2s;
-        }
-
-        .profile-card:active { background: var(--border-color); }
-
-        .drawer-avatar {
-            width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
-            background: linear-gradient(135deg, var(--primary, #8b5cf6), #6d28d9); color: white;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 1.25rem; font-weight: bold; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
-        }
-
-        .drawer-user-info { flex-grow: 1; }
-        .drawer-user-info h3 { margin: 0 0 0.2rem 0; font-size: 1.05rem; color: var(--text-main); font-weight: 700; }
-        .drawer-user-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.2rem; }
-
-        .drawer-nav { padding: 1.5rem 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; flex-grow: 1; }
-        
-        .drawer-link {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem 1.15rem; color: var(--text-main);
-            text-decoration: none; font-size: 1rem; font-weight: 600;
-            border-radius: 14px; transition: all 0.2s;
-            border: 1px solid var(--border-color);
-            background: var(--surface);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-
-        .drawer-link:active { transform: scale(0.98); background: var(--bg-input, rgba(128,128,128,0.05)); }
-        .drawer-link i { color: var(--primary, #8b5cf6); width: 20px; height: 20px; }
-        .drawer-divider { height: 1px; background: var(--border-color); margin: 0.5rem 0; }
-        
-        .drawer-logout { 
-            border-color: rgba(239, 68, 68, 0.3) !important; 
-            background: rgba(239, 68, 68, 0.05) !important; 
-            color: #ef4444 !important; 
-        }
-        .drawer-logout i { color: #ef4444 !important; }
-
-        /* 3. Floating Bottom Nav */
-        .mobile-bottom-nav {
-            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 50px;
-            padding: 0.5rem 1rem; gap: 0.5rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15); z-index: 1000;
-        }
-
-        .bottom-nav-item {
-            display: flex; align-items: center; gap: 0.5rem;
-            padding: 0.6rem 1rem; border-radius: 30px;
-            color: var(--text-muted);
-            text-decoration: none; font-size: 0.95rem; font-weight: 600;
-        }
-
-        .bottom-nav-item.active { background: rgba(139, 92, 246, 0.15); color: var(--primary, #8b5cf6); }
-        .bottom-nav-item i { width: 18px; height: 18px; }
-
-        body { padding-bottom: 100px; padding-top: 60px; /* space for fixed navs */ }
-    }
+.main-content{padding:0!important;max-width:100%!important;width:100%!important}
+.n-dash{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
+.n-dash-content{padding:2rem 2.5rem 4rem;overflow-x:hidden}
+@media(max-width:900px){.n-dash{grid-template-columns:1fr}}
+.n-metric-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--border);overflow:hidden;margin-bottom:1.5rem}
+.n-metric{padding:1.1rem 1.25rem;background:var(--surface);border-right:1px solid var(--border);transition:background .15s}
+.n-metric:last-child{border-right:none}
+.n-metric:hover{background:var(--surface-2)}
+.n-metric .lbl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.35rem}
+.n-metric .val{font-family:var(--font-mono);font-size:1.6rem;font-weight:700}
+.n-card{background:var(--surface);border:1px solid var(--border);margin-bottom:1px}
+.n-card-head{padding:.85rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.n-card-head .lbl{font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:.5rem}
+.n-card-head .lbl i{width:13px;height:13px;color:var(--primary)}
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- ==========================================================================
-     MOBILE SPECIFIC NAVIGATION LAYERS
-     ========================================================================== -->
+{% include 'includes/_n_page.html' %}
 
-<!-- 1. Top Navbar (Mobile Only) -->
-<div class="mobile-top-nav mobile-only">
-    <a href="{% url 'events:home' %}" class="brand mobile-brand">
-        <i data-lucide="trophy" style="width: 20px; height: 20px;"></i>
-        CampusArena
-    </a>
-    <div class="mobile-actions">
-        <button class="mobile-icon-btn" id="mobile-theme-toggle">
-            <i data-lucide="moon"></i>
-        </button>
-        <a href="{% url 'dashboard:notifications' %}" class="mobile-icon-btn" style="text-decoration: none;">
-            <i data-lucide="bell"></i>
-            <span style="position: absolute; top: 3px; right: 5px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
-        </a>
-        <button class="mobile-icon-btn" id="hamburger-menu-btn">
-            <i data-lucide="menu"></i>
-        </button>
-    </div>
-</div>
+<div class="n-dash">
+    {% include 'dashboard/_sidebar.html' with current_page='overview' %}
 
-<!-- 2. Hamburger Drawer (Mobile Only) -->
-<div class="mobile-drawer-overlay mobile-only" id="drawer-overlay"></div>
-<div class="mobile-drawer mobile-only" id="mobile-drawer">
-    <div class="drawer-header">
-        <h4>Account</h4>
-        {% if user.is_authenticated %}
-        <a href="{% url 'dashboard:my_profile' %}" class="profile-card">
-            <div class="drawer-avatar">
-                {{ user.first_name|default:"U"|make_list|first|upper }}
+    <div class="n-dash-content">
+
+        <!-- Page header -->
+        <div class="n-head n-reveal">
+            <div class="n-head-l">
+                <span class="n-num">01</span>
+                <span class="n-name">Overview</span>
             </div>
-            <div class="drawer-user-info">
-                <h3>
-                {% if user.is_staff %}
-                Admin User
-                {% else %}
-                {{ user.get_full_name|default:"Student User" }}
-                {% endif %}
-                </h3>
-                <p>View Profile <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i></p>
-            </div>
-        </a>
-        {% else %}
-        <div class="profile-card" style="justify-content: center; text-align: center;">
-            <div class="drawer-user-info">
-                <h3>Guest User</h3>
-                <p style="justify-content: center;">Join the community</p>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-    <div class="drawer-nav">
-        {% if user.is_authenticated %}
-            <a href="{% url 'dashboard:user_dashboard' %}" class="drawer-link"><i data-lucide="layout-dashboard"></i> Overview</a>
-            <a href="{% url 'dashboard:my_events' %}" class="drawer-link"><i data-lucide="calendar"></i> My Events</a>
-            <a href="{% url 'dashboard:my_teams' %}" class="drawer-link"><i data-lucide="users"></i> My Teams</a>
-            <a href="{% url 'team:find_teammates' %}" class="drawer-link"><i data-lucide="user-plus"></i> Find Teammates</a>
-            <a href="{% url 'dashboard:pending_requests' %}" class="drawer-link"><i data-lucide="clock"></i> Pending Requests</a>
-            <a href="{% url 'dashboard:settings' %}" class="drawer-link"><i data-lucide="settings"></i> Settings</a>
-            <div class="drawer-divider"></div>
-            <form method="POST" action="{% url 'users:logout' %}" style="margin:0;">
-                {% csrf_token %}
-                <button type="submit" class="drawer-link drawer-logout" style="width:100%; text-align:left; background:none; border:none; font-family:inherit; cursor:pointer;">
-                    <i data-lucide="log-out"></i> Logout
-                </button>
-            </form>
-        {% else %}
-            <a href="{% url 'users:login' %}" class="drawer-link"><i data-lucide="log-in"></i> Login</a>
-            <a href="{% url 'users:register' %}" class="drawer-link"><i data-lucide="user-plus"></i> Register</a>
-        {% endif %}
-    </div>
-</div>
-
-<!-- 3. Bottom Navigation Bar (Mobile Only) -->
-<div class="mobile-bottom-nav mobile-only">
-
-    <a href="{% url 'events:home' %}" class="bottom-nav-item">
-        <i data-lucide="home"></i> Events
-    </a>
-
-    {% if user.is_authenticated %}
-
-        {% if user.is_staff %}
-        <!-- Admin / Organizer -->
-        <a href="{% url 'eventManagement:organizer_dashboard' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-
-        {% else %}
-        <!-- Student -->
-        <a href="{% url 'dashboard:user_dashboard' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-        {% endif %}
-
-    {% else %}
-        <a href="{% url 'users:login' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-    {% endif %}
-
-</div>
-
-<!-- ==========================================================================
-     STANDARD DASHBOARD CONTENT
-     ========================================================================== -->
-
-<section class="dashboard-layout">
-    <!-- Desktop Sidebar (Hidden on Mobile via .desktop-sidebar class) -->
-    <div class="desktop-sidebar">
-        {% include 'dashboard/_sidebar.html' with current_page='overview' %}
-    </div>
-
-    <!-- Main Content -->
-    <div>
-        <div class="welcome-header reveal">
-            <h1>Welcome back, {{ request.user.first_name|default:request.user.username }}</h1>
-            <p>Here’s a quick look at your recent activity across events, teams, and notifications.</p>
+            <a href="{% url 'events:home' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;">
+                <i data-lucide="compass" style="width:13px;height:13px;"></i> Browse Events
+            </a>
         </div>
 
-        <div class="teams-grid reveal">
-            {% for team in my_teams %}
-            <article class="team-card">
+        <!-- Welcome -->
+        <div class="n-reveal" style="margin-bottom:1.5rem;">
+            <div style="font-size:1.2rem;font-weight:700;letter-spacing:-.02em;">Welcome back, <span style="color:var(--primary);">{{ request.user.first_name|default:request.user.username }}</span></div>
+            <div style="font-size:.85rem;color:var(--muted);margin-top:.2rem;">Here's a snapshot of your recent activity.</div>
+        </div>
 
-                <div class="team-header">
-                    <div class="team-avatar">{{ team.name|first|upper }}</div>
+        <!-- Stats -->
+        <div class="n-metric-grid n-reveal n-d1">
+            <div class="n-metric">
+                <div class="lbl">Events Joined</div>
+                <div class="val">{{ my_events|length }}</div>
+            </div>
+            <div class="n-metric">
+                <div class="lbl">Active Teams</div>
+                <div class="val">{{ my_teams|length }}</div>
+            </div>
+            <div class="n-metric">
+                <div class="lbl">Notifications</div>
+                <div class="val">{{ notifications|length }}</div>
+            </div>
+        </div>
+
+        <!-- Recent events + teams grid -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-bottom:1px;" class="n-reveal n-d2">
+
+            <!-- Recent Events -->
+            <div class="n-card">
+                <div class="n-card-head">
+                    <span class="lbl"><i data-lucide="calendar"></i> Recent Events</span>
+                    <a href="{% url 'dashboard:my_events' %}" style="font-size:.68rem;color:var(--primary);text-decoration:none;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">View All</a>
+                </div>
+                {% for event in my_events %}
+                <div class="n-row" style="border-bottom:1px solid var(--border);">
+                    <div style="font-size:.9rem;font-weight:600;margin-bottom:.2rem;">{{ event.title }}</div>
+                    <div style="font-size:.75rem;color:var(--muted);font-family:var(--font-mono);">{{ event.status }}</div>
+                </div>
+                {% empty %}
+                <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem;">No events yet. <a href="{% url 'events:home' %}" style="color:var(--primary);">Browse events</a></div>
+                {% endfor %}
+            </div>
+
+            <!-- Recent Teams -->
+            <div class="n-card" style="border-left:1px solid var(--border);">
+                <div class="n-card-head">
+                    <span class="lbl"><i data-lucide="users"></i> My Teams</span>
+                    <a href="{% url 'dashboard:my_teams' %}" style="font-size:.68rem;color:var(--primary);text-decoration:none;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">View All</a>
+                </div>
+                {% for team in my_teams %}
+                <div class="n-row" style="border-bottom:1px solid var(--border);">
+                    <div style="font-size:.9rem;font-weight:600;margin-bottom:.2rem;">{{ team.name }}</div>
+                    <div style="font-size:.75rem;color:var(--muted);">{{ team.event }} · <span style="font-family:var(--font-mono);">{{ team.role }}</span></div>
+                </div>
+                {% empty %}
+                <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem;">Not in any teams yet.</div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <!-- Recent notifications -->
+        <div class="n-card n-reveal n-d3">
+            <div class="n-card-head">
+                <span class="lbl"><i data-lucide="bell"></i> Recent Notifications</span>
+                <a href="{% url 'dashboard:notifications' %}" style="font-size:.68rem;color:var(--primary);text-decoration:none;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">View All</a>
+            </div>
+            {% for notif in notifications %}
+            <div class="n-row">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;">
                     <div>
-                        <h3 class="team-title">{{ team.name }}</h3>
-                        <p class="team-event">
-                            <i data-lucide="calendar" style="width:13px;height:13px;"></i>
-                            {{ team.event }}
-                        </p>
+                        <div style="font-size:.88rem;font-weight:600;">{{ notif.title }}</div>
+                        <div style="font-size:.78rem;color:var(--muted);margin-top:.18rem;">{{ notif.body|truncatechars:80 }}</div>
                     </div>
+                    <div style="font-size:.65rem;color:var(--muted-soft);font-family:var(--font-mono);white-space:nowrap;">{{ notif.created_at|timesince }} ago</div>
                 </div>
-
-                <div class="team-role">
-                    <i data-lucide="user-check"></i>
-                    <span>Your role: <strong>{{ team.role }}</strong></span>
-                </div>
-
-                {% if team.members %}
-                <div class="members-section-title">Members</div>
-                <div class="members-list">
-                    {% for member in team.members %}
-                    <div class="member-chip">
-                        <span class="member-avatar">{{ member|first|upper }}</span>
-                        {{ member }}
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-
-                <div class="team-actions">
-                    <a href="{% url 'dashboard:my_teams' %}" class="action-btn">
-                        <i data-lucide="users"></i> View Team
-                    </a>
-                    <a href="{% url 'dashboard:my_events' %}" class="action-btn">
-                        <i data-lucide="calendar"></i> Event
-                    </a>
-                </div>
-
-            </article>
-            {% empty %}
-            <div class="teams-empty">
-                <i data-lucide="users"></i>
-                <h3>No Recent Teams Yet</h3>
-                <p>You’re not part of any teams yet. Explore events and build your squad.</p>
             </div>
+            {% empty %}
+            <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem;">No notifications.</div>
             {% endfor %}
         </div>
+
     </div>
-</section>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        /* ==========================================================================
-           REVEAL ANIMATIONS (For Dashboard Elements)
-           ========================================================================== */
-        const revealElements = document.querySelectorAll('.reveal');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { 
-            threshold: 0.08, 
-            rootMargin: '0px 0px -20px 0px' 
-        });
-
-        revealElements.forEach(el => observer.observe(el));
-
-        /* ==========================================================================
-           MOBILE DRAWER LOGIC
-           ========================================================================== */
-        const hamburgerBtn = document.getElementById('hamburger-menu-btn');
-        const drawerOverlay = document.getElementById('drawer-overlay');
-        const mobileDrawer = document.getElementById('mobile-drawer');
-        
-        if (hamburgerBtn && drawerOverlay && mobileDrawer) {
-            function toggleDrawer() {
-                const isOpen = mobileDrawer.classList.contains('open');
-                if (isOpen) {
-                    mobileDrawer.classList.remove('open');
-                    drawerOverlay.classList.remove('open');
-                    document.body.style.overflow = ''; // Restore scroll
-                } else {
-                    mobileDrawer.classList.add('open');
-                    drawerOverlay.classList.add('open');
-                    document.body.style.overflow = 'hidden'; // Prevent body scroll while menu is open
-                }
-            }
-
-            hamburgerBtn.addEventListener('click', toggleDrawer);
-            drawerOverlay.addEventListener('click', toggleDrawer);
-
-            const drawerLinks = mobileDrawer.querySelectorAll('.drawer-link');
-            drawerLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    mobileDrawer.classList.remove('open');
-                    drawerOverlay.classList.remove('open');
-                    document.body.style.overflow = ''; 
-                });
-            });
-        }
-
-        /* ==========================================================================
-           MOBILE THEME TOGGLE LOGIC
-           ========================================================================== */
-        const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
-        if (mobileThemeToggle) {
-            mobileThemeToggle.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                const nextTheme = isDark ? 'light' : 'dark';
-
-                const updateTheme = () => {
-                    document.documentElement.setAttribute('data-theme', nextTheme);
-                    localStorage.setItem('campusarena-theme', nextTheme);
-                    const label = document.getElementById('theme-label');
-                    if(label) label.textContent = nextTheme === 'dark' ? 'Dark' : 'Light';
-                };
-
-                if (!document.startViewTransition) {
-                    updateTheme();
-                    return;
-                }
-
-                const x = e.clientX || (e.touches && e.touches[0].clientX) || window.innerWidth / 2;
-                const y = e.clientY || (e.touches && e.touches[0].clientY) || 30;
-
-                const endRadius = Math.hypot(
-                    Math.max(x, window.innerWidth - x),
-                    Math.max(y, window.innerHeight - y)
-                );
-
-                document.documentElement.classList.add('vt-active');
-                const transition = document.startViewTransition(updateTheme);
-
-                transition.ready.then(() => {
-                    const animation = document.documentElement.animate(
-                        {
-                            clipPath: [
-                                `circle(0px at ${x}px ${y}px)`,
-                                `circle(${endRadius}px at ${x}px ${y}px)`
-                            ]
-                        },
-                        {
-                            duration: 600,
-                            easing: 'cubic-bezier(0.34, 1.2, 0.64, 1)', 
-                            pseudoElement: '::view-transition-new(root)'
-                        }
-                    );
-
-                    animation.onfinish = () => {
-                        document.documentElement.classList.remove('vt-active');
-                    };
-                });
-                
-                transition.finished.finally(() => {
-                    document.documentElement.classList.remove('vt-active');
-                });
-            });
-        }
-    });
-</script>
+</div>
 {% endblock %}

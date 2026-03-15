@@ -25,6 +25,8 @@ class TeamAdmin(admin.ModelAdmin):
     raw_id_fields = ("leader", "event")
     inlines = [TeamMembershipInline]
 
+    list_select_related = ("event", "leader")
+
     def get_queryset(self, request):
         """Show all teams including soft-deleted in admin."""
         return Team.all_objects.all()
@@ -36,6 +38,7 @@ class TeamMembershipAdmin(admin.ModelAdmin):
     list_filter = ("role",)
     search_fields = ("user__username", "team__name")
     raw_id_fields = ("user", "team")
+    list_select_related = ("user", "team")
 
 
 @admin.register(JoinRequest)
@@ -45,6 +48,7 @@ class JoinRequestAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "team__name")
     raw_id_fields = ("user", "team", "reviewed_by")
     readonly_fields = ("created_at", "updated_at")
+    list_select_related = ("user", "team", "reviewed_by")
 
 
 @admin.register(ChatMessage)

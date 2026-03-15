@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from .models import Event, EventStatus
+from .models import Event, EventCategory, EventStatus
 
 logger = logging.getLogger(__name__)
 
@@ -16,11 +16,12 @@ def home(request):
     """Event listing page with filtering and featured carousel."""
     now = timezone.now()
 
-    # ── Filters from query params ──────────────────────────────────────────
     category = request.GET.get("category", "")
     mode = request.GET.get("mode", "")
     status_filter = request.GET.get("status", "")
     search = request.GET.get("q", "")
+
+    sort = request.GET.get("sort", "newest")
 
     base_qs = Event.objects.filter(
         status__in=[
@@ -58,11 +59,15 @@ def home(request):
             Q(title__icontains=search) | Q(description__icontains=search)
         )
 
-    event_grid = grid_qs.order_by("-event_start")[:24]
+    # Apply sort
+    if sort == "deadline":
+        event_grid = grid_qs.order_by("registration_end")[:24]
+    elif sort == "popular":
+        event_grid = grid_qs.order_by("-registered_count")[:24]
+    else:  # newest (default)
+        event_grid = grid_qs.order_by("-event_start")[:24]
 
-    # ── Featured events ────────────────────────────────────────────────────
     featured_events = base_qs.filter(is_featured=True).order_by("-event_start")[:6]
-    # Fallback: if no featured events, show upcoming ones
     if not featured_events.exists():
         featured_events = base_qs.order_by("-event_start")[:3]
 
@@ -72,10 +77,11 @@ def home(request):
         {
             "featured_events": featured_events,
             "event_grid": event_grid,
-            "current_category": category,
-            "current_mode": mode,
-            "current_status": status_filter,
-            "search_query": search,
+            # Keys that match the template
+            "q": search,
+            "active_category": category,
+            "active_sort": sort,
+            "categories": EventCategory.choices,
         },
     )
 
@@ -94,38 +100,26 @@ def event_detail(request, event_id):
 
     rounds = event.rounds.all().order_by("order")
 
-    # Registered participants (confirmed/submitted)
     participants = event.registrations.filter(
         status__in=["confirmed", "submitted"]
     ).select_related("user", "user__profile")[:50]
 
-    # Open teams for this event
     teams_open = (
-        event.teams.filter(
-            status="open",
-            is_deleted=False,
-        )
+        event.teams.filter(status="open", is_deleted=False)
         .select_related("leader")
-        .annotate(
-            current_members=Count("memberships"),
-        )
+        .annotate(current_members=Count("memberships"))
     )
 
-    # Judges and sponsors
     judges = event.judges.all()
     sponsors = event.sponsors.all()
-
-    # Announcements
     announcements = event.announcements.all()[:10]
 
-    # Check if current user is already registered
     is_registered = False
     user_registration = None
     if request.user.is_authenticated:
         user_registration = event.registrations.filter(user=request.user).first()
         is_registered = user_registration is not None
 
-    # Participants looking for a team
     looking_for_team_regs = event.registrations.filter(
         looking_for_team=True,
         status__in=["confirmed", "submitted"],
@@ -149,9 +143,14 @@ def event_detail(request, event_id):
     )
 
 
+def event_detail_slug(request, slug):
+    """Canonical slug-based URL — resolves to the event detail page."""
+    event = get_object_or_404(Event, slug=slug)
+    return redirect("events:event_detail", event_id=event.pk, permanent=True)
+
+
 @require_http_methods(["GET", "POST"])
 def contact_organizer(request, event_id):
-    """Send a message to the event organizer or redirect back to the event page."""
     event = get_object_or_404(Event.objects.select_related("created_by"), pk=event_id)
 
     if request.method == "GET":

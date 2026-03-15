@@ -1,63 +1,47 @@
 {% extends 'base.html' %}
-
 {% block title %}CampusArena | Registration Confirmed{% endblock %}
-
+{% block extra_css %}<style>.main-content{max-width:600px!important}</style>{% endblock %}
 {% block content %}
-<section class="section" style="max-width:680px;margin:0 auto;">
-    <div class="section-head reveal" style="text-align:center;">
-        <span style="font-size:3.5rem;">🎉</span>
-        <h1>You're Registered!</h1>
-        <p class="muted">Your spot has been confirmed for <strong>{{ registration.event.title }}</strong>.</p>
+{% include 'includes/_n_page.html' %}
+<div style="text-align:center;padding:2.5rem 0 1.5rem;" class="n-reveal">
+    <div style="font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.75rem;">CONFIRMED</div>
+    <div style="font-size:2.5rem;margin-bottom:.75rem;">🎉</div>
+    <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em;margin:0 0 .4rem;">You're Registered!</h1>
+    <p style="color:var(--muted);font-size:.9rem;">Your spot is confirmed for <strong style="color:var(--text);">{{ registration.event.title }}</strong>.</p>
+</div>
+
+<div style="border:1px solid var(--border);overflow:hidden;margin-bottom:1px;" class="n-reveal n-d1">
+    <div style="padding:.85rem 1.1rem;border-bottom:1px solid var(--border);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);">Registration Summary</div>
+    {% for k,v in summary.items %}{% endfor %}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+        <div style="padding:.8rem 1.1rem;border-right:1px solid var(--border);border-bottom:1px solid var(--border);"><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Ref #</div><div style="font-family:var(--font-mono);font-size:.88rem;font-weight:700;">{{ registration.registration_id }}</div></div>
+        <div style="padding:.8rem 1.1rem;border-bottom:1px solid var(--border);"><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Date</div><div style="font-family:var(--font-mono);font-size:.88rem;">{{ registration.registered_at|date:"d M Y" }}</div></div>
+        <div style="padding:.8rem 1.1rem;border-right:1px solid var(--border);border-bottom:1px solid var(--border);"><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Event Date</div><div style="font-family:var(--font-mono);font-size:.88rem;">{{ registration.event.event_start|date:"d M Y" }}</div></div>
+        <div style="padding:.8rem 1.1rem;border-bottom:1px solid var(--border);"><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Venue</div><div style="font-size:.88rem;">{{ registration.event.venue|default:"Online" }}</div></div>
+        <div style="padding:.8rem 1.1rem;border-right:1px solid var(--border);"><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Type</div><div style="font-size:.88rem;">{{ registration.get_type_display }}</div></div>
+        <div style="padding:.8rem 1.1rem;"><div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Status</div><span style="font-size:.72rem;font-weight:700;color:var(--ok);background:var(--ok-soft);border:1px solid rgba(0,230,118,.22);padding:.18rem .5rem;font-family:var(--font-mono);">{{ registration.get_status_display }}</span></div>
     </div>
+</div>
 
-    <article class="surface reveal" style="margin-bottom:1rem;">
-        <h2><i data-lucide="receipt-text"></i> Registration Summary</h2>
-        <dl class="info-grid">
-            <dt><i data-lucide="hash"></i> Ref #</dt>
-            <dd>{{ registration.registration_id }}</dd>
-
-            <dt><i data-lucide="calendar-days"></i> Date</dt>
-            <dd>{{ registration.registered_at|date:"N j, Y" }}</dd>
-
-            <dt><i data-lucide="layers"></i> Event</dt>
-            <dd>{{ registration.event.title }}</dd>
-
-            <dt><i data-lucide="calendar-clock"></i> Event Date</dt>
-            <dd>{{ registration.event.event_start|date:"N j, Y" }}</dd>
-
-            <dt><i data-lucide="map-pin"></i> Venue</dt>
-            <dd>{{ registration.event.venue|default:"Online" }}</dd>
-
-            <dt><i data-lucide="users"></i> Participation</dt>
-            <dd>{{ registration.get_type_display }}</dd>
-
-            {% if registration.team %}
-            <dt><i data-lucide="flag"></i> Team</dt>
-            <dd>{{ registration.team.name }}</dd>
-            {% endif %}
-
-            <dt><i data-lucide="circle-check-big"></i> Status</dt>
-            <dd><span class="chip" style="background:var(--green-subtle);color:var(--green);">Confirmed</span></dd>
-        </dl>
-    </article>
-
-    <article class="surface reveal" style="margin-bottom:1rem;">
-        <h2><i data-lucide="list-todo"></i> What's Next?</h2>
-        <ul class="step-list">
-            <li><i data-lucide="bell"></i> Watch your inbox — you'll get event updates via email.</li>
-            <li><i data-lucide="users"></i> If you created a team, share the link so teammates can find you.</li>
-            <li><i data-lucide="layout-dashboard"></i> Track everything from your <a href="{% url 'dashboard:home' %}">dashboard</a>.</li>
-            <li><i data-lucide="calendar-days"></i> Add the event date to your calendar.</li>
-        </ul>
-    </article>
-
-    <div class="btn-row reveal">
-        <a href="{% url 'events:event_detail' registration.event.id %}" class="btn-secondary">
-            <i data-lucide="arrow-left"></i> Back to Event
-        </a>
-        <a href="{% url 'dashboard:home' %}" class="btn-primary">
-            <i data-lucide="layout-dashboard"></i> Go to Dashboard
-        </a>
+<div style="border:1px solid var(--border);padding:1.1rem;margin-bottom:1px;" class="n-reveal n-d2">
+    <div style="font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;">What's Next</div>
+    <div style="display:flex;flex-direction:column;gap:.55rem;">
+        <div style="display:flex;align-items:center;gap:.6rem;font-size:.85rem;color:var(--muted);"><i data-lucide="bell" style="width:14px;height:14px;color:var(--primary);flex-shrink:0;"></i>Watch your inbox for event updates.</div>
+        {% if registration.team %}
+        <div style="display:flex;align-items:center;gap:.6rem;font-size:.85rem;color:var(--muted);"><i data-lucide="users" style="width:14px;height:14px;color:var(--primary);flex-shrink:0;"></i>Visit your <a href="{% url 'team:team_management' registration.team.id %}" style="color:var(--primary);font-weight:700;">team workspace</a> to chat with teammates.</div>
+        {% else %}
+        <div style="display:flex;align-items:center;gap:.6rem;font-size:.85rem;color:var(--muted);"><i data-lucide="users" style="width:14px;height:14px;color:var(--primary);flex-shrink:0;"></i>Browse open teams on the event page.</div>
+        {% endif %}
+        <div style="display:flex;align-items:center;gap:.6rem;font-size:.85rem;color:var(--muted);"><i data-lucide="qr-code" style="width:14px;height:14px;color:var(--primary);flex-shrink:0;"></i>Get your <a href="{% url 'checkin:my_qr' registration.event.id %}" style="color:var(--primary);font-weight:700;">QR check-in code</a> ready.</div>
     </div>
-</section>
+</div>
+
+<div style="display:flex;gap:.5rem;margin-top:1rem;" class="n-reveal n-d3">
+    <a href="{% url 'events:event_detail' registration.event.id %}" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.1rem;background:transparent;color:var(--text);border:1px solid var(--border);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;">
+        <i data-lucide="arrow-left" style="width:12px;height:12px;"></i> Back to Event
+    </a>
+    <a href="{% url 'dashboard:user_dashboard' %}" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.25rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;transition:background .15s;">
+        <i data-lucide="layout-dashboard" style="width:12px;height:12px;"></i> Dashboard
+    </a>
+</div>
 {% endblock %}

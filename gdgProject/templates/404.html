@@ -1,26 +1,20 @@
 {% extends "base.html" %}
-{% load static %}
-
-{% block title %}404 — Page Not Found | CampusArena{% endblock %}
-
+{% block title %}404 — Not Found | CampusArena{% endblock %}
 {% block content %}
-<section class="error-page">
-    <div class="error-visual">
-        <span class="error-code">404</span>
-        <i data-lucide="map-pin-off" class="error-icon"></i>
-    </div>
-    <h1 class="error-title">Page Not Found</h1>
-    <p class="error-message">
-        Looks like this page took a wrong turn. It may have been moved, deleted,
-        or the URL might be typed incorrectly.
-    </p>
-    <div class="error-actions">
-        <a href="{% url 'events:home' %}" class="btn-primary">
-            <i data-lucide="home"></i> Go to Home
+{% include 'includes/_n_page.html' %}
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:3rem 1.5rem;">
+    <div style="font-family:var(--font-mono);font-size:.65rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.75rem;">ERROR</div>
+    <div style="font-family:var(--font-mono);font-size:clamp(5rem,15vw,8rem);font-weight:700;color:var(--primary);line-height:1;margin-bottom:1rem;">404</div>
+    <div style="width:40px;height:1px;background:var(--primary);margin:0 auto 1.5rem;"></div>
+    <h1 style="font-size:1.25rem;font-weight:700;letter-spacing:-.02em;margin:0 0 .5rem;">Page Not Found</h1>
+    <p style="color:var(--muted);font-size:.88rem;max-width:380px;line-height:1.65;margin-bottom:2rem;">This page may have been moved, deleted, or the URL is incorrect.</p>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;">
+        <a href="{% url 'events:home' %}" style="display:inline-flex;align-items:center;gap:.4rem;padding:.72rem 1.25rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;transition:background .15s;">
+            <i data-lucide="home" style="width:13px;height:13px;"></i> Go Home
         </a>
-        <button class="btn-secondary" onclick="history.back()">
-            <i data-lucide="arrow-left"></i> Go Back
+        <button onclick="history.back()" style="display:inline-flex;align-items:center;gap:.4rem;padding:.72rem 1.25rem;background:transparent;color:var(--text);border:1px solid var(--border);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .15s;">
+            <i data-lucide="arrow-left" style="width:13px;height:13px;"></i> Go Back
         </button>
     </div>
-</section>
+</div>
 {% endblock %}

@@ -1,0 +1,48 @@
+{#
+  pwa_head_snippet.html
+  ─────────────────────
+  Include inside <head> of your base.html to activate:
+    [E7] PWA    — manifest + service worker registration
+    [E8] Theme  — theme.js (must load before first paint to avoid flicker)
+
+  Usage:
+    {% include "pwa/pwa_head_snippet.html" %}
+
+  Add this button anywhere in your navbar for the theme toggle [E8]:
+    <button data-theme-toggle aria-label="Toggle theme">
+      <span data-theme-icon></span>
+    </button>
+
+  Add this link in your navbar for OAuth login [E6]:
+    <a href="{% url 'socialaccount_signup' %}">Sign in with Google / GitHub</a>
+  Or use the allauth login page which renders all social providers automatically.
+#}
+
+{# ── Theme tokens (load first to avoid FOUC) ─────────────────────────────── #}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/theme.css' %}">
+
+{# theme.js runs synchronously — MUST be in <head>, not deferred #}
+<script src="{% static 'js/theme.js' %}"></script>
+
+{# ── PWA meta tags ─────────────────────────────────────────────────────────── #}
+<meta name="theme-color" content="#534AB7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CampusArena">
+<link rel="manifest" href="{% url 'pwa_manifest' %}">
+<link rel="apple-touch-icon" href="{% static 'pwa/icons/icon-192.png' %}">
+
+{# ── Service worker registration ──────────────────────────────────────────── #}
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker
+        .register('{% url "service_worker" %}', { scope: '/' })
+        .catch(function (err) {
+          console.warn('SW registration failed:', err);
+        });
+    });
+  }
+</script>

@@ -1,996 +1,113 @@
 {% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Edit Profile | CampusArena{% endblock %}
-
+{% block title %}CampusArena | Edit Profile{% endblock %}
 {% block extra_css %}
 <style>
-    /* Specific styles for Edit Profile to keep it clean */
-    .edit-profile-main {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-    
-    /* ----- Added Spacing Improvements ----- */
-    .edit-profile-main .field-grid {
-        gap: 1.5rem 1.25rem; /* Increased from 0.65rem to add breathing room between fields */
-    }
-
-    .edit-profile-main .settings-item {
-        padding: 1.15rem 0; /* More spacing for toggle rows */
-    }
-
-    .edit-profile-main .form-layout {
-        gap: 2rem; /* More space between main sections */
-    }
-    /* -------------------------------------- */
-
-    /* ----- CHROME AUTOFILL FIX (Dynamic Theme Compatible) ----- */
-    
-    /* 1. Tell Chrome's native UI (like autofill dropdowns) to use Dark Mode */
-    :root { color-scheme: light; }
-    :root[data-theme="dark"] { color-scheme: dark; }
-
-    /* 2. Light Theme Autofill explicit colors */
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover, 
-    input:-webkit-autofill:focus, 
-    input:-webkit-autofill:active {
-        -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
-        -webkit-text-fill-color: #0f172a !important;
-        caret-color: #0f172a !important;
-        transition: background-color 0s, color 0s !important; /* Force instant theme toggle */
-    }
-
-    /* 3. Dark Theme Autofill explicit colors */
-    :root[data-theme="dark"] input:-webkit-autofill,
-    :root[data-theme="dark"] input:-webkit-autofill:hover, 
-    :root[data-theme="dark"] input:-webkit-autofill:focus, 
-    :root[data-theme="dark"] input:-webkit-autofill:active {
-        -webkit-box-shadow: 0 0 0px 1000px #111111 inset !important;
-        -webkit-text-fill-color: #e6ecff !important;
-        caret-color: #e6ecff !important;
-    }
-
-    /* 4. Ensure the floating label handles the background properly */
-    .form-group input:-webkit-autofill ~ label {
-        top: 0 !important;
-        transform: translateY(-50%) !important;
-        font-size: .76rem !important;
-        font-weight: 700 !important;
-        color: var(--primary) !important;
-        background: var(--surface) !important;
-    }
-
-    .form-group.has-icon input:-webkit-autofill ~ label {
-        left: .9rem !important;
-    }
-    /* ----------------------------------------------- */
-
-    .avatar-upload-wrap {
-        position: relative;
-        width: 100px;
-        height: 100px;
-        margin-bottom: 1.25rem;
-    }
-    
-    /* Clean fallback for missing profile image */
-    .avatar-placeholder {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        background: var(--surface-2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 3px solid var(--border-soft);
-        box-shadow: var(--shadow-sm);
-        overflow: hidden;
-    }
-    
-    .avatar-placeholder img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .avatar-upload-btn {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 32px;
-        height: 32px;
-        background: var(--primary);
-        color: #fff;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        border: 2px solid var(--surface);
-        transition: all var(--motion-fast) var(--ease-smooth);
-    }
-    
-    .avatar-upload-btn:hover {
-        transform: scale(1.1);
-        background: var(--primary-2);
-    }
-
-    /* Target svg as well, since Lucide replaces <i> with <svg> */
-    .form-group.has-icon i,
-    .form-group.has-icon svg {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--muted-soft);
-        width: 18px;
-        height: 18px;
-        z-index: 2;
-        pointer-events: none;
-    }
-
-    .form-group.has-icon input,
-    .form-group.has-icon select {
-        padding-left: 2.8rem;
-    }
-
-    /* Force labels for <select> to always float since they always have a value */
-    .form-group select ~ label {
-        top: 0 !important;
-        transform: translateY(-50%) !important;
-        font-size: .76rem !important;
-        font-weight: 700 !important;
-        color: var(--primary) !important;
-        background: var(--surface) !important;
-        left: .9rem !important;
-    }
-
-    /* ==========================================================================
-       MOBILE OPTIMIZATION (max-width: 768px)
-       ========================================================================== */
-    .mobile-only { display: none !important; }
-
-    @media (max-width: 768px) {
-        .mobile-only { display: flex !important; }
-
-        /* Hide default base.html navbar AND the profile sidebar */
-        body > header, .navbar:not(.mobile-bottom-nav), .sidebar { 
-            display: none !important; 
-        }
-
-        body { padding-bottom: 100px; padding-top: 60px; /* space for fixed navs */ }
-
-        /* Edit Profile specific layout fixes for mobile */
-        .dashboard-layout {
-            display: block !important;
-            padding: 0 0.5rem !important;
-        }
-
-        .edit-profile-main {
-            gap: 1.2rem;
-            margin-top: 0.5rem;
-        }
-
-        .welcome-header { margin-top: 1rem; text-align: center; }
-
-        /* Stack action buttons full width on mobile */
-        .edit-profile-main > .form-layout > .surface:last-child {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            padding: 1rem !important;
-            gap: 0.75rem !important;
-        }
-
-        .edit-profile-main > .form-layout > .surface:last-child > div {
-            display: flex !important;
-            flex-direction: column !important;
-            width: 100% !important;
-            gap: 0.75rem !important;
-        }
-
-        .edit-profile-main > .form-layout > .surface:last-child button {
-            width: 100% !important;
-            justify-content: center !important;
-        }
-
-        /* 1. Navbar Mobile Setup */
-        .mobile-top-nav {
-            position: fixed; top: 0; left: 0; right: 0;
-            height: 60px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border-color);
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 1.25rem;
-            z-index: 1000;
-        }
-
-        .mobile-brand {
-            font-size: 1.2rem;
-            font-weight: 800;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            color: var(--text-main);
-        }
-
-        .mobile-actions { display: flex; align-items: center; gap: 1rem; }
-        .mobile-icon-btn { 
-            background: none; border: none; padding: 0.25rem;
-            color: var(--text-main); cursor: pointer;
-            display: flex; align-items: center; position: relative;
-        }
-
-        /* 2. Hamburger Menu Drawer */
-        .mobile-drawer-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
-            z-index: 1001; opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease;
-            display: block !important;
-        }
-
-        .mobile-drawer-overlay.open { opacity: 1; pointer-events: auto; }
-
-        .mobile-drawer {
-            position: fixed; top: 0; right: -85%;
-            width: 75%; max-width: 320px; height: 100vh;
-            background: var(--surface); z-index: 1002;
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex !important; flex-direction: column;
-            box-shadow: -4px 0 24px rgba(0,0,0,0.5); overflow-y: auto;
-        }
-
-        .mobile-drawer.open { right: 0; }
-
-        .drawer-header {
-            padding: 2.5rem 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex; flex-direction: column;
-        }
-
-        .drawer-header h4 {
-            margin: 0 0 1rem 0; font-size: 0.8rem; text-transform: uppercase; 
-            letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700;
-        }
-
-        .profile-card-drawer {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem; background: var(--bg-input, rgba(128,128,128,0.05));
-            border: 1px solid var(--border-color); border-radius: 16px;
-            text-decoration: none; transition: all 0.2s;
-        }
-
-        .profile-card-drawer:active { background: var(--border-color); }
-
-        .drawer-avatar {
-            width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
-            background: linear-gradient(135deg, var(--primary, #8b5cf6), #6d28d9); color: white;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 1.25rem; font-weight: bold; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
-        }
-
-        .drawer-user-info { flex-grow: 1; }
-        .drawer-user-info h3 { margin: 0 0 0.2rem 0; font-size: 1.05rem; color: var(--text-main); font-weight: 700; }
-        .drawer-user-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.2rem; }
-
-        .drawer-nav { padding: 1.5rem 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; flex-grow: 1; }
-        
-        .drawer-link {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem 1.15rem; color: var(--text-main);
-            text-decoration: none; font-size: 1rem; font-weight: 600;
-            border-radius: 14px; transition: all 0.2s;
-            border: 1px solid var(--border-color);
-            background: var(--surface);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-
-        .drawer-link:active { transform: scale(0.98); background: var(--bg-input, rgba(128,128,128,0.05)); }
-        .drawer-link i { color: var(--primary, #8b5cf6); width: 20px; height: 20px; }
-        .drawer-divider { height: 1px; background: var(--border-color); margin: 0.5rem 0; }
-        
-        .drawer-logout { 
-            border-color: rgba(239, 68, 68, 0.3) !important; 
-            background: rgba(239, 68, 68, 0.05) !important; 
-            color: #ef4444 !important; 
-        }
-        .drawer-logout i { color: #ef4444 !important; }
-
-        /* 3. Floating Bottom Nav */
-        .mobile-bottom-nav {
-            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 50px;
-            padding: 0.5rem 1rem; gap: 0.5rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15); z-index: 1000;
-        }
-
-        .bottom-nav-item {
-            display: flex; align-items: center; gap: 0.5rem;
-            padding: 0.6rem 1rem; border-radius: 30px;
-            color: var(--text-muted);
-            text-decoration: none; font-size: 0.95rem; font-weight: 600;
-        }
-
-        .bottom-nav-item.active { background: rgba(139, 92, 246, 0.15); color: var(--primary, #8b5cf6); }
-        .bottom-nav-item i { width: 18px; height: 18px; }
-    }
+.main-content{padding:0!important;max-width:100%!important;width:100%!important}
+.n-dash{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
+.n-dash-content{padding:2rem 2.5rem 4rem;max-width:660px}
+@media(max-width:900px){.n-dash{grid-template-columns:1fr}}
+.n-card{background:var(--surface);border:1px solid var(--border);padding:1.25rem;margin-bottom:1px}
+.n-card-head{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;display:flex;align-items:center;gap:.4rem}
+.n-card-head i{width:12px;height:12px;color:var(--primary)}
+.n-f label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.38rem}
+.n-f{margin-bottom:.75rem}
+.n-i{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font);font-size:.88rem;padding:.65rem .9rem;border-radius:0;outline:none;transition:border-color .15s}
+.n-i:focus{border-color:var(--primary)}
+.n-g2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.n-sk{padding:.3rem .7rem;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;letter-spacing:.04em;transition:all .15s;font-family:var(--font)}
+.n-sk.on{border-color:var(--primary);color:var(--primary);background:var(--primary-glow)}
+@media(max-width:600px){.n-g2{grid-template-columns:1fr}}
 </style>
 {% endblock %}
-
 {% block content %}
-<!-- ==========================================================================
-     MOBILE SPECIFIC NAVIGATION LAYERS
-     ========================================================================== -->
+{% include 'includes/_n_page.html' %}
+<div class="n-dash">
+    {% include 'dashboard/_sidebar.html' with current_page='profile' %}
+    <div class="n-dash-content">
 
-<!-- 1. Top Navbar (Mobile Only) -->
-<div class="mobile-top-nav mobile-only">
-    <a href="{% url 'events:home' %}" class="brand mobile-brand">
-        <i data-lucide="trophy" style="width: 20px; height: 20px;"></i>
-        CampusArena
-    </a>
-    <div class="mobile-actions">
-        <button class="mobile-icon-btn" id="mobile-theme-toggle">
-            <i data-lucide="moon"></i>
-        </button>
-        <a href="{% url 'dashboard:notifications' %}" class="mobile-icon-btn" style="text-decoration: none;">
-            <i data-lucide="bell"></i>
-            <span style="position: absolute; top: 3px; right: 5px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
-        </a>
-        <button class="mobile-icon-btn" id="hamburger-menu-btn">
-            <i data-lucide="menu"></i>
-        </button>
-    </div>
-</div>
-
-<!-- 2. Hamburger Drawer (Mobile Only) -->
-<div class="mobile-drawer-overlay mobile-only" id="drawer-overlay"></div>
-<div class="mobile-drawer mobile-only" id="mobile-drawer">
-    <div class="drawer-header">
-        <h4>Account</h4>
-        {% if user.is_authenticated %}
-        <a href="{% url 'dashboard:my_profile' %}" class="profile-card-drawer">
-            <div class="drawer-avatar">
-                {{ user.first_name|default:"U"|make_list|first|upper }}
-            </div>
-            <div class="drawer-user-info">
-                <h3>
-                {% if user.is_staff %}
-                Admin User
-                {% else %}
-                {{ user.get_full_name|default:"Student User" }}
-                {% endif %}
-                </h3>
-                <p>View Profile <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i></p>
-            </div>
-        </a>
-        {% else %}
-        <div class="profile-card-drawer" style="justify-content: center; text-align: center;">
-            <div class="drawer-user-info">
-                <h3>Guest User</h3>
-                <p style="justify-content: center;">Join the community</p>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-    <div class="drawer-nav">
-        {% if user.is_authenticated %}
-            <a href="{% url 'dashboard:user_dashboard' %}" class="drawer-link"><i data-lucide="layout-dashboard"></i> Overview</a>
-            <a href="{% url 'dashboard:my_events' %}" class="drawer-link"><i data-lucide="calendar"></i> My Events</a>
-            <a href="{% url 'dashboard:my_teams' %}" class="drawer-link"><i data-lucide="users"></i> My Teams</a>
-            <a href="{% url 'team:find_teammates' %}" class="drawer-link"><i data-lucide="user-plus"></i> Find Teammates</a>
-            <a href="{% url 'dashboard:pending_requests' %}" class="drawer-link"><i data-lucide="clock"></i> Pending Requests</a>
-            <a href="{% url 'dashboard:settings' %}" class="drawer-link"><i data-lucide="settings"></i> Settings</a>
-            <div class="drawer-divider"></div>
-            <form method="POST" action="{% url 'users:logout' %}" style="margin:0;">
-                {% csrf_token %}
-                <button type="submit" class="drawer-link drawer-logout" style="width:100%; text-align:left; background:none; border:none; font-family:inherit; cursor:pointer;">
-                    <i data-lucide="log-out"></i> Logout
-                </button>
-            </form>
-        {% else %}
-            <a href="{% url 'users:login' %}" class="drawer-link"><i data-lucide="log-in"></i> Login</a>
-            <a href="{% url 'users:register' %}" class="drawer-link"><i data-lucide="user-plus"></i> Register</a>
-        {% endif %}
-    </div>
-</div>
-
-<!-- 3. Bottom Navigation Bar (Mobile Only) -->
-<div class="mobile-bottom-nav mobile-only">
-
-    <a href="{% url 'events:home' %}" class="bottom-nav-item">
-        <i data-lucide="home"></i> Events
-    </a>
-
-    {% if user.is_authenticated %}
-
-        {% if user.is_staff %}
-        <!-- Admin / Organizer -->
-        <a href="{% url 'eventManagement:organizer_dashboard' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-
-        {% else %}
-        <!-- Student -->
-        <a href="{% url 'dashboard:user_dashboard' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-        {% endif %}
-
-    {% else %}
-        <a href="{% url 'users:login' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-    {% endif %}
-
-</div>
-
-<div class="dashboard-layout">
-
-    <!-- LEFT SIDEBAR (Sticky) -->
-    <aside class="sidebar">
-        <div class="surface" style="text-align: center; position: sticky; top: 100px;">
-            
-            <!-- Avatar & Basic Details -->
-            <div class="avatar-xl" style="margin: 0 auto 1rem; background: var(--surface-2); display: flex; align-items: center; justify-content: center; border: 2px solid var(--border-soft);">
-                <i data-lucide="user" style="width:32px; height:32px; color:var(--muted);"></i>
-            </div>
-            <h3 style="margin-bottom: 0.2rem; font-size: 1.15rem;">{{ user.first_name }} {{ user.last_name }}</h3>
-            <p class="muted" style="font-size: 0.88rem; margin-bottom: 1.5rem;">Frontend Developer</p>
-
-            <!-- 11. Profile Completeness Indicator -->
-            <div style="text-align: left; margin-bottom: 1.5rem;">
-                <div class="progress-label">
-                    <strong style="color: var(--text);">Profile Completion</strong>
-                    <span class="muted" style="font-weight: 700;">60%</span>
-                </div>
-                <div class="progress-track" style="height: 8px; margin-top: 0.5rem;">
-                    <!-- Adjust width dynamically based on context -->
-                    <div class="progress-fill" style="width: 60%;"></div>
-                </div>
-                <p class="muted" style="font-size: 0.8rem; margin-top: 0.6rem; display: flex; gap: 0.4rem; align-items:flex-start;">
-                    <i data-lucide="info" style="width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px; color: var(--primary);"></i>
-                    Add your resume and GitHub to reach 80%
-                </p>
-            </div>
-
-            <hr style="border-color: var(--border-soft); border-style: solid; margin: 1.5rem 0;">
-
-            <!-- 8. Event Participation Stats (Read Only) -->
-            <p style="font-size: .85rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; text-align: left; margin-bottom: 1rem;">Your Journey</p>
-            <div class="stats-row" style="grid-template-columns: repeat(3, 1fr); padding:0; margin-top: 0;">
-                <div style="padding: 0.6rem 0.4rem; background: transparent; border: 1px solid var(--border-soft); box-shadow: none;">
-                    <strong style="font-size: 1.2rem;">12</strong>
-                    <span style="font-size: .75rem;">Events</span>
-                </div>
-                <div style="padding: 0.6rem 0.4rem; background: transparent; border: 1px solid var(--border-soft); box-shadow: none;">
-                    <strong style="font-size: 1.2rem;">4</strong>
-                    <span style="font-size: .75rem;">Teams</span>
-                </div>
-                <div style="padding: 0.6rem 0.4rem; background: transparent; border: 1px solid var(--border-soft); box-shadow: none;">
-                    <strong style="font-size: 1.2rem;">3</strong>
-                    <span style="font-size: .75rem;">Certs</span>
-                </div>
-            </div>
-            
-        </div>
-    </aside>
-
-    <!-- RIGHT MAIN CONTENT -->
-    <div class="edit-profile-main">
-        
-        <div class="welcome-header" style="margin-bottom: 0;">
-            <h1>Edit Profile</h1>
-            <p>Customize your identity, showcase your skills, and adjust your teammate matching preferences.</p>
+        <div class="n-head n-reveal" style="margin-bottom:1.5rem;">
+            <div class="n-head-l"><span class="n-num">EDIT</span><span class="n-name">Edit Profile</span></div>
+            <a href="{% url 'dashboard:my_profile' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;">
+                <i data-lucide="arrow-left" style="width:12px;height:12px;"></i> Cancel
+            </a>
         </div>
 
-        <form method="POST" enctype="multipart/form-data" class="form-layout">
+        {% if messages %}{% for message in messages %}
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:.85rem;border:1px solid;{% if 'error' in message.tags %}background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger);{% else %}background:var(--ok-soft);border-color:rgba(0,230,118,.22);color:var(--ok);{% endif %}">
+            <i data-lucide="{% if 'error' in message.tags %}alert-circle{% else %}check-circle{% endif %}" style="width:14px;height:14px;"></i>{{ message }}
+        </div>
+        {% endfor %}{% endif %}
+
+        <form method="POST" action="" enctype="multipart/form-data">
             {% csrf_token %}
-
-            <!-- 1. Basic Information Section -->
-            <section class="surface">
-                <h2 class="section-head"><i data-lucide="user-circle"></i> Basic Information</h2>
-                
-                <div class="avatar-upload-wrap">
-                    <div class="avatar-placeholder" id="avatar-preview-container">
-                        <i data-lucide="user" style="width:40px; height:40px; color:var(--muted);" id="avatar-fallback-icon"></i>
-                        <img src="" alt="Preview" id="avatar-preview-img" style="display: none;">
-                    </div>
-                    
-                    <label for="profile_photo" class="avatar-upload-btn" title="Upload Photo">
-                        <i data-lucide="camera" style="width: 16px; height: 16px;"></i>
-                    </label>
-                    <input type="file" id="profile_photo" name="profile_photo" accept="image/*" style="display: none;">
-                </div>
-
-                <div class="field-grid">
-                    <div class="form-group has-icon">
-                        <i data-lucide="user"></i>
-                        <input type="text" id="full_name" name="full_name" placeholder=" " value="{{ user.get_full_name|default:'' }}">
-                        <label for="full_name">Full Name</label>
-                    </div>
-
-                    <div class="form-group has-icon">
-                        <i data-lucide="phone"></i>
-                        <input type="tel" id="phone" name="phone" placeholder=" " value="">
-                        <label for="phone">Phone Number</label>
-                    </div>
-
-                    <div class="form-group has-icon">
-                        <i data-lucide="building"></i>
-                        <input type="text" id="college" name="college" placeholder=" " value="">
-                        <label for="college">College Name</label>
-                    </div>
-
-                    <div class="form-group has-icon">
-                        <i data-lucide="book-open"></i>
-                        <input type="text" id="branch" name="branch" placeholder=" " value="">
-                        <label for="branch">Branch / Department</label>
-                    </div>
-
-                    <div class="form-group has-icon">
-                        <i data-lucide="graduation-cap"></i>
-                        <select id="year" name="year">
-                            <option value="" disabled selected>Select Year of Study</option>
-                            <option value="1">1st Year</option>
-                            <option value="2">2nd Year</option>
-                            <option value="3">3rd Year</option>
-                            <option value="4">4th Year</option>
-                            <option value="5">Graduated</option>
+            <div class="n-card n-reveal">
+                <div class="n-card-head"><i data-lucide="user-circle"></i> Personal Information</div>
+                <div class="n-g2">
+                    <div class="n-f"><label>Phone</label><input class="n-i" type="tel" name="phone" value="{{ profile.phone|default:'' }}" placeholder="+91..."></div>
+                    <div class="n-f"><label>College</label><input class="n-i" type="text" name="college" value="{{ profile.college|default:'' }}" placeholder="College name"></div>
+                    <div class="n-f"><label>Branch</label><input class="n-i" type="text" name="branch" value="{{ profile.branch|default:'' }}" placeholder="e.g. CSE"></div>
+                    <div class="n-f">
+                        <label>Year</label>
+                        <select class="n-i" name="year">
+                            <option value="">Select year</option>
+                            {% for y in "1,2,3,4,5,6"|split:"," %}{% endfor %}
+                            <option value="1" {% if profile.year == 1 %}selected{% endif %}>Year 1</option>
+                            <option value="2" {% if profile.year == 2 %}selected{% endif %}>Year 2</option>
+                            <option value="3" {% if profile.year == 3 %}selected{% endif %}>Year 3</option>
+                            <option value="4" {% if profile.year == 4 %}selected{% endif %}>Year 4</option>
+                            <option value="5" {% if profile.year == 5 %}selected{% endif %}>Year 5</option>
                         </select>
-                        <label for="year">Year of Study</label>
-                    </div>
-
-                    <div class="form-group has-icon">
-                        <i data-lucide="map-pin"></i>
-                        <input type="text" id="city" name="city" placeholder=" " value="">
-                        <label for="city">City / Location</label>
                     </div>
                 </div>
-            </section>
-
-            <!-- 2. Professional Links Section -->
-            <section class="surface">
-                <h2 class="section-head"><i data-lucide="link-2"></i> Professional Links</h2>
-                <p class="section-subtitle" style="margin-bottom: 1.5rem;">Add your links to stand out to organizers and potential teammates.</p>
-                
-                <div class="field-grid">
-                    <div class="form-group has-icon">
-                        <i data-lucide="github"></i>
-                        <input type="url" id="github" name="github" placeholder=" " value="">
-                        <label for="github">GitHub Profile</label>
-                    </div>
-
-                    <div class="form-group has-icon">
-                        <i data-lucide="linkedin"></i>
-                        <input type="url" id="linkedin" name="linkedin" placeholder=" " value="">
-                        <label for="linkedin">LinkedIn Profile</label>
-                    </div>
-
-                    <div class="form-group has-icon">
-                        <i data-lucide="globe"></i>
-                        <input type="url" id="portfolio" name="portfolio" placeholder=" " value="">
-                        <label for="portfolio">Portfolio Website</label>
-                    </div>
-
-                    <!-- Resume Upload (Custom File UI) -->
-                    <div style="display: flex; flex-direction: column; justify-content: flex-end;">
-                        <label for="resume_upload" class="btn-secondary" style="width: 100%; cursor: pointer; padding: 0.65rem 1rem;">
-                            <i data-lucide="file-text"></i> <span id="resume_filename">Upload Resume (PDF)</span>
-                            <input type="file" id="resume_upload" name="resume" accept=".pdf" style="display: none;">
-                        </label>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 3 & 4. Bio and Skills Section -->
-            <section class="surface">
-                <h2 class="section-head"><i data-lucide="sparkles"></i> About & Skills</h2>
-                
-                <!-- 3. Bio -->
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <textarea id="bio" name="bio" rows="2" placeholder=" " style="resize: vertical;"></textarea>
-                    <label for="bio">Short Bio / About Me</label>
-                </div>
-
-                <!-- 4. Skills Section -->
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; font-size: .9rem; font-weight: 600; color: var(--text-soft); margin-bottom: .8rem;">Your Skills</label>
-                    <div class="chip-row" id="skills_container" style="margin-bottom: 1rem;">
-                        <span class="chip active">Python <i data-lucide="x" style="width:14px;height:14px;cursor:pointer;" class="remove-skill"></i></span>
-                        <span class="chip active">Django <i data-lucide="x" style="width:14px;height:14px;cursor:pointer;" class="remove-skill"></i></span>
-                        <span class="chip active">Machine Learning <i data-lucide="x" style="width:14px;height:14px;cursor:pointer;" class="remove-skill"></i></span>
-                    </div>
-                    
-                    <div class="field-grid" style="align-items: center;">
-                        <div class="form-group has-icon" style="margin: 0;">
-                            <i data-lucide="code"></i>
-                            <input type="text" placeholder=" " id="add_skill_input">
-                            <label for="add_skill_input">Add Skill (e.g. React)</label>
-                        </div>
-                        <div style="display: flex; gap: .5rem;">
-                            <select id="add_skill_level" class="form-group" style="margin: 0; padding: .6rem; height: auto;">
-                                <option value="" disabled selected>Skill Level</option>
-                                <option value="Beginner">Intermediate</option>
-                                <option value="Intermediate">Intermediate</option>
-                                <option value="Advanced">Advanced</option>
-                            </select>
-                            <button type="button" id="btn_add_skill" class="btn-secondary"><i data-lucide="plus"></i> Add</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 5 & 6. Roles & Team Finder Settings -->
-            <section class="surface">
-                <h2 class="section-head"><i data-lucide="users"></i> Team Matchmaking</h2>
-                <p class="section-subtitle" style="margin-bottom: 1.5rem;">Adjust these settings to help teams find you, or to find the perfect teammates for your next event.</p>
-
-                <div class="settings-group" style="margin-bottom: 1.5rem;">
-                    <!-- 6. Toggle Looking for Teammates -->
-                    <div class="settings-item">
-                        <div>
-                            <p style="font-weight: 600; color: var(--text);">Looking for teammates</p>
-                            <p class="muted" style="font-size: .85rem; margin-top: .1rem;">Let others know you are actively open to joining teams.</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" name="looking_for_team" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="field-grid">
-                    <!-- 5. Interests / Roles -->
-                    <div class="form-group has-icon">
-                        <i data-lucide="briefcase"></i>
-                        <select id="primary_role" name="primary_role">
-                            <option value="" disabled selected>Select Primary Role</option>
-                            <option value="frontend">Frontend Developer</option>
-                            <option value="backend">Backend Developer</option>
-                            <option value="ai_ml">AI/ML Engineer</option>
-                            <option value="ui_ux">UI/UX Designer</option>
-                            <option value="pm">Project Manager</option>
-                        </select>
-                        <label for="primary_role">Preferred Role</label>
-                    </div>
-
-                    <div class="form-group has-icon">
-                        <i data-lucide="briefcase"></i>
-                        <select id="secondary_role" name="secondary_role">
-                            <option value="" disabled selected>Select Secondary Role</option>
-                            <option value="frontend">Frontend Developer</option>
-                            <option value="backend">Backend Developer</option>
-                            <option value="ai_ml">AI/ML Engineer</option>
-                            <option value="ui_ux">UI/UX Designer</option>
-                            <option value="pm">Project Manager</option>
-                        </select>
-                        <label for="secondary_role">Secondary Role (Optional)</label>
-                    </div>
-
-                    <div class="form-group has-icon">
-                        <i data-lucide="users-2"></i>
-                        <select id="preferred_team_size" name="preferred_team_size">
-                            <option value="" disabled selected>Select Team Size</option>
-                            <option value="any">Any Size</option>
-                            <option value="2">Duo (2 members)</option>
-                            <option value="3-4">Small Squad (3-4 members)</option>
-                            <option value="5+">Large Team (5+ members)</option>
-                        </select>
-                        <label for="preferred_team_size">Preferred Team Size</label>
-                    </div>
-                </div>
-
-                <div style="margin-top: 1.5rem;">
-                    <label style="display: block; font-size: .9rem; font-weight: 600; color: var(--text-soft); margin-bottom: .8rem;">Events interested in joining</label>
-                    <div class="chip-row">
-                        <label class="chip active"><input type="checkbox" checked style="display:none;"> Hackathons</label>
-                        <label class="chip active"><input type="checkbox" checked style="display:none;"> Coding Contests</label>
-                        <label class="chip"><input type="checkbox" style="display:none;"> Design Challenges</label>
-                        <label class="chip"><input type="checkbox" style="display:none;"> Ideathons</label>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 7 & 9. Availability & Privacy Settings -->
-            <section class="surface">
-                <h2 class="section-head"><i data-lucide="shield"></i> Privacy & Availability</h2>
-                
-                <div class="settings-group">
-                    
-                    <!-- 7. Availability -->
-                    <div class="settings-item">
-                        <div>
-                            <p style="font-weight: 600; color: var(--text);">Available for Weekend Hackathons</p>
-                            <p class="muted" style="font-size: .85rem; margin-top: .1rem;">Show organizers you are free to attend weekend events.</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" name="weekend_availability" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="settings-item">
-                        <div>
-                            <p style="font-weight: 600; color: var(--text);">Timezone Setting</p>
-                            <select class="form-group" style="margin-top: .6rem; padding: .4rem .6rem;">
-                                <option value="" disabled selected>Select Timezone</option>
-                                <option>GMT-8 (Pacific Time)</option>
-                                <option>GMT-5 (Eastern Time)</option>
-                                <option>GMT+0 (UTC)</option>
-                                <option>GMT+5:30 (India Standard)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- 9. Privacy -->
-                    <div class="settings-item">
-                        <div>
-                            <p style="font-weight: 600; color: var(--text);">Show email publicly</p>
-                            <p class="muted" style="font-size: .85rem; margin-top: .1rem;">Allow anyone viewing your profile to see your email.</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" name="show_email">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="settings-item">
-                        <div>
-                            <p style="font-weight: 600; color: var(--text);">Show phone publicly</p>
-                            <p class="muted" style="font-size: .85rem; margin-top: .1rem;">Allow organizers and teammates to view your number.</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" name="show_phone">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="settings-item" style="border-bottom: none;">
-                        <div>
-                            <p style="font-weight: 600; color: var(--text);">Allow teammate requests</p>
-                            <p class="muted" style="font-size: .85rem; margin-top: .1rem;">Receive direct invitations from other users.</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" name="allow_requests" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-
-                </div>
-            </section>
-
-            <!-- 12. Actions Bottom Bar -->
-            <div class="surface" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.25rem 1.5rem; margin-top: 0.5rem;">
-                <div>
-                    <button type="button" class="btn-secondary" onclick="window.history.back()">
-                        <i data-lucide="x"></i> Cancel
-                    </button>
-                </div>
-                <div style="display: flex; gap: .75rem;">
-                    <button type="reset" class="btn-secondary">
-                        <i data-lucide="rotate-ccw"></i> Reset Changes
-                    </button>
-                    <button type="submit" class="btn-primary">
-                        <i data-lucide="save"></i> Save Profile
-                    </button>
-                </div>
+                <div class="n-f"><label>Profile Photo</label><input class="n-i" type="file" name="profile_photo" accept="image/*" style="padding:.45rem .9rem;"></div>
             </div>
 
+            <div class="n-card n-reveal" style="margin-top:1px;">
+                <div class="n-card-head"><i data-lucide="link"></i> Links & Bio</div>
+                <div class="n-g2">
+                    <div class="n-f"><label>GitHub</label><input class="n-i" type="url" name="github" value="{{ profile.github|default:'' }}" placeholder="https://github.com/..."></div>
+                    <div class="n-f"><label>LinkedIn</label><input class="n-i" type="url" name="linkedin" value="{{ profile.linkedin|default:'' }}" placeholder="https://linkedin.com/in/..."></div>
+                    <div class="n-f"><label>Portfolio</label><input class="n-i" type="url" name="portfolio" value="{{ profile.portfolio|default:'' }}" placeholder="https://yoursite.dev"></div>
+                </div>
+                <div class="n-f" style="margin-bottom:0;"><label>Bio</label><textarea class="n-i" name="bio" rows="3" placeholder="Tell others about yourself...">{{ profile.bio|default:'' }}</textarea></div>
+            </div>
+
+            <div class="n-card n-reveal" style="margin-top:1px;">
+                <div class="n-card-head"><i data-lucide="cpu"></i> Skills</div>
+                <div style="display:flex;flex-wrap:wrap;gap:.35rem;" id="sk-chips">
+                    {% for skill in "React,Python,Django,Figma,Flutter,AWS,Node.js,TensorFlow,Docker,MongoDB"|split:"," %}{% endfor %}
+                    {% for s in "React,Python,Django,Figma,Flutter,AWS,Node.js,TensorFlow,Docker,MongoDB" %}{% endfor %}
+                    <button type="button" class="n-sk {% if 'React' in profile.skills|default:'' %}on{% endif %}" data-s="React">React</button>
+                    <button type="button" class="n-sk {% if 'Python' in profile.skills|default:'' %}on{% endif %}" data-s="Python">Python</button>
+                    <button type="button" class="n-sk {% if 'Django' in profile.skills|default:'' %}on{% endif %}" data-s="Django">Django</button>
+                    <button type="button" class="n-sk {% if 'Figma' in profile.skills|default:'' %}on{% endif %}" data-s="Figma">Figma</button>
+                    <button type="button" class="n-sk {% if 'Flutter' in profile.skills|default:'' %}on{% endif %}" data-s="Flutter">Flutter</button>
+                    <button type="button" class="n-sk {% if 'AWS' in profile.skills|default:'' %}on{% endif %}" data-s="AWS">AWS</button>
+                    <button type="button" class="n-sk {% if 'Node' in profile.skills|default:'' %}on{% endif %}" data-s="Node.js">Node.js</button>
+                    <button type="button" class="n-sk {% if 'TensorFlow' in profile.skills|default:'' %}on{% endif %}" data-s="TensorFlow">TensorFlow</button>
+                    <button type="button" class="n-sk {% if 'Docker' in profile.skills|default:'' %}on{% endif %}" data-s="Docker">Docker</button>
+                    <button type="button" class="n-sk {% if 'MongoDB' in profile.skills|default:'' %}on{% endif %}" data-s="MongoDB">MongoDB</button>
+                </div>
+                <input type="hidden" name="skills" id="sk-hidden" value="{{ profile.skills|default:'' }}">
+            </div>
+
+            <div style="display:flex;gap:.5rem;margin-top:1rem;" class="n-reveal">
+                <a href="{% url 'dashboard:my_profile' %}" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.1rem;background:transparent;color:var(--text);border:1px solid var(--border);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;">
+                    <i data-lucide="x" style="width:12px;height:12px;"></i> Cancel
+                </a>
+                <button type="submit" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.25rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s;">
+                    <i data-lucide="save" style="width:12px;height:12px;"></i> Save Changes
+                </button>
+            </div>
         </form>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        
-        // 1. Resume Upload Name Update Logic
-        const resumeInput = document.getElementById('resume_upload');
-        const resumeFilename = document.getElementById('resume_filename');
-        if(resumeInput && resumeFilename) {
-            resumeInput.addEventListener('change', function() {
-                if(this.files && this.files.length > 0) {
-                    resumeFilename.textContent = this.files[0].name;
-                } else {
-                    resumeFilename.textContent = 'Upload Resume (PDF)';
-                }
-            });
-        }
-
-        // 2. Add Skill Dynamic Logic
-        const skillInput = document.getElementById('add_skill_input');
-        const skillLevel = document.getElementById('add_skill_level');
-        const addSkillBtn = document.getElementById('btn_add_skill');
-        const skillsContainer = document.getElementById('skills_container');
-
-        if(addSkillBtn && skillInput && skillsContainer) {
-            // Function to handle adding a skill
-            const addNewSkill = () => {
-                const skillName = skillInput.value.trim();
-                if(skillName) {
-                    const chip = document.createElement('span');
-                    chip.className = 'chip active';
-                    
-                    // Add Level Text if selected
-                    const level = skillLevel ? skillLevel.value : '';
-                    const displayText = level ? `${skillName} (${level})` : skillName;
-                    
-                    // Create chip HTML with a hidden input to submit via form
-                    chip.innerHTML = `${displayText} <input type="hidden" name="skills[]" value="${skillName}"> <i data-lucide="x" style="width:14px;height:14px;cursor:pointer;" class="remove-skill"></i>`;
-                    
-                    skillsContainer.appendChild(chip);
-                    
-                    // Initialize the lucide icon inside the dynamically created element
-                    if(window.lucide) {
-                        lucide.createIcons({ root: chip });
-                    }
-                    
-                    // Reset inputs after adding
-                    skillInput.value = '';
-                    if(skillLevel) skillLevel.value = '';
-                }
-            };
-
-            addSkillBtn.addEventListener('click', addNewSkill);
-
-            // Allow 'Enter' key inside the text box to trigger the add button
-            skillInput.addEventListener('keypress', (e) => {
-                if(e.key === 'Enter') {
-                    e.preventDefault(); // Stop form from submitting early
-                    addNewSkill();
-                }
-            });
-
-            // Event Delegation to handle Removing chips
-            skillsContainer.addEventListener('click', (e) => {
-                const removeIcon = e.target.closest('.remove-skill') || e.target.closest('svg');
-                if(removeIcon) {
-                    const chip = removeIcon.closest('.chip');
-                    if(chip) {
-                        chip.remove();
-                    }
-                }
-            });
-        }
-
-        // 3. Events interested in - Visual toggle logic
-        const toggleChips = document.querySelectorAll('.chip-row label.chip');
-        toggleChips.forEach(chip => {
-            const checkbox = chip.querySelector('input[type="checkbox"]');
-            if(checkbox) {
-                if(checkbox.checked) chip.classList.add('active');
-                chip.addEventListener('click', (e) => {
-                    setTimeout(() => {
-                        if (checkbox.checked) {
-                            chip.classList.add('active');
-                        } else {
-                            chip.classList.remove('active');
-                        }
-                    }, 10);
-                });
-            }
-        });
-
-        // 4. Photo upload preview logic
-        const photoInput = document.getElementById('profile_photo');
-        const photoPreviewImg = document.getElementById('avatar-preview-img');
-        const fallbackIcon = document.getElementById('avatar-fallback-icon');
-        
-        if(photoInput && photoPreviewImg) {
-            photoInput.addEventListener('change', function() {
-                if (this.files && this.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        photoPreviewImg.src = e.target.result;
-                        photoPreviewImg.style.display = 'block';
-                        if(fallbackIcon) fallbackIcon.style.display = 'none';
-                    }
-                    reader.readAsDataURL(this.files[0]);
-                }
-            });
-        }
-
-        /* ==========================================================================
-           MOBILE DRAWER LOGIC
-           ========================================================================== */
-        const hamburgerBtn = document.getElementById('hamburger-menu-btn');
-        const drawerOverlay = document.getElementById('drawer-overlay');
-        const mobileDrawer = document.getElementById('mobile-drawer');
-        
-        if (hamburgerBtn && drawerOverlay && mobileDrawer) {
-            function toggleDrawer() {
-                const isOpen = mobileDrawer.classList.contains('open');
-                if (isOpen) {
-                    mobileDrawer.classList.remove('open');
-                    drawerOverlay.classList.remove('open');
-                    document.body.style.overflow = ''; // Restore scroll
-                } else {
-                    mobileDrawer.classList.add('open');
-                    drawerOverlay.classList.add('open');
-                    document.body.style.overflow = 'hidden'; // Prevent body scroll while menu is open
-                }
-            }
-
-            hamburgerBtn.addEventListener('click', toggleDrawer);
-            drawerOverlay.addEventListener('click', toggleDrawer);
-
-            const drawerLinks = mobileDrawer.querySelectorAll('.drawer-link');
-            drawerLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    mobileDrawer.classList.remove('open');
-                    drawerOverlay.classList.remove('open');
-                    document.body.style.overflow = ''; 
-                });
-            });
-        }
-
-        /* ==========================================================================
-           MOBILE THEME TOGGLE LOGIC
-           ========================================================================== */
-        const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
-        if (mobileThemeToggle) {
-            mobileThemeToggle.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                const nextTheme = isDark ? 'light' : 'dark';
-
-                const updateTheme = () => {
-                    document.documentElement.setAttribute('data-theme', nextTheme);
-                    localStorage.setItem('campusarena-theme', nextTheme);
-                    const label = document.getElementById('theme-label');
-                    if(label) label.textContent = nextTheme === 'dark' ? 'Dark' : 'Light';
-                };
-
-                if (!document.startViewTransition) {
-                    updateTheme();
-                    return;
-                }
-
-                const x = e.clientX || (e.touches && e.touches[0].clientX) || window.innerWidth / 2;
-                const y = e.clientY || (e.touches && e.touches[0].clientY) || 30;
-
-                const endRadius = Math.hypot(
-                    Math.max(x, window.innerWidth - x),
-                    Math.max(y, window.innerHeight - y)
-                );
-
-                document.documentElement.classList.add('vt-active');
-                const transition = document.startViewTransition(updateTheme);
-
-                transition.ready.then(() => {
-                    const animation = document.documentElement.animate(
-                        {
-                            clipPath: [
-                                `circle(0px at ${x}px ${y}px)`,
-                                `circle(${endRadius}px at ${x}px ${y}px)`
-                            ]
-                        },
-                        {
-                            duration: 600,
-                            easing: 'cubic-bezier(0.34, 1.2, 0.64, 1)', 
-                            pseudoElement: '::view-transition-new(root)'
-                        }
-                    );
-
-                    animation.onfinish = () => {
-                        document.documentElement.classList.remove('vt-active');
-                    };
-                });
-                
-                transition.finished.finally(() => {
-                    document.documentElement.classList.remove('vt-active');
-                });
-            });
-        }
+document.querySelectorAll('.n-sk').forEach(b=>{
+    b.addEventListener('click',()=>{
+        b.classList.toggle('on');
+        document.getElementById('sk-hidden').value=[...document.querySelectorAll('.n-sk.on')].map(x=>x.dataset.s).join(',');
     });
+});
 </script>
 {% endblock %}

@@ -1,816 +1,236 @@
 {% extends 'base.html' %}
-
 {% block title %}CampusArena | {{ event.title }}{% endblock %}
-
 {% block extra_css %}
 <style>
-    /* ==========================================================================
-       GLOBAL REVEAL ANIMATIONS
-       ========================================================================== */
-    .reveal {
-        opacity: 0;
-        transform: translateY(40px);
-        transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    
-    .reveal.active { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
-
-    /* ==========================================================================
-       MOBILE OPTIMIZATION (max-width: 768px)
-       ========================================================================== */
-    .mobile-only { display: none !important; }
-
-    @media (max-width: 768px) {
-        .mobile-only { display: flex !important; }
-
-        /* Hide default base.html navbar */
-        body > header, .navbar:not(.mobile-bottom-nav) { 
-            display: none !important; 
-        }
-
-        body { padding-bottom: 100px; padding-top: 60px; /* space for fixed navs */ }
-
-        /* Event Detail Specific Layout Fixes for Mobile */
-        .event-header {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            padding: 1.5rem 1rem !important;
-            gap: 1.5rem;
-        }
-
-        .event-header > div:first-child {
-            width: 100%;
-        }
-
-        .event-header h1 {
-            font-size: 2rem !important;
-            line-height: 1.2;
-        }
-
-        .meta-row {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.5rem;
-        }
-
-        .event-actions {
-            width: 100%;
-            flex-direction: column;
-            align-items: stretch;
-            text-align: center;
-            gap: 1rem;
-        }
-
-        .event-actions .btn-primary, 
-        .event-actions .btn-secondary {
-            width: 100%;
-            justify-content: center;
-            padding: 0.8rem !important;
-        }
-
-        .countdown {
-            justify-content: space-between;
-            width: 100%;
-        }
-
-        /* Make tabs swipeable on mobile instead of squishing */
-        .tab-bar {
-            overflow-x: auto;
-            flex-wrap: nowrap;
-            justify-content: flex-start;
-            padding-bottom: 0.5rem;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none; /* Firefox */
-        }
-        
-        .tab-bar::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
-        }
-
-        .tab-btn {
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        /* Ensure 2-column lists stack */
-        .two-col {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 1.5rem !important;
-        }
-
-        .prize-grid {
-            grid-template-columns: 1fr !important;
-        }
-
-        /* 1. Navbar Mobile Setup */
-        .mobile-top-nav {
-            position: fixed; top: 0; left: 0; right: 0;
-            height: 60px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border-color);
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 1.25rem;
-            z-index: 1000;
-        }
-
-        .mobile-brand {
-            font-size: 1.2rem;
-            font-weight: 800;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            color: var(--text-main);
-        }
-
-        .mobile-actions { display: flex; align-items: center; gap: 1rem; }
-        .mobile-icon-btn { 
-            background: none; border: none; padding: 0.25rem;
-            color: var(--text-main); cursor: pointer;
-            display: flex; align-items: center; position: relative;
-        }
-
-        /* 2. Hamburger Menu Drawer */
-        .mobile-drawer-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
-            z-index: 1001; opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease;
-            display: block !important;
-        }
-
-        .mobile-drawer-overlay.open { opacity: 1; pointer-events: auto; }
-
-        .mobile-drawer {
-            position: fixed; top: 0; right: -85%;
-            width: 75%; max-width: 320px; height: 100vh;
-            background: var(--surface); z-index: 1002;
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex !important; flex-direction: column;
-            box-shadow: -4px 0 24px rgba(0,0,0,0.5); overflow-y: auto;
-        }
-
-        .mobile-drawer.open { right: 0; }
-
-        .drawer-header {
-            padding: 2.5rem 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex; flex-direction: column;
-        }
-
-        .drawer-header h4 {
-            margin: 0 0 1rem 0; font-size: 0.8rem; text-transform: uppercase; 
-            letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700;
-        }
-
-        .profile-card-drawer {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem; background: var(--bg-input, rgba(128,128,128,0.05));
-            border: 1px solid var(--border-color); border-radius: 16px;
-            text-decoration: none; transition: all 0.2s;
-        }
-
-        .profile-card-drawer:active { background: var(--border-color); }
-
-        .drawer-avatar {
-            width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
-            background: linear-gradient(135deg, var(--primary, #8b5cf6), #6d28d9); color: white;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 1.25rem; font-weight: bold; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
-        }
-
-        .drawer-user-info { flex-grow: 1; }
-        .drawer-user-info h3 { margin: 0 0 0.2rem 0; font-size: 1.05rem; color: var(--text-main); font-weight: 700; }
-        .drawer-user-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.2rem; }
-
-        .drawer-nav { padding: 1.5rem 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; flex-grow: 1; }
-        
-        .drawer-link {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem 1.15rem; color: var(--text-main);
-            text-decoration: none; font-size: 1rem; font-weight: 600;
-            border-radius: 14px; transition: all 0.2s;
-            border: 1px solid var(--border-color);
-            background: var(--surface);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-
-        .drawer-link:active { transform: scale(0.98); background: var(--bg-input, rgba(128,128,128,0.05)); }
-        .drawer-link i { color: var(--primary, #8b5cf6); width: 20px; height: 20px; }
-        .drawer-divider { height: 1px; background: var(--border-color); margin: 0.5rem 0; }
-        
-        .drawer-logout { 
-            border-color: rgba(239, 68, 68, 0.3) !important; 
-            background: rgba(239, 68, 68, 0.05) !important; 
-            color: #ef4444 !important; 
-        }
-        .drawer-logout i { color: #ef4444 !important; }
-
-        /* 3. Floating Bottom Nav */
-        .mobile-bottom-nav {
-            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 50px;
-            padding: 0.5rem 1rem; gap: 0.5rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15); z-index: 1000;
-        }
-
-        .bottom-nav-item {
-            display: flex; align-items: center; gap: 0.5rem;
-            padding: 0.6rem 1rem; border-radius: 30px;
-            color: var(--text-muted);
-            text-decoration: none; font-size: 0.95rem; font-weight: 600;
-        }
-
-        .bottom-nav-item.active { background: rgba(139, 92, 246, 0.15); color: var(--primary, #8b5cf6); }
-        .bottom-nav-item i { width: 18px; height: 18px; }
-    }
+.n-ev-detail{display:grid;grid-template-columns:1fr 280px;gap:0;border:1px solid var(--border);margin-bottom:1.5rem}
+.n-ev-main{border-right:1px solid var(--border);padding:1.5rem}
+.n-ev-aside{padding:1.25rem;display:flex;flex-direction:column;gap:.75rem}
+.n-tab-bar{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.n-tab-bar::-webkit-scrollbar{display:none}
+.n-tab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:.65rem 1rem;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;cursor:pointer;font-family:var(--font);transition:all .15s}
+.n-tab:hover{color:var(--text)}
+.n-tab.on{color:var(--primary);border-bottom-color:var(--primary)}
+.n-panel{display:none;padding:1.25rem 0}
+.n-panel.on{display:block}
+.n-countdown{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border);overflow:hidden;margin-top:.75rem}
+.n-cd-unit{text-align:center;padding:.7rem .5rem;border-right:1px solid var(--border);background:var(--surface)}
+.n-cd-unit:last-child{border-right:none}
+.n-cd-unit strong{display:block;font-family:var(--font-mono);font-size:1.3rem;font-weight:700;color:var(--primary)}
+.n-cd-unit span{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.n-pb{height:2px;background:var(--surface-3);overflow:hidden}
+.n-pb-fill{height:100%;background:var(--primary);transition:width .8s}
+.n-tl{padding-left:1.5rem;position:relative}
+.n-tl::before{content:'';position:absolute;left:.5rem;top:.2rem;bottom:.2rem;width:1px;background:var(--border)}
+.n-tl-item{position:relative;padding:.65rem 0}
+.n-tl-item::before{content:'';position:absolute;left:-1.1rem;top:.8rem;width:8px;height:8px;border-radius:50%;background:var(--surface);border:1.5px solid var(--muted)}
+.n-tl-item.done::before{background:var(--primary);border-color:var(--primary)}
+.n-prize-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border)}
+.n-prize-cell{padding:1.25rem;text-align:center;background:var(--surface)}
+@media(max-width:900px){.n-ev-detail{grid-template-columns:1fr}.n-ev-aside{border-top:1px solid var(--border)}}
 </style>
 {% endblock %}
-
 {% block content %}
-<!-- ==========================================================================
-     MOBILE SPECIFIC NAVIGATION LAYERS
-     ========================================================================== -->
+{% include 'includes/_n_page.html' %}
 
-<!-- 1. Top Navbar (Mobile Only) -->
-<div class="mobile-top-nav mobile-only">
-    <a href="{% url 'events:home' %}" class="brand mobile-brand">
-        <i data-lucide="trophy" style="width: 20px; height: 20px;"></i>
-        CampusArena
-    </a>
-    <div class="mobile-actions">
-        <button class="mobile-icon-btn" id="mobile-theme-toggle">
-            <i data-lucide="moon"></i>
-        </button>
-        {% if user.is_authenticated %}
-        <a href="{% url 'dashboard:notifications' %}" class="mobile-icon-btn" style="text-decoration: none;">
-            <i data-lucide="bell"></i>
-            <span style="position: absolute; top: 3px; right: 5px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
-        </a>
-        {% endif %}
-        <button class="mobile-icon-btn" id="hamburger-menu-btn">
-            <i data-lucide="menu"></i>
-        </button>
+<!-- Header -->
+<div style="padding:1.5rem 0 1rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem;" class="n-reveal">
+    <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;">
+        <span style="font-family:var(--font-mono);font-size:.65rem;font-weight:700;color:var(--primary);">{{ event.get_category_display|upper }}</span>
+        <span style="font-size:.65rem;color:var(--muted-soft);">·</span>
+        <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);">{{ event.get_mode_display|upper }}</span>
+    </div>
+    <h1 style="font-size:clamp(1.4rem,3vw,2rem);font-weight:800;letter-spacing:-.03em;margin:0 0 .5rem;">{{ event.title }}</h1>
+    <p style="color:var(--muted);font-size:.9rem;max-width:600px;line-height:1.6;margin-bottom:.85rem;">{{ event.description|truncatewords:40 }}</p>
+    <div style="display:flex;flex-wrap:wrap;gap:.4rem;">
+        <span style="font-size:.72rem;color:var(--muted);padding:.22rem .6rem;border:1px solid var(--border);font-family:var(--font-mono);display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="calendar" style="width:11px;height:11px;color:var(--primary);"></i>{{ event.event_start|date:"M d" }}–{{ event.event_end|date:"M d, Y" }}</span>
+        <span style="font-size:.72rem;color:var(--muted);padding:.22rem .6rem;border:1px solid var(--border);font-family:var(--font-mono);display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="users" style="width:11px;height:11px;color:var(--primary);"></i>{{ event.registered_count }}/{{ event.capacity }}</span>
+        <span style="font-size:.72rem;color:var(--muted);padding:.22rem .6rem;border:1px solid var(--border);font-family:var(--font-mono);display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="clock" style="width:11px;height:11px;color:var(--primary);"></i>Reg ends {{ event.registration_end|date:"M d, Y" }}</span>
+        {% if event.prize_pool %}<span style="font-size:.72rem;color:var(--warn);padding:.22rem .6rem;border:1px solid rgba(255,179,0,.25);background:var(--warn-soft);font-family:var(--font-mono);font-weight:700;display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="trophy" style="width:11px;height:11px;"></i>₹{{ event.prize_pool|floatformat:0 }}</span>{% endif %}
     </div>
 </div>
 
-<!-- 2. Hamburger Drawer (Mobile Only) -->
-<div class="mobile-drawer-overlay mobile-only" id="drawer-overlay"></div>
-<div class="mobile-drawer mobile-only" id="mobile-drawer">
-    <div class="drawer-header">
-        <h4>Account</h4>
-        {% if user.is_authenticated %}
-        <a href="{% url 'dashboard:my_profile' %}" class="profile-card-drawer">
-            <div class="drawer-avatar">
-                {{ user.first_name|default:"U"|make_list|first|upper }}
-            </div>
-            <div class="drawer-user-info">
-                <h3>
-                {% if user.is_staff %}
-                Admin User
-                {% else %}
-                {{ user.get_full_name|default:"Student User" }}
-                {% endif %}
-                </h3>
-                <p>View Profile <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i></p>
-            </div>
-        </a>
-        {% else %}
-        <div class="profile-card-drawer" style="justify-content: center; text-align: center;">
-            <div class="drawer-user-info">
-                <h3>Guest User</h3>
-                <p style="justify-content: center;">Join the community</p>
+<!-- Main grid -->
+<div class="n-ev-detail n-reveal">
+    <div class="n-ev-main">
+        <!-- Tabs -->
+        <div class="n-tab-bar" id="ev-tabs">
+            <button class="n-tab on" data-p="p-about">About</button>
+            <button class="n-tab" data-p="p-timeline">Timeline</button>
+            <button class="n-tab" data-p="p-prizes">Prizes</button>
+            <button class="n-tab" data-p="p-people">Participants</button>
+            <button class="n-tab" data-p="p-judges">Judges</button>
+            <button class="n-tab" data-p="p-faq">FAQ</button>
+            <button class="n-tab" data-p="p-contact">Contact</button>
+        </div>
+
+        <!-- About -->
+        <div id="p-about" class="n-panel on">
+            <p style="color:var(--text-soft);line-height:1.75;font-size:.92rem;">{{ event.description }}</p>
+            {% if event.eligibility %}<p style="margin-top:.75rem;font-size:.88rem;color:var(--muted);"><strong style="color:var(--text);">Eligibility:</strong> {{ event.eligibility }}</p>{% endif %}
+            {% if event.rules %}<p style="margin-top:.5rem;font-size:.88rem;color:var(--muted);"><strong style="color:var(--text);">Rules:</strong> {{ event.rules }}</p>{% endif %}
+            {% if event.participation_type != 'individual' %}<p style="margin-top:.5rem;font-size:.88rem;color:var(--muted);"><strong style="color:var(--text);">Team Size:</strong> {{ event.min_team_size }}–{{ event.max_team_size }} members</p>{% endif %}
+            {% if event.registration_fee %}<p style="margin-top:.5rem;font-size:.88rem;color:var(--muted);"><strong style="color:var(--text);">Fee:</strong> ₹{{ event.registration_fee|floatformat:0 }}</p>{% endif %}
+        </div>
+
+        <!-- Timeline -->
+        <div id="p-timeline" class="n-panel">
+            <div class="n-tl">
+                {% for r in rounds %}
+                <div class="n-tl-item {% if r.status == 'completed' %}done{% endif %}">
+                    <strong style="font-size:.9rem;">{{ r.name }}</strong>
+                    <div style="font-size:.78rem;color:var(--muted);font-family:var(--font-mono);margin-top:.15rem;">{{ r.start_date|date:"M d" }} → {{ r.end_date|date:"M d" }} · {{ r.get_status_display }}</div>
+                    {% if r.description %}<p style="font-size:.82rem;color:var(--muted);margin-top:.2rem;">{{ r.description }}</p>{% endif %}
+                </div>
+                {% empty %}<p style="color:var(--muted);font-size:.85rem;">Timeline coming soon.</p>{% endfor %}
             </div>
         </div>
-        {% endif %}
-    </div>
-    <div class="drawer-nav">
-        {% if user.is_authenticated %}
-            {% if user.is_staff %}
-            <a href="{% url 'eventManagement:organizer_dashboard' %}" class="drawer-link"><i data-lucide="settings-2"></i> Organizer Panel</a>
-            {% endif %}
-            <a href="{% url 'dashboard:user_dashboard' %}" class="drawer-link"><i data-lucide="layout-dashboard"></i> Overview</a>
-            <a href="{% url 'dashboard:my_events' %}" class="drawer-link"><i data-lucide="calendar"></i> My Events</a>
-            <a href="{% url 'dashboard:my_teams' %}" class="drawer-link"><i data-lucide="users"></i> My Teams</a>
-            <a href="{% url 'team:find_teammates' %}" class="drawer-link"><i data-lucide="user-plus"></i> Find Teammates</a>
-            <a href="{% url 'dashboard:pending_requests' %}" class="drawer-link"><i data-lucide="clock"></i> Pending Requests</a>
-            <a href="{% url 'dashboard:settings' %}" class="drawer-link"><i data-lucide="settings"></i> Settings</a>
-            <div class="drawer-divider"></div>
-            <form method="POST" action="{% url 'users:logout' %}" style="margin:0;">
-                {% csrf_token %}
-                <button type="submit" class="drawer-link drawer-logout" style="width:100%; text-align:left; background:none; border:none; font-family:inherit; cursor:pointer;">
-                    <i data-lucide="log-out"></i> Logout
-                </button>
-            </form>
-        {% else %}
-            <a href="{% url 'users:login' %}" class="drawer-link"><i data-lucide="log-in"></i> Login</a>
-            <a href="{% url 'users:register' %}" class="drawer-link"><i data-lucide="user-plus"></i> Register</a>
-        {% endif %}
-    </div>
-</div>
 
-<!-- 3. Bottom Navigation Bar (Mobile Only) -->
-<div class="mobile-bottom-nav mobile-only">
-
-    <a href="{% url 'events:home' %}" class="bottom-nav-item">
-        <i data-lucide="home"></i> Events
-    </a>
-
-    {% if user.is_authenticated %}
-
-        {% if user.is_staff %}
-        <!-- Admin / Organizer -->
-        <a href="{% url 'eventManagement:organizer_dashboard' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-
-        {% else %}
-        <!-- Student -->
-        <a href="{% url 'dashboard:user_dashboard' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-        {% endif %}
-
-    {% else %}
-        <a href="{% url 'users:login' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-    {% endif %}
-
-</div>
-
-<!-- ==========================================================================
-     STANDARD PAGE CONTENT
-     ========================================================================== -->
-
-<!-- Event Header -->
-<section class="event-header reveal">
-    <div>
-        <p class="eyebrow"><i data-lucide="tag"></i> {{ event.get_category_display }} · {{ event.get_mode_display }}</p>
-        <h1>{{ event.title }}</h1>
-        <p class="text-soft" style="max-width:600px;">{{ event.description|truncatewords:50 }}</p>
-        <div class="meta-row">
-            <span><i data-lucide="calendar"></i> {{ event.event_start|date:"M d" }}–{{ event.event_end|date:"M d, Y" }}</span>
-            <span><i data-lucide="users"></i> {{ event.registered_count }}/{{ event.capacity }} registered</span>
-            <span><i data-lucide="clock"></i> Reg closes {{ event.registration_end|date:"M d, Y" }}</span>
-        </div>
-        <!-- Progress bar -->
-        {% widthratio event.registered_count event.capacity 100 as registration_percent %}
-        <div style="margin-top:.8rem;max-width:400px;">
-            <div class="progress-track">
-                <div class="progress-fill" data-progress="{{ registration_percent }}" style="width: {{ registration_percent }}%;"></div>
+        <!-- Prizes -->
+        <div id="p-prizes" class="n-panel">
+            {% if event.prize_1st or event.prize_2nd or event.prize_3rd %}
+            <div class="n-prize-grid" style="margin-bottom:.85rem;">
+                {% if event.prize_1st %}<div class="n-prize-cell"><div style="font-size:1.4rem;margin-bottom:.35rem;">🥇</div><div style="font-size:.88rem;font-weight:700;margin-bottom:.2rem;">1st Place</div><div style="font-size:.82rem;color:var(--muted);">{{ event.prize_1st }}</div></div>{% endif %}
+                {% if event.prize_2nd %}<div class="n-prize-cell"><div style="font-size:1.4rem;margin-bottom:.35rem;">🥈</div><div style="font-size:.88rem;font-weight:700;margin-bottom:.2rem;">2nd Place</div><div style="font-size:.82rem;color:var(--muted);">{{ event.prize_2nd }}</div></div>{% endif %}
+                {% if event.prize_3rd %}<div class="n-prize-cell"><div style="font-size:1.4rem;margin-bottom:.35rem;">🥉</div><div style="font-size:.88rem;font-weight:700;margin-bottom:.2rem;">3rd Place</div><div style="font-size:.82rem;color:var(--muted);">{{ event.prize_3rd }}</div></div>{% endif %}
             </div>
-            <div class="progress-label"><span>{{ event.registered_count }} registered</span><span>{{ event.capacity }} max</span></div>
+            {% endif %}
+            {% if event.prize_special %}<p style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem;">⭐ Special: {{ event.prize_special }}</p>{% endif %}
+            <p style="font-size:.82rem;color:var(--muted);">{% if event.participation_certificate and event.merit_certificate %}Participation + Merit certificates for all.{% elif event.participation_certificate %}Participation certificates for all.{% elif event.merit_certificate %}Merit certificates for top performers.{% else %}No certificates for this event.{% endif %}</p>
         </div>
-    </div>
-    <div class="event-actions">
-        {% if is_registered %}
-        <button class="btn-secondary" disabled><i data-lucide="check-circle"></i> Already Registered</button>
-        {% elif event.is_registration_open %}
-        <a href="{% url 'registration:register_event' event.id %}" class="btn-primary"><i data-lucide="pen-line"></i>
-            Register Now</a>
-        {% else %}
-        <button class="btn-secondary" disabled><i data-lucide="lock"></i> Registration {{ event.get_status_display }}</button>
-        {% endif %}
-        <!-- Countdown -->
-        <div class="countdown" data-deadline="{{ event.registration_end|date:'c' }}">
-            <div class="countdown-unit"><strong data-days>--</strong><span>Days</span></div>
-            <div class="countdown-unit"><strong data-hours>--</strong><span>Hours</span></div>
-            <div class="countdown-unit"><strong data-mins>--</strong><span>Mins</span></div>
-            <div class="countdown-unit"><strong data-secs>--</strong><span>Secs</span></div>
-        </div>
-    </div>
-</section>
 
-<!-- Tabs -->
-<div class="tab-container">
-    <div class="tab-bar reveal" role="tablist" aria-label="Event details">
-        <button class="tab-btn active" data-tab="tab-about" role="tab" aria-selected="true" aria-controls="tab-about"><i
-                data-lucide="info"></i> About</button>
-        <button class="tab-btn" data-tab="tab-timeline" role="tab" aria-selected="false" aria-controls="tab-timeline"><i
-                data-lucide="milestone"></i> Timeline</button>
-        <button class="tab-btn" data-tab="tab-prizes" role="tab" aria-selected="false" aria-controls="tab-prizes"><i
-                data-lucide="trophy"></i> Prizes</button>
-        <button class="tab-btn" data-tab="tab-participants" role="tab" aria-selected="false"
-            aria-controls="tab-participants"><i data-lucide="users"></i> Participants</button>
-        <button class="tab-btn" data-tab="tab-judges" role="tab" aria-selected="false" aria-controls="tab-judges"><i
-                data-lucide="award"></i> Judges & Sponsors</button>
-        <button class="tab-btn" data-tab="tab-faq" role="tab" aria-selected="false" aria-controls="tab-faq"><i
-                data-lucide="help-circle"></i> FAQs</button>
-        <button class="tab-btn" data-tab="tab-contact" role="tab" aria-selected="false" aria-controls="tab-contact"><i
-                data-lucide="mail"></i> Contact</button>
-    </div>
-
-    <!-- About -->
-    <div id="tab-about" class="tab-panel active" role="tabpanel" aria-labelledby="tab-about">
-        <article class="surface reveal">
-            <h2><i data-lucide="info"></i> About This Event</h2>
-            <p class="text-soft">{{ event.description }}</p>
-            {% if event.eligibility %}
-            <p class="text-soft" style="margin-top:.5rem;"><strong>Eligibility:</strong> {{ event.eligibility }}</p>
-            {% endif %}
-            {% if event.rules %}
-            <p class="text-soft" style="margin-top:.5rem;"><strong>Rules:</strong> {{ event.rules }}</p>
-            {% endif %}
-            {% if event.participation_type == 'team' or event.participation_type == 'both' %}
-            <p class="text-soft" style="margin-top:.5rem;"><strong>Team Size:</strong> {{ event.min_team_size }}–{{ event.max_team_size }} members</p>
-            {% endif %}
-            {% if event.registration_fee %}
-            <p class="text-soft" style="margin-top:.5rem;"><strong>Registration Fee:</strong> ₹{{ event.registration_fee|floatformat:0 }}</p>
-            {% endif %}
-        </article>
-    </div>
-
-    <!-- Timeline -->
-    <div id="tab-timeline" class="tab-panel" role="tabpanel" aria-labelledby="tab-timeline">
-        <article class="surface reveal">
-            <h2><i data-lucide="milestone"></i> Rounds & Timeline</h2>
-            <div class="timeline">
-                {% for round in rounds %}
-                <div class="timeline-item{% if round.status == 'completed' %} completed{% endif %}">
-                    <strong>{{ round.name }}</strong>
-                    <span><i data-lucide="calendar-days"></i> {{ round.start_date|date:"M d" }}–{{ round.end_date|date:"M d" }} · {{ round.get_status_display }}</span>
-                    {% if round.description %}<p class="text-soft" style="margin-top:.25rem;">{{ round.description }}</p>{% endif %}
-                </div>
-                {% empty %}
-                <div class="empty-state"><i data-lucide="calendar-x"></i>
-                    <p>Timeline coming soon</p>
-                </div>
-                {% endfor %}
-            </div>
-        </article>
-    </div>
-
-    <!-- Prizes -->
-    <div id="tab-prizes" class="tab-panel" role="tabpanel" aria-labelledby="tab-prizes">
-        <article class="surface reveal">
-            <h2><i data-lucide="trophy"></i> Prizes & Certificates</h2>
-            <div class="prize-grid">
-                {% if event.prize_1st %}
-                <div class="surface prize-card">
-                    <span class="prize-icon">🥇</span>
-                    <strong>1st Place</strong>
-                    <span>{{ event.prize_1st }}</span>
-                </div>
-                {% endif %}
-                {% if event.prize_2nd %}
-                <div class="surface prize-card">
-                    <span class="prize-icon">🥈</span>
-                    <strong>2nd Place</strong>
-                    <span>{{ event.prize_2nd }}</span>
-                </div>
-                {% endif %}
-                {% if event.prize_3rd %}
-                <div class="surface prize-card">
-                    <span class="prize-icon">🥉</span>
-                    <strong>3rd Place</strong>
-                    <span>{{ event.prize_3rd }}</span>
-                </div>
-                {% endif %}
-            </div>
-            {% if event.prize_special %}
-            <p class="muted" style="margin-top:.75rem;"><i data-lucide="star"></i> Special: {{ event.prize_special }}</p>
-            {% endif %}
-            <p class="muted" style="margin-top:1rem;">
-                <i data-lucide="badge-check"></i>
-                {% if event.participation_certificate and event.merit_certificate %}
-                    Participation + Merit certificates available for all participants.
-                {% elif event.participation_certificate %}
-                    Participation certificates available for all participants.
-                {% elif event.merit_certificate %}
-                    Merit certificates available for top performers.
-                {% else %}
-                    No certificates for this event.
-                {% endif %}
-            </p>
-        </article>
-    </div>
-
-    <!-- Participants -->
-    <div id="tab-participants" class="tab-panel" role="tabpanel" aria-labelledby="tab-participants">
-        <div class="two-col">
-            <article class="surface reveal">
-                <h2><i data-lucide="users"></i> Registered Participants</h2>
-                <ul class="list">
+        <!-- People -->
+        <div id="p-people" class="n-panel">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);">
+                <div style="background:var(--surface);padding:.75rem 1rem;">
+                    <div style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">Registered</div>
                     {% for reg in participants %}
-                    <li>
-                        <div style="display:flex;align-items:center;gap:.55rem;">
-                            <div class="avatar avatar-sm">{{ reg.user.get_full_name|first }}</div>
-                            <div>
-                                <strong>{{ reg.user.get_full_name|default:reg.user.username }}</strong>
-                                {% if reg.user.profile.college %}
-                                <span style="display:block;">{{ reg.user.profile.college }}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </li>
-                    {% empty %}
-                    <li class="empty-state"><i data-lucide="user-x"></i>
-                        <p>No participants yet. Be the first!</p>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </article>
-
-            <article class="surface reveal">
-                <h2><i data-lucide="users-round"></i> Teams with Open Spots</h2>
-                <ul class="list">
+                    <div style="display:flex;align-items:center;gap:.5rem;padding:.45rem 0;border-bottom:1px solid var(--border-soft);">
+                        <div style="width:26px;height:26px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;font-family:var(--font-mono);flex-shrink:0;">{{ reg.user.get_full_name|first|upper }}</div>
+                        <div><div style="font-size:.82rem;font-weight:600;">{{ reg.user.get_full_name|default:reg.user.username }}</div>{% if reg.user.profile.college %}<div style="font-size:.72rem;color:var(--muted);">{{ reg.user.profile.college }}</div>{% endif %}</div>
+                    </div>
+                    {% empty %}<p style="color:var(--muted);font-size:.82rem;">No participants yet.</p>{% endfor %}
+                </div>
+                <div style="background:var(--surface);padding:.75rem 1rem;border-left:1px solid var(--border);">
+                    <div style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">Open Teams</div>
                     {% for team in teams_open %}
-                    <li>
-                        <strong>{{ team.name }}</strong>
-                        <span><i data-lucide="users"></i> {{ team.current_members }}/{{ event.max_team_size }} members · Need: {{ team.looking_for|default:"teammates" }}</span>
-                        <div class="inline-actions">
-                    <button class="btn-primary btn-small" data-action="request-join" data-team-id="{{ team.id }}"><i data-lucide="user-plus"></i> Request to Join</button>
-                        </div>
-                    </li>
-                    {% empty %}
-                    <li class="empty-state"><i data-lucide="users-round"></i>
-                        <p>No open teams yet</p>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </article>
+                    <div style="padding:.55rem 0;border-bottom:1px solid var(--border-soft);">
+                        <div style="font-size:.85rem;font-weight:600;">{{ team.name }}</div>
+                        <div style="font-size:.72rem;color:var(--muted);font-family:var(--font-mono);">{{ team.current_members }}/{{ event.max_team_size }} members</div>
+                        <form method="POST" action="{% url 'registration:register_event' event.id %}" style="display:inline;">
+                            {% csrf_token %}<input type="hidden" name="type" value="join_team"><input type="hidden" name="team_id" value="{{ team.id }}">
+                            <button type="submit" style="margin-top:.35rem;padding:.25rem .6rem;background:var(--primary);color:#fff;border:none;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:var(--font);">Request Join</button>
+                        </form>
+                    </div>
+                    {% empty %}<p style="color:var(--muted);font-size:.82rem;">No open teams.</p>{% endfor %}
+                </div>
+            </div>
+        </div>
 
-            <article class="surface reveal">
-                <h2><i data-lucide="search"></i> Looking for Team</h2>
-                <ul class="list">
-                    {% for reg in looking_for_team_regs %}
-                    <li>
-                        <div style="display:flex;align-items:center;gap:.55rem;">
-                            <div class="avatar avatar-sm">{{ reg.user.get_full_name|default:reg.user.username|first }}</div>
-                            <div>
-                                <strong>{{ reg.user.get_full_name|default:reg.user.username }}</strong>
-                                <span style="display:block;">{{ reg.user.profile.college|default:'College not shared' }}</span>
-                                {% if reg.preferred_role %}<span style="display:block;">{{ reg.preferred_role }}</span>{% endif %}
-                            </div>
-                        </div>
-                    </li>
-                    {% empty %}
-                    <li class="empty-state"><i data-lucide="search-x"></i>
-                        <p>No participants are currently looking for a team.</p>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </article>
+        <!-- Judges -->
+        <div id="p-judges" class="n-panel">
+            {% if judges %}<div style="margin-bottom:1rem;">{% for j in judges %}<div style="display:flex;align-items:center;gap:.65rem;padding:.55rem 0;border-bottom:1px solid var(--border-soft);"><div style="width:30px;height:30px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;font-family:var(--font-mono);flex-shrink:0;">{{ j.name|first|upper }}</div><div><div style="font-size:.88rem;font-weight:600;">{{ j.name }}</div>{% if j.designation %}<div style="font-size:.75rem;color:var(--muted);">{{ j.designation }}</div>{% endif %}</div></div>{% endfor %}</div>{% else %}<p style="color:var(--muted);font-size:.85rem;margin-bottom:.75rem;">Judges to be announced.</p>{% endif %}
+            {% if sponsors %}{% for s in sponsors %}<div style="display:flex;align-items:center;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--border-soft);"><div><strong style="font-size:.85rem;">{{ s.name }}</strong><span style="font-size:.75rem;color:var(--muted);margin-left:.5rem;">{{ s.get_sponsor_type_display }}</span></div>{% if s.website_url %}<a href="{{ s.website_url }}" target="_blank" style="font-size:.72rem;color:var(--primary);font-weight:700;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;">Visit ↗</a>{% endif %}</div>{% endfor %}{% endif %}
+        </div>
 
-            <article class="surface reveal">
-                <h2><i data-lucide="megaphone"></i> Announcements</h2>
-                <ul class="list">
-                    {% for announcement in announcements %}
-                    <li>
-                        <strong>{{ announcement.title }}</strong>
-                        <span style="display:block;">{{ announcement.content|truncatewords:30 }}</span>
-                        <span style="display:block;">{{ announcement.created_at|date:'M d, Y H:i' }}</span>
-                    </li>
-                    {% empty %}
-                    <li class="empty-state"><i data-lucide="megaphone-off"></i>
-                        <p>No announcements have been posted yet.</p>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </article>
+        <!-- FAQ -->
+        <div id="p-faq" class="n-panel">
+            {% for faq in event.faqs %}
+            <div style="border-bottom:1px solid var(--border);">
+                <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';this.querySelector('.arr').style.transform=this.nextElementSibling.style.display==='block'?'rotate(180deg)':''" style="width:100%;background:none;border:none;padding:.8rem 0;text-align:left;font-family:var(--font);font-size:.88rem;font-weight:600;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+                    {{ faq.q }}<i data-lucide="chevron-down" class="arr" style="width:15px;height:15px;color:var(--muted);flex-shrink:0;transition:transform .2s;"></i>
+                </button>
+                <div style="display:none;padding-bottom:.85rem;color:var(--muted);font-size:.85rem;line-height:1.65;">{{ faq.a }}</div>
+            </div>
+            {% empty %}<p style="color:var(--muted);font-size:.85rem;">No FAQs yet.</p>{% endfor %}
+        </div>
+
+        <!-- Contact -->
+        <div id="p-contact" class="n-panel">
+            {% if event.contact_info %}<p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem;">{{ event.contact_info }}</p>{% endif %}
+            <div style="display:flex;border:1px solid var(--border);transition:border-color .15s;" onfocusin="this.style.borderColor='var(--primary)'" onfocusout="this.style.borderColor='var(--border)'">
+                <input type="text" id="contact-msg" placeholder="Ask the organizers a question..." style="flex:1;border:none;background:var(--surface);color:var(--text);font-family:var(--font);font-size:.88rem;padding:.72rem 1rem;outline:none;">
+                <button data-action="contact-organizer" style="background:var(--primary);color:#fff;border:none;padding:.72rem 1.1rem;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:var(--font);white-space:nowrap;"><i data-lucide="send" style="width:13px;height:13px;display:inline;"></i> Send</button>
+            </div>
         </div>
     </div>
 
-    <!-- Judges & Sponsors -->
-    <div id="tab-judges" class="tab-panel" role="tabpanel" aria-labelledby="tab-judges">
-        <article class="surface reveal">
-            <h2><i data-lucide="award"></i> Judges & Sponsors</h2>
-            {% if judges %}
-            <h3 style="margin-top:.5rem;">Judges</h3>
-            <ul class="list">
-                {% for judge in judges %}
-                <li>
-                    <div style="display:flex;align-items:center;gap:.55rem;">
-                        <div class="avatar avatar-sm">{{ judge.name|first }}</div>
-                        <div>
-                            <strong>{{ judge.name }}</strong>
-                            {% if judge.designation %}<span style="display:block;">{{ judge.designation }}</span>{% endif %}
-                        </div>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="text-soft"><strong>Judges:</strong> To be announced.</p>
-            {% endif %}
+    <!-- Aside -->
+    <div class="n-ev-aside">
+        {% if is_registered %}
+        <button disabled style="width:100%;padding:.8rem;background:var(--surface-3);color:var(--muted);border:1px solid var(--border);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:.4rem;">
+            <i data-lucide="check-circle" style="width:13px;height:13px;"></i> Registered
+        </button>
+        {% elif event.is_registration_open %}
+        <a href="{% url 'registration:register_event' event.id %}" style="width:100%;padding:.8rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:.4rem;">
+            <i data-lucide="pen-line" style="width:13px;height:13px;"></i> Register Now
+        </a>
+        {% else %}
+        <button disabled style="width:100%;padding:.8rem;background:var(--surface-3);color:var(--muted);border:1px solid var(--border);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:not-allowed;">
+            {{ event.get_status_display }}
+        </button>
+        {% endif %}
 
-            {% if sponsors %}
-            <h3 style="margin-top:1rem;">Sponsors</h3>
-            <ul class="list">
-                {% for sponsor in sponsors %}
-                <li>
-                    <strong>{{ sponsor.name }}</strong>
-                    <span> · {{ sponsor.get_sponsor_type_display }}</span>
-                    {% if sponsor.website_url %}
-                    <a href="{{ sponsor.website_url }}" target="_blank" rel="noopener noreferrer" class="btn-small">Visit</a>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="text-soft" style="margin-top:.5rem;"><strong>Sponsors:</strong> To be announced.</p>
-            {% endif %}
-        </article>
-    </div>
+        <!-- Progress -->
+        <div>
+            <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);font-family:var(--font-mono);margin-bottom:.4rem;">
+                <span>{{ event.registered_count }} registered</span><span>{{ event.capacity }} max</span>
+            </div>
+            <div class="n-pb"><div class="n-pb-fill" style="width:{% widthratio event.registered_count event.capacity 100 %}%;"></div></div>
+        </div>
 
-    <!-- FAQs -->
-    <div id="tab-faq" class="tab-panel" role="tabpanel" aria-labelledby="tab-faq">
-        <article class="reveal" style="display:grid;gap:.5rem;">
-            {% for faq in event.faqs %}
-            <div class="faq-item{% if forloop.first %} open{% endif %}">
-                <button class="faq-toggle" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">{{ faq.q }} <i
-                        data-lucide="chevron-down"></i></button>
-                <div class="faq-body">
-                    <p>{{ faq.a }}</p>
-                </div>
+        <!-- Countdown -->
+        <div>
+            <div style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;">Registration Closes</div>
+            <div class="n-countdown" data-deadline="{{ event.registration_end|date:'c' }}">
+                <div class="n-cd-unit"><strong data-days>--</strong><span>Days</span></div>
+                <div class="n-cd-unit"><strong data-hours>--</strong><span>Hrs</span></div>
+                <div class="n-cd-unit"><strong data-mins>--</strong><span>Min</span></div>
+                <div class="n-cd-unit"><strong data-secs>--</strong><span>Sec</span></div>
             </div>
-            {% empty %}
-            <div class="empty-state"><i data-lucide="help-circle"></i>
-                <p>No FAQs yet for this event.</p>
-            </div>
-            {% endfor %}
-        </article>
-    </div>
+        </div>
 
-    <!-- Contact -->
-    <div id="tab-contact" class="tab-panel" role="tabpanel" aria-labelledby="tab-contact">
-        <article class="surface reveal">
-            <h2><i data-lucide="mail"></i> Contact Organizers</h2>
-            {% if event.contact_info %}
-            <p class="text-soft" style="margin-bottom:.8rem;">{{ event.contact_info }}</p>
+        <!-- Quick info -->
+        <div style="border:1px solid var(--border);">
+            <div style="padding:.65rem .85rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.72rem;color:var(--muted);">Category</span><span style="font-size:.72rem;font-weight:600;font-family:var(--font-mono);">{{ event.get_category_display }}</span></div>
+            <div style="padding:.65rem .85rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.72rem;color:var(--muted);">Mode</span><span style="font-size:.72rem;font-weight:600;font-family:var(--font-mono);">{{ event.get_mode_display }}</span></div>
+            <div style="padding:.65rem .85rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.72rem;color:var(--muted);">Type</span><span style="font-size:.72rem;font-weight:600;font-family:var(--font-mono);">{{ event.get_participation_type_display }}</span></div>
+            {% if event.participation_type != 'individual' %}
+            <div style="padding:.65rem .85rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.72rem;color:var(--muted);">Team Size</span><span style="font-size:.72rem;font-weight:600;font-family:var(--font-mono);">{{ event.min_team_size }}–{{ event.max_team_size }}</span></div>
             {% endif %}
-            <div class="search-wrap">
-                <input type="text" placeholder="Ask a question to organizers..." id="contact-msg">
-                <button class="btn-primary" data-action="contact-organizer"><i data-lucide="send"></i> Send</button>
-            </div>
-        </article>
+            <div style="padding:.65rem .85rem;display:flex;justify-content:space-between;"><span style="font-size:.72rem;color:var(--muted);">Fee</span><span style="font-size:.72rem;font-weight:600;font-family:var(--font-mono);">{% if event.registration_fee %}₹{{ event.registration_fee|floatformat:0 }}{% else %}Free{% endif %}</span></div>
+        </div>
+
+        {% if is_registered %}
+        <a href="{% url 'checkin:my_qr' event.id %}" style="display:flex;align-items:center;justify-content:center;gap:.35rem;padding:.6rem;border:1px solid var(--border);font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--text);transition:all .15s;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+            <i data-lucide="qr-code" style="width:13px;height:13px;"></i> My QR Code
+        </a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
-
 {% block extra_js %}
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        /* ==========================================================================
-           TAB SWITCHING LOGIC
-           ========================================================================== */
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabPanels = document.querySelectorAll('.tab-panel');
-
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active from all
-                tabBtns.forEach(b => {
-                    b.classList.remove('active');
-                    b.setAttribute('aria-selected', 'false');
-                });
-                tabPanels.forEach(p => p.classList.remove('active'));
-
-                // Add active to clicked
-                btn.classList.add('active');
-                btn.setAttribute('aria-selected', 'true');
-                
-                const targetId = btn.getAttribute('data-tab');
-                const targetPanel = document.getElementById(targetId);
-                if (targetPanel) {
-                    targetPanel.classList.add('active');
-                }
-            });
-        });
-
-        /* ==========================================================================
-           FAQ TOGGLE LOGIC
-           ========================================================================== */
-        const faqToggles = document.querySelectorAll('.faq-toggle');
-        faqToggles.forEach(toggle => {
-            toggle.addEventListener('click', () => {
-                const item = toggle.closest('.faq-item');
-                item.classList.toggle('open');
-                const isExpanded = item.classList.contains('open');
-                toggle.setAttribute('aria-expanded', isExpanded);
-            });
-        });
-
-        /* ==========================================================================
-           REVEAL ANIMATIONS
-           ========================================================================== */
-        const revealElements = document.querySelectorAll('.reveal');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { 
-            threshold: 0.08, 
-            rootMargin: '0px 0px -20px 0px' 
-        });
-
-        revealElements.forEach(el => observer.observe(el));
-
-        /* ==========================================================================
-           MOBILE DRAWER LOGIC
-           ========================================================================== */
-        const hamburgerBtn = document.getElementById('hamburger-menu-btn');
-        const drawerOverlay = document.getElementById('drawer-overlay');
-        const mobileDrawer = document.getElementById('mobile-drawer');
-        
-        if (hamburgerBtn && drawerOverlay && mobileDrawer) {
-            function toggleDrawer() {
-                const isOpen = mobileDrawer.classList.contains('open');
-                if (isOpen) {
-                    mobileDrawer.classList.remove('open');
-                    drawerOverlay.classList.remove('open');
-                    document.body.style.overflow = ''; // Restore scroll
-                } else {
-                    mobileDrawer.classList.add('open');
-                    drawerOverlay.classList.add('open');
-                    document.body.style.overflow = 'hidden'; // Prevent body scroll while menu is open
-                }
-            }
-
-            hamburgerBtn.addEventListener('click', toggleDrawer);
-            drawerOverlay.addEventListener('click', toggleDrawer);
-
-            const drawerLinks = mobileDrawer.querySelectorAll('.drawer-link');
-            drawerLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    mobileDrawer.classList.remove('open');
-                    drawerOverlay.classList.remove('open');
-                    document.body.style.overflow = ''; 
-                });
-            });
-        }
-
-        /* ==========================================================================
-           MOBILE THEME TOGGLE LOGIC
-           ========================================================================== */
-        const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
-        if (mobileThemeToggle) {
-            mobileThemeToggle.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                const nextTheme = isDark ? 'light' : 'dark';
-
-                const updateTheme = () => {
-                    document.documentElement.setAttribute('data-theme', nextTheme);
-                    localStorage.setItem('campusarena-theme', nextTheme);
-                    const label = document.getElementById('theme-label');
-                    if(label) label.textContent = nextTheme === 'dark' ? 'Dark' : 'Light';
-                };
-
-                if (!document.startViewTransition) {
-                    updateTheme();
-                    return;
-                }
-
-                const x = e.clientX || (e.touches && e.touches[0].clientX) || window.innerWidth / 2;
-                const y = e.clientY || (e.touches && e.touches[0].clientY) || 30;
-
-                const endRadius = Math.hypot(
-                    Math.max(x, window.innerWidth - x),
-                    Math.max(y, window.innerHeight - y)
-                );
-
-                document.documentElement.classList.add('vt-active');
-                const transition = document.startViewTransition(updateTheme);
-
-                transition.ready.then(() => {
-                    const animation = document.documentElement.animate(
-                        {
-                            clipPath: [
-                                `circle(0px at ${x}px ${y}px)`,
-                                `circle(${endRadius}px at ${x}px ${y}px)`
-                            ]
-                        },
-                        {
-                            duration: 600,
-                            easing: 'cubic-bezier(0.34, 1.2, 0.64, 1)', 
-                            pseudoElement: '::view-transition-new(root)'
-                        }
-                    );
-
-                    animation.onfinish = () => {
-                        document.documentElement.classList.remove('vt-active');
-                    };
-                });
-                
-                transition.finished.finally(() => {
-                    document.documentElement.classList.remove('vt-active');
-                });
-            });
-        }
+// Tab switching
+document.querySelectorAll('.n-tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        document.querySelectorAll('.n-tab').forEach(b=>b.classList.remove('on'));
+        document.querySelectorAll('.n-panel').forEach(p=>p.classList.remove('on'));
+        btn.classList.add('on');
+        document.getElementById(btn.dataset.p).classList.add('on');
     });
+});
+// Countdown
+document.querySelectorAll('[data-deadline]').forEach(el=>{
+    const t=()=>{
+        const diff=Math.max(0,new Date(el.dataset.deadline)-Date.now());
+        const f=n=>String(Math.floor(n)).padStart(2,'0');
+        el.querySelector('[data-days]').textContent=f(diff/864e5);
+        el.querySelector('[data-hours]').textContent=f((diff%864e5)/36e5);
+        el.querySelector('[data-mins]').textContent=f((diff%36e5)/6e4);
+        el.querySelector('[data-secs]').textContent=f((diff%6e4)/1e3);
+    };
+    t();setInterval(t,1000);
+});
+if(window.lucide)lucide.createIcons();
 </script>
 {% endblock %}

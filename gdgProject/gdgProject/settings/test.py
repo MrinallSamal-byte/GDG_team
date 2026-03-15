@@ -38,7 +38,15 @@ LOGGING = {
 }
 
 # ── Media ─────────────────────────────────────────────────────────────────────
-DEFAULT_FILE_STORAGE = "django.core.files.storage.InMemoryStorage"
+# Use the Django 4.2+ STORAGES dict instead of the deprecated DEFAULT_FILE_STORAGE.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.InMemoryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # ── Misc ──────────────────────────────────────────────────────────────────────
 DEBUG = False

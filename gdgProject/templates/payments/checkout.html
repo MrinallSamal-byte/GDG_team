@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}CampusArena | Pay — {{ event.title }}{% endblock %}
+{% block extra_css %}<style>.main-content{max-width:500px!important}</style>{% endblock %}
+{% block content %}
+{% include 'includes/_n_page.html' %}
+
+<div style="text-align:center;padding:2rem 0 1.5rem;" class="n-reveal">
+    <div style="font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.75rem;">PAYMENT</div>
+    <h1 style="font-size:1.4rem;font-weight:800;letter-spacing:-.03em;margin:0 0 .35rem;">Complete Payment</h1>
+    <p style="color:var(--muted);font-size:.88rem;">Secure your spot for <strong style="color:var(--text);">{{ event.title }}</strong></p>
+</div>
+
+<div style="border:1px solid var(--border);overflow:hidden;margin-bottom:1px;" class="n-reveal n-d1">
+    <div style="padding:.85rem 1.1rem;border-bottom:1px solid var(--border);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);">Order Summary</div>
+    <div style="padding:1rem 1.1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.82rem;color:var(--muted);">Event</span><span style="font-size:.82rem;font-weight:600;">{{ event.title }}</span></div>
+    <div style="padding:1rem 1.1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.82rem;color:var(--muted);">Registration ID</span><span style="font-size:.82rem;font-family:var(--font-mono);font-weight:700;">{{ registration.registration_id }}</span></div>
+    <div style="padding:1.25rem 1.1rem;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:.82rem;color:var(--muted);">Amount</span><span style="font-family:var(--font-mono);font-size:1.6rem;font-weight:700;color:var(--primary);">₹{{ amount_display }}</span></div>
+</div>
+
+<div style="border:1px solid var(--border);padding:1.25rem;" class="n-reveal n-d2">
+    <button id="rzp-pay-btn" style="width:100%;padding:.85rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:.4rem;margin-bottom:.85rem;">
+        <i data-lucide="lock" style="width:14px;height:14px;"></i> Pay ₹{{ amount_display }} Securely
+    </button>
+    <div style="display:flex;align-items:center;justify-content:center;gap:.4rem;font-size:.75rem;color:var(--muted);">
+        <i data-lucide="shield-check" style="width:13px;height:13px;"></i> Powered by Razorpay · 256-bit SSL
+    </div>
+</div>
+
+<form id="rzp-form" action="{% url 'payments:callback' %}" method="POST" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="razorpay_order_id" id="rzp-oid">
+    <input type="hidden" name="razorpay_payment_id" id="rzp-pid">
+    <input type="hidden" name="razorpay_signature" id="rzp-sig">
+</form>
+{% endblock %}
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+    var rzp=new Razorpay({
+        key:"{{ razorpay_key }}",amount:"{{ amount_paise }}",currency:"INR",
+        name:"CampusArena",description:"{{ event.title }}",order_id:"{{ razorpay_order_id }}",
+        prefill:{name:"{{ registration.user.get_full_name|default:registration.user.username }}",email:"{{ registration.user.email }}"},
+        theme:{color:"#FF0000"},
+        handler:function(r){
+            document.getElementById('rzp-oid').value=r.razorpay_order_id;
+            document.getElementById('rzp-pid').value=r.razorpay_payment_id;
+            document.getElementById('rzp-sig').value=r.razorpay_signature;
+            document.getElementById('rzp-form').submit();
+        }
+    });
+    document.getElementById('rzp-pay-btn').addEventListener('click',function(){
+        this.disabled=true;this.textContent='Opening payment…';rzp.open();
+    });
+});
+</script>
+{% endblock %}

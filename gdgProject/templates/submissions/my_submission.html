@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | My Submission — {{ event.title }}{% endblock %}
+
+{% block content %}
+<section class="section" style="max-width:680px;margin:0 auto;">
+    <div class="section-head reveal">
+        <h1><i data-lucide="file-code-2"></i> My Submission</h1>
+        <p class="muted">{{ event.title }}{% if team %} · <strong>{{ team.name }}</strong>{% endif %}</p>
+    </div>
+
+    {% if submission %}
+    <article class="surface reveal" style="margin-bottom:1.25rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem;">
+            <h2 style="margin:0;">{{ submission.title }}</h2>
+            <span class="status {% if submission.status == 'submitted' or submission.status == 'reviewed' %}open{% else %}closing{% endif %}">
+                {% if submission.status == 'submitted' %}<i data-lucide="send"></i> Submitted
+                {% elif submission.status == 'reviewed' %}<i data-lucide="check-circle"></i> Reviewed
+                {% elif submission.status == 'disqualified' %}<i data-lucide="x-circle"></i> Disqualified
+                {% else %}<i data-lucide="file-edit"></i> Draft
+                {% endif %}
+            </span>
+        </div>
+
+        {% if submission.description %}
+        <p style="margin:.5rem 0 1rem;">{{ submission.description }}</p>
+        {% endif %}
+
+        <dl class="info-grid">
+            {% if submission.project_url %}
+            <dt><i data-lucide="github"></i> Project</dt>
+            <dd><a href="{{ submission.project_url }}" target="_blank" rel="noopener">{{ submission.project_url }}</a></dd>
+            {% endif %}
+
+            {% if submission.presentation_url %}
+            <dt><i data-lucide="presentation"></i> Slides</dt>
+            <dd><a href="{{ submission.presentation_url }}" target="_blank" rel="noopener">Open presentation</a></dd>
+            {% endif %}
+
+            {% if submission.file_upload %}
+            <dt><i data-lucide="paperclip"></i> File</dt>
+            <dd><a href="{{ submission.file_upload.url }}" target="_blank">Download attachment</a></dd>
+            {% endif %}
+
+            {% if submission.submitted_at %}
+            <dt><i data-lucide="clock"></i> Submitted</dt>
+            <dd>{{ submission.submitted_at|date:"N j, Y — g:i A" }}</dd>
+            {% endif %}
+
+            {% if submission.score is not None %}
+            <dt><i data-lucide="star"></i> Score</dt>
+            <dd><strong>{{ submission.score }}</strong></dd>
+            {% endif %}
+        </dl>
+
+        {% if submission.judge_notes %}
+        <div style="margin-top:1rem;padding:.75rem;background:var(--surface-2);border-radius:var(--radius-md);border-left:3px solid var(--primary);">
+            <p class="muted" style="font-size:.8rem;margin:0 0 .3rem;text-transform:uppercase;letter-spacing:.05em;">Judge Notes</p>
+            <p style="margin:0;">{{ submission.judge_notes }}</p>
+        </div>
+        {% endif %}
+    </article>
+
+    <div class="btn-row reveal">
+        <a href="{% url 'events:event_detail' event.id %}" class="btn-secondary">
+            <i data-lucide="arrow-left"></i> Back to Event
+        </a>
+        <a href="{% url 'submissions:submit' event.id %}" class="btn-primary">
+            <i data-lucide="edit-2"></i> Edit Submission
+        </a>
+    </div>
+
+    {% else %}
+    <article class="surface reveal">
+        <div class="empty-state">
+            <i data-lucide="upload-cloud"></i>
+            <p>You haven't submitted a project for this event yet.</p>
+            <a href="{% url 'submissions:submit' event.id %}" class="btn-primary btn-small">
+                <i data-lucide="plus"></i> Create Submission
+            </a>
+        </div>
+    </article>
+    {% endif %}
+</section>
+{% endblock %}

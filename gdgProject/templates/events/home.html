@@ -1,1203 +1,792 @@
 {% extends 'base.html' %}
-
-{% block title %}CampusArena | Discover Events{% endblock %}
+{% block title %}CampusArena{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* ==========================================================================
-       GLOBAL LAYOUT FIXES
-       ========================================================================== */
-    * { box-sizing: border-box; }
-    
-    body, html {
-        overflow-x: hidden;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-    }
+/* ============================================================
+   HOME — Nothing Phone UI
+   ============================================================ */
 
-    /* ==========================================================================
-       GLOBAL REVEAL ANIMATIONS
-       ========================================================================== */
-    .reveal {
-        opacity: 0;
-        transform: translateY(40px);
-        transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    
-    .reveal.active { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
-
-    .delay-1 { transition-delay: 0.1s; }
-    .delay-2 { transition-delay: 0.2s; }
-    .delay-3 { transition-delay: 0.3s; }
-    .delay-4 { transition-delay: 0.4s; }
-
-    /* ==========================================================================
-       EVENT CARDS HOVER (THE "POP" EFFECT)
-       ========================================================================== */
-    .event-card {
-        transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.45s ease, border-color 0.4s ease !important;
-    }
-
-    .event-card:hover {
-        transform: translateY(-8px) scale(1.015) !important;
-        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18) !important;
-        border-color: var(--primary, #8b5cf6) !important;
-        z-index: 5;
-    }
-
-    /* ==========================================================================
-       CARD FOOTER & BADGE REFACTOR
-       ========================================================================== */
-    .event-card-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        margin-top: auto;
-        padding-top: 1.25rem;
-        border-top: 1px solid var(--border-color, #e5e7eb);
-    }
-
-    .footer-left {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        flex-wrap: wrap;
-    }
-
-    .footer-left .status {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        padding: 0.35rem 0.65rem;
-        border-radius: 50px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        white-space: nowrap;
-        border: 1px solid transparent;
-        transition: all 0.15s ease;
-    }
-
-    .footer-left .status.open {
-        background: rgba(16, 185, 129, 0.1);
-        color: #10b981;
-        border-color: rgba(16, 185, 129, 0.2);
-    }
-
-    .footer-left .status.closed {
-        background: rgba(239, 68, 68, 0.1);
-        color: #ef4444;
-        border-color: rgba(239, 68, 68, 0.2);
-    }
-
-    .footer-left .status:not(.open):not(.closed) {
-        background: rgba(59, 130, 246, 0.1);
-        color: #3b82f6;
-        border-color: rgba(59, 130, 246, 0.2);
-    }
-
-    .prize-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        padding: 0.35rem 0.65rem;
-        border-radius: 50px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        white-space: nowrap;
-        background: rgba(245, 158, 11, 0.1);
-        color: #f59e0b;
-        border: 1px solid rgba(245, 158, 11, 0.2);
-        transition: all 0.15s ease;
-    }
-
-    .prize-badge.high-prize {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        color: #ffffff;
-        border: 1px solid transparent;
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
-    }
-
-    .btn-closed {
-        opacity: 0.6;
-        cursor: not-allowed;
-        background: var(--bg-input, transparent);
-        border: 1px solid var(--border-color);
-        color: var(--text-muted);
-        padding: 0.5rem 1rem;
-        border-radius: var(--radius-sm, 8px);
-        font-size: 0.85rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-    }
-
-    [data-theme="dark"] .event-card-footer {
-        border-top-color: var(--border-color, #2a2a32);
-    }
-
-    /* ==========================================================================
-       HOW IT WORKS & WHY CHOOSE US SECTIONS
-       ========================================================================== */
-    .feature-section {
-        margin-top: 80px;
-        margin-bottom: 40px;
-    }
-    
-    .feature-section.bordered {
-        padding-top: 40px;
-        border-top: 1px solid var(--border-color, #e5e7eb);
-    }
-    
-    .feature-header {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 36px;
-    }
-    
-    .feature-header.center {
-        justify-content: center;
-        text-align: center;
-        align-items: center;
-    }
-    
-    .feature-header h2 { 
-        font-size: 2.8rem; 
-        font-weight: 800; 
-        margin-bottom: 8px;
-        line-height: 1.2;
-        color: var(--text-main, inherit);
-    }
-    
-    .feature-header p { 
-        font-size: 1.2rem; 
-        color: var(--text-muted, #9ba1a6); 
-        font-weight: 500; 
-    }
-
-    .how-it-works-grid {
-        display: grid; 
-        grid-template-columns: repeat(3, 1fr); 
-        gap: 40px; 
-        margin-top: 50px;
-    }
-    
-    .step-card { text-align: center; padding: 20px; }
-    
-    .step-icon {
-        width: 80px; height: 80px; margin: 0 auto 24px;
-        background: var(--surface, var(--bg-surface, #1a1b23)); 
-        border: 2px solid var(--border, var(--border-color, rgba(255,255,255,0.08)));
-        border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-    
-    .step-card:hover .step-icon {
-        border-color: var(--primary, #8b5cf6); 
-        transform: scale(1.1);
-        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.2);
-    }
-    
-    .step-icon i { width: 36px; height: 36px; color: var(--primary, #8b5cf6); }
-    .step-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 12px; color: var(--text-main, inherit); }
-    .step-desc { color: var(--text-muted, #9ba1a6); font-size: 1rem; line-height: 1.6; }
-
-    .why-us-grid {
-        display: grid; 
-        grid-template-columns: repeat(4, 1fr); 
-        gap: 20px; 
-        margin-top: 30px;
-    }
-    
-    .why-card {
-        background: var(--surface, var(--bg-surface, #1a1b23)); 
-        border: 1px solid var(--border, var(--border-color, rgba(255,255,255,0.08)));
-        padding: 28px 20px; 
-        border-radius: var(--radius-md, 12px); 
-        transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.4s ease, box-shadow 0.45s ease;
-    }
-    
-    .why-card:hover { 
-        border-color: var(--primary, #8b5cf6); 
-        transform: translateY(-6px) scale(1.015);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-    }
-    
-    .why-icon {
-        width: 44px; height: 44px; background: rgba(139, 92, 246, 0.1); 
-        border-radius: var(--radius-sm, 8px); display: flex; align-items: center; justify-content: center;
-        margin-bottom: 20px;
-    }
-    
-    .why-icon i { color: var(--primary, #8b5cf6); width: 22px; height: 22px; }
-    .why-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; color: var(--text-main, inherit); }
-    .why-desc { color: var(--text-muted, #9ba1a6); font-size: 0.9rem; line-height: 1.5; }
-
-    .live-dot { width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; display: inline-block; position: relative; margin-right: 8px; margin-bottom: 2px;}
-    .live-dot::after { content: ''; position: absolute; top: -4px; left: -4px; width: 16px; height: 16px; background-color: rgba(16, 185, 129, 0.4); border-radius: 50%; animation: pulse-green 2s infinite; }
-    @keyframes pulse-green { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
-
-    /* ==========================================================================
-       HERO CARD
-       ========================================================================== */
-    .hero { align-items: start !important; }
-    .hero-card { align-self: start !important; display: flex !important; flex-direction: column !important; }
-
-    .hero-prize-row {
-        display: flex; align-items: center; gap: .5rem; padding: .55rem .75rem;
-        background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2);
-        border-radius: 8px; margin-top: .5rem; font-size: .82rem; font-weight: 700; color: #f59e0b;
-    }
-
-    /* ==========================================================================
-       MOBILE OPTIMIZATION (max-width: 768px)
-       ========================================================================== */
-    
-    /* Default Hidden Desktop Classes */
-    .mobile-only { display: none !important; }
-
-    @media (max-width: 1200px) {
-        .how-it-works-grid { gap: 15px; }
-        .why-us-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    @media (max-width: 768px) {
-        /* Enable Mobile Elements */
-        .mobile-only { display: flex !important; }
-
-        /* 1. Navbar Mobile Setup */
-        /* Hide default base.html navbar to prevent duplicate navs */
-        body > header, .navbar:not(.mobile-bottom-nav) { display: none !important; }
-
-        .mobile-top-nav {
-            position: fixed; top: 0; left: 0; right: 0;
-            height: 60px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border-color);
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 1.25rem;
-            z-index: 1000;
-        }
-
-        .mobile-brand {
-            font-size: 1.2rem;
-            font-weight: 800;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            color: var(--text-main);
-        }
-
-        .mobile-actions { display: flex; align-items: center; gap: 1rem; }
-        .mobile-icon-btn { 
-            background: none; border: none; padding: 0.25rem;
-            color: var(--text-main); cursor: pointer;
-            display: flex; align-items: center; position: relative;
-        }
-
-        /* 2. Hamburger Menu Drawer */
-        .mobile-drawer-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
-            z-index: 1001; opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease;
-            display: block !important;
-        }
-
-        .mobile-drawer-overlay.open { opacity: 1; pointer-events: auto; }
-
-        .mobile-drawer {
-            position: fixed; top: 0; right: -85%;
-            width: 75%; max-width: 320px; height: 100vh;
-            background: var(--surface); z-index: 1002;
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex !important; flex-direction: column;
-            box-shadow: -4px 0 24px rgba(0,0,0,0.5); overflow-y: auto;
-        }
-
-        .mobile-drawer.open { right: 0; }
-
-        .drawer-header {
-            padding: 2.5rem 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex; flex-direction: column;
-        }
-
-        .drawer-header h4 {
-            margin: 0 0 1rem 0; font-size: 0.8rem; text-transform: uppercase; 
-            letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700;
-        }
-
-        .profile-card {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem; background: var(--bg-input, rgba(128,128,128,0.05));
-            border: 1px solid var(--border-color); border-radius: 16px;
-            text-decoration: none; transition: all 0.2s;
-        }
-
-        .profile-card:active { background: var(--border-color); }
-
-        .drawer-avatar {
-            width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
-            background: linear-gradient(135deg, var(--primary, #8b5cf6), #6d28d9); color: white;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 1.25rem; font-weight: bold; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
-        }
-
-        .drawer-user-info { flex-grow: 1; }
-        .drawer-user-info h3 { margin: 0 0 0.2rem 0; font-size: 1.05rem; color: var(--text-main); font-weight: 700; }
-        .drawer-user-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.2rem; }
-
-        .drawer-nav { padding: 1.5rem 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; flex-grow: 1; }
-        
-        .drawer-link {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem 1.15rem; color: var(--text-main);
-            text-decoration: none; font-size: 1rem; font-weight: 600;
-            border-radius: 14px; transition: all 0.2s;
-            border: 1px solid var(--border-color);
-            background: var(--surface);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-
-        .drawer-link:active { transform: scale(0.98); background: var(--bg-input, rgba(128,128,128,0.05)); }
-        .drawer-link i { color: var(--primary, #8b5cf6); width: 20px; height: 20px; }
-        .drawer-divider { height: 1px; background: var(--border-color); margin: 0.5rem 0; }
-        
-        .drawer-logout { 
-            border-color: rgba(239, 68, 68, 0.3) !important; 
-            background: rgba(239, 68, 68, 0.05) !important; 
-            color: #ef4444 !important; 
-        }
-        .drawer-logout i { color: #ef4444 !important; }
-
-        /* 3. Floating Bottom Nav */
-        .mobile-bottom-nav {
-            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 50px;
-            padding: 0.5rem 1rem; gap: 0.5rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15); z-index: 1000;
-        }
-
-        .bottom-nav-item {
-            display: flex; align-items: center; gap: 0.5rem;
-            padding: 0.6rem 1rem; border-radius: 30px;
-            color: var(--text-muted);
-            text-decoration: none; font-size: 0.95rem; font-weight: 600;
-        }
-
-        .bottom-nav-item.active { background: rgba(139, 92, 246, 0.15); color: var(--primary, #8b5cf6); }
-        .bottom-nav-item i { width: 18px; height: 18px; }
-
-        /* Dashboard Layout Rules Fixes */
-        body { padding-bottom: 100px; padding-top: 60px; /* space for fixed navs */ }
-        
-        /* HERO SECTION MOBILE PROFESSIONAL LAYOUT */
-        .hero { 
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            text-align: center !important;
-            margin-top: 20px !important; 
-            padding-top: 1rem !important;
-        }
-
-        .hero > div:first-child {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        .hero p.eyebrow {
-            justify-content: center;
-            margin-bottom: 1.25rem;
-        }
-
-        .hero h1 {
-            font-size: 2.6rem !important;
-            line-height: 1.15 !important;
-            margin-bottom: 1.25rem !important;
-            text-align: center !important;
-        }
-
-        .hero p.muted {
-            text-align: center !important;
-            margin: 0 auto 2rem auto !important;
-            font-size: 1.05rem !important;
-            line-height: 1.6 !important;
-        }
-
-        .hero .search-wrap {
-            display: flex !important;
-            flex-direction: column !important;
-            width: 100% !important;
-            background: transparent !important;
-            border: none !important;
-            padding: 0 !important;
-            gap: 0.75rem !important;
-        }
-
-        .hero .search-wrap input {
-            width: 100% !important;
-            padding: 1rem 1.25rem !important;
-            border-radius: 12px !important;
-            border: 1px solid var(--border-color) !important;
-            background: var(--surface) !important;
-            color: var(--text-main) !important;
-            font-size: 1rem !important;
-        }
-
-        .hero .search-wrap button {
-            width: 100% !important;
-            padding: 1rem !important;
-            border-radius: 12px !important;
-            justify-content: center !important;
-            font-size: 1.05rem !important;
-        }
-
-        /* Fix the weird vertical stacking of stats on mobile */
-        .hero .stats-row {
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: space-around !important;
-            width: 100% !important;
-            margin-top: 3rem !important;
-            background: var(--surface) !important;
-            border: 1px solid var(--border-color) !important;
-            border-radius: 16px !important;
-            padding: 1.5rem 0.5rem !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
-        }
-
-        .hero .stats-row div {
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            border: none !important;
-            background: transparent !important;
-            padding: 0 !important;
-            flex: 1 !important;
-        }
-
-        .hero .stats-row div strong {
-            font-size: 1.4rem !important;
-            color: var(--text-main) !important;
-            margin-bottom: 0.2rem !important;
-        }
-
-        .hero .stats-row div span {
-            font-size: 0.75rem !important;
-            color: var(--text-muted) !important;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .hero .hero-card { 
-            width: 100% !important;
-            align-self: center !important;
-            margin-top: 3.5rem !important;
-            text-align: left !important;
-        }
-
-        /* Rest of the layout fixes */
-        .how-it-works-grid, .why-us-grid { grid-template-columns: 1fr; }
-        .feature-header.center { align-items: flex-start; text-align: left; }
-
-        /* Collapse Event Grids neatly to exactly Two-Columns */
-        .card-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 1rem !important;
-        }
-        
-        /* Increase padding for visual breathability */
-        .event-card { padding: 1.25rem !important; }
-        
-        .event-card-body h3 { font-size: 1.05rem; white-space: normal; line-height: 1.3; }
-        .event-meta span { font-size: 0.75rem; }
-
-        /* Cleanly stack the card footer vertically on mobile inside 2 cols */
-        .event-card-footer {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 0.75rem;
-        }
-        .footer-left { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
-        .event-card .btn-primary, .event-card .btn-closed { width: 100%; justify-content: center; }
-
-        /* More Vertical Spacing Between Sections */
-        .section, .feature-section {
-            margin-top: 90px !important;
-            margin-bottom: 70px !important;
-        }
-    }
-
-    /* Fallback if phone is exceptionally thin (under 400px), drop to 1 col so text doesn't crush */
-    @media (max-width: 400px) {
-        .card-grid { grid-template-columns: 1fr !important; }
-    }
-
-       .drawer-header {
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--border-color);
+/* ── Full-page dot grid (darker, denser on home) ─────────────── */
+.home-dot-grid {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background-image: radial-gradient(circle, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size: 20px 20px;
 }
 
-.drawer-section-title {
-    font-size: 0.72rem;
+/* Single red-glow orb — nothing phone has minimal glow */
+.home-glow {
+    position: fixed; pointer-events: none; z-index: -1;
+    width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,0,0,.04) 0%, transparent 70%);
+    top: -200px; right: -100px;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────── */
+.n-hero {
+    padding: 4.5rem 0 3.5rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+}
+
+/* Vertical label strip on the left — Nothing OS signature */
+.n-hero-label {
+    display: flex; align-items: center; gap: .55rem;
+    margin-bottom: 1.5rem;
+}
+.n-hero-label-line {
+    width: 28px; height: 1px; background: var(--primary);
+}
+.n-hero-label span {
+    font-size: .68rem; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--muted);
+}
+
+.n-hero-grid {
+    display: grid; grid-template-columns: 1fr 380px; gap: 4rem; align-items: center;
+}
+
+.n-hero-title {
+    font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 800; letter-spacing: -.05em; line-height: 1.02;
+    margin: 0 0 1.25rem;
+}
+.n-hero-title .n-red { color: var(--primary); }
+
+.n-hero-sub {
+    font-size: 1rem; color: var(--muted); line-height: 1.7;
+    max-width: 460px; margin-bottom: 2rem; font-weight: 400;
+}
+
+/* Nothing-style search: no border-radius, square */
+.n-search {
+    display: flex; border: 1px solid var(--border);
+    background: var(--surface); overflow: hidden;
+    transition: border-color .2s;
+    max-width: 480px;
+}
+.n-search:focus-within { border-color: var(--primary); }
+.n-search input {
+    flex: 1; border: none; background: transparent; color: var(--text);
+    font-size: .92rem; padding: .85rem 1rem; outline: none; border-radius: 0;
+}
+.n-search input::placeholder { color: var(--muted-soft); font-size: .88rem; }
+.n-search button {
+    background: var(--primary); color: #fff; border: none;
+    padding: .85rem 1.1rem; cursor: pointer;
+    display: flex; align-items: center; gap: .35rem;
+    font-size: .85rem; font-weight: 700; letter-spacing: .03em;
+    transition: background .15s; white-space: nowrap;
+}
+.n-search button:hover { background: var(--primary-2); }
+
+/* Stat strip — horizontal line of numbers */
+.n-stats {
+    display: flex; gap: 0; margin-top: 2.5rem;
+    border: 1px solid var(--border); border-radius: 0;
+    max-width: 480px; overflow: hidden;
+}
+.n-stat {
+    flex: 1; padding: .9rem 1rem; border-right: 1px solid var(--border);
+    text-align: center;
+}
+.n-stat:last-child { border-right: none; }
+.n-stat strong {
+    display: block; font-family: var(--font-mono);
+    font-size: 1.45rem; font-weight: 700; color: var(--text);
+    letter-spacing: -.03em;
+}
+.n-stat span {
+    font-size: .65rem; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .12em;
+}
+
+/* Featured card — right side of hero */
+.n-featured {
+    border: 1px solid var(--border); background: var(--surface);
+    overflow: hidden; position: relative;
+}
+
+/* Top accent bar */
+.n-featured::before {
+    content: ''; display: block; height: 2px;
+    background: var(--primary);
+}
+
+.n-featured-inner { padding: 1.4rem; }
+
+.n-featured-tag {
+    font-size: .65rem; font-weight: 700; letter-spacing: .15em;
+    text-transform: uppercase; color: var(--primary); margin-bottom: .75rem;
+    display: flex; align-items: center; gap: .5rem;
+}
+.n-featured-tag::after {
+    content: ''; flex: 1; height: 1px; background: rgba(255,0,0,.2);
+}
+
+.n-featured-title { font-size: 1.05rem; font-weight: 700; line-height: 1.3; margin: 0 0 .85rem; }
+
+.n-featured-rows { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+.n-featured-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: .8rem; padding: .35rem 0; border-bottom: 1px solid var(--border-soft);
+}
+.n-featured-row:last-child { border-bottom: none; }
+.n-featured-row span:first-child { color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .08em; font-weight: 700; }
+.n-featured-row span:last-child  { color: var(--text); font-weight: 500; font-family: var(--font-mono); font-size: .78rem; }
+
+.n-progress { margin-bottom: 1rem; }
+.n-progress-bar { height: 2px; background: var(--surface-3); }
+.n-progress-fill { height: 100%; background: var(--primary); transition: width .8s; }
+.n-progress-label { display: flex; justify-content: space-between; margin-top: .35rem; font-size: .66rem; color: var(--muted); font-family: var(--font-mono); }
+
+.n-featured-cta {
+    display: flex; gap: .5rem;
+}
+.n-btn-primary {
+    flex: 1; text-align: center; padding: .75rem; background: var(--primary);
+    color: #fff; font-size: .85rem; font-weight: 700; letter-spacing: .03em;
+    border: 1px solid var(--primary); transition: background .15s;
+    display: flex; align-items: center; justify-content: center; gap: .35rem;
+}
+.n-btn-primary:hover { background: var(--primary-2); }
+.n-btn-outline {
+    padding: .75rem 1rem; background: transparent;
+    color: var(--muted); font-size: .85rem; font-weight: 500;
+    border: 1px solid var(--border); transition: all .15s;
+    display: flex; align-items: center;
+}
+.n-btn-outline:hover { border-color: var(--border-hover); color: var(--text); }
+
+/* ── Section header — Nothing style ──────────────────────────── */
+.n-section { padding: 2.5rem 0; border-bottom: 1px solid var(--border); }
+.n-section:last-of-type { border-bottom: none; }
+
+.n-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.75rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: .75rem;
+}
+.n-section-title {
+    display: flex; align-items: center; gap: .75rem;
+}
+.n-section-number {
+    font-family: var(--font-mono); font-size: .68rem; font-weight: 700;
+    color: var(--primary); letter-spacing: .1em; opacity: .6;
+}
+.n-section-name {
+    font-size: .75rem; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--text);
+}
+
+/* ── Filter bar ───────────────────────────────────────────────── */
+.n-filters { display: flex; flex-wrap: wrap; gap: .3rem; }
+.n-chip {
+    padding: .3rem .75rem; border: 1px solid var(--border);
+    color: var(--muted); font-size: .75rem; font-weight: 600;
+    cursor: pointer; transition: all .15s; text-decoration: none;
+    display: inline-block; letter-spacing: .03em;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-    margin: 10px 12px;
+}
+.n-chip:hover  { border-color: var(--border-hover); color: var(--text); }
+.n-chip.active { border-color: var(--primary); color: var(--primary); background: var(--primary-glow); }
+
+.n-sort select {
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--muted); font-size: .75rem; padding: .3rem .65rem;
+    font-family: var(--font); cursor: pointer; border-radius: 0;
+    letter-spacing: .03em;
 }
 
-.drawer-link {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0.75rem 0.9rem;
-    border-radius: 10px;
-    text-decoration: none;
-    color: var(--text-main);
-    font-weight: 500;
-    transition: background 0.2s ease;
+/* ── Event card grid — Nothing flat grid ──────────────────────── */
+.n-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+    border: 1px solid var(--border);
+    gap: 0;
+}
+.n-card-grid .n-ev-card:not(:last-child) { border-right: 1px solid var(--border); }
+/* every 3rd card starts a new row and loses right border on last in row — simplified via outline approach */
+.n-ev-card {
+    background: var(--surface); padding: 1.15rem;
+    display: flex; flex-direction: column; gap: .55rem;
+    transition: background .15s; position: relative;
+    border-bottom: 1px solid var(--border);
+}
+.n-ev-card:hover { background: var(--surface-2); }
+
+/* Red left accent on hover */
+.n-ev-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--primary); transform: scaleY(0); transform-origin: bottom;
+    transition: transform .25s var(--ease-smooth);
+}
+.n-ev-card:hover::before { transform: scaleY(1); }
+
+.n-ev-cat {
+    font-size: .62rem; font-weight: 700; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--primary);
+    display: flex; align-items: center; gap: .4rem;
+}
+.n-ev-cat::after { content: ''; flex: 1; height: 1px; background: rgba(255,0,0,.15); }
+
+.n-ev-title { font-size: .97rem; font-weight: 600; line-height: 1.35; }
+
+.n-ev-meta { display: flex; flex-wrap: wrap; gap: .3rem; }
+.n-ev-tag {
+    font-size: .7rem; color: var(--muted); border: 1px solid var(--border-soft);
+    padding: .18rem .5rem; display: inline-flex; align-items: center; gap: .2rem;
+    font-family: var(--font-mono); letter-spacing: .02em;
+}
+.n-ev-tag i { width: 10px; height: 10px; }
+
+.n-ev-progress { margin-top: .15rem; }
+.n-ev-bar { height: 1px; background: var(--surface-3); position: relative; overflow: hidden; }
+.n-ev-bar-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--primary); transition: width .8s; }
+.n-ev-bar-label { display: flex; justify-content: space-between; margin-top: .3rem; font-size: .62rem; color: var(--muted); font-family: var(--font-mono); }
+
+.n-ev-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .4rem; margin-top: auto; padding-top: .65rem;
+    border-top: 1px solid var(--border-soft); flex-wrap: wrap;
+}
+.n-ev-status {
+    font-size: .65rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; display: flex; align-items: center; gap: .25rem;
+    padding: .22rem .55rem; border: 1px solid;
+}
+.n-ev-status.open   { color: var(--ok);     border-color: rgba(0,230,118,.25); background: var(--ok-soft); }
+.n-ev-status.closed { color: var(--muted);  border-color: var(--border); }
+.n-ev-status.other  { color: var(--warn);   border-color: rgba(255,179,0,.25); background: var(--warn-soft); }
+.n-ev-prize {
+    font-size: .68rem; font-weight: 700; font-family: var(--font-mono);
+    color: var(--warn); letter-spacing: .03em;
+}
+.n-ev-cta {
+    font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: .35rem .7rem; background: var(--primary); color: #fff; border: none;
+    cursor: pointer; transition: background .15s; text-decoration: none;
+    display: inline-flex; align-items: center; gap: .3rem;
+}
+.n-ev-cta:hover { background: var(--primary-2); }
+.n-ev-cta-closed {
+    font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: .35rem .7rem; color: var(--muted-soft); border: 1px solid var(--border);
+    cursor: not-allowed; display: inline-flex; align-items: center; gap: .3rem;
 }
 
-.drawer-link:hover {
-    background: rgba(255,255,255,0.05);
+/* ── How it works ─────────────────────────────────────────────── */
+.n-how-grid {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    border: 1px solid var(--border); gap: 0;
 }
-
-.drawer-link i {
-    width: 18px;
-    height: 18px;
+.n-how-step {
+    padding: 2rem 1.5rem; border-right: 1px solid var(--border);
+    transition: background .15s; position: relative;
 }
-
-.logout-section {
-    margin-top: 10px;
+.n-how-step:last-child { border-right: none; }
+.n-how-step:hover { background: var(--surface-2); }
+.n-how-num {
+    font-family: var(--font-mono); font-size: .65rem; font-weight: 700;
+    color: var(--primary); letter-spacing: .12em; margin-bottom: 1rem; display: block;
 }
-
-.drawer-logout {
-    color: #ef4444;
+.n-how-icon {
+    width: 40px; height: 40px; border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text); margin-bottom: 1rem;
+    transition: border-color .15s, color .15s;
 }
+.n-how-step:hover .n-how-icon { border-color: var(--primary); color: var(--primary); }
+.n-how-icon i { width: 18px; height: 18px; }
+.n-how-title { font-size: .92rem; font-weight: 700; margin: 0 0 .5rem; }
+.n-how-desc  { font-size: .82rem; color: var(--muted); line-height: 1.65; }
 
-.drawer-logout:hover {
-    background: rgba(239,68,68,0.1);
+/* ── Why grid ─────────────────────────────────────────────────── */
+.n-why-grid {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    border: 1px solid var(--border); gap: 0;
 }
+.n-why-item {
+    padding: 1.5rem 1.25rem; border-right: 1px solid var(--border);
+    transition: background .15s; position: relative; overflow: hidden;
+}
+.n-why-item:last-child { border-right: none; }
+.n-why-item:hover { background: var(--surface-2); }
+/* Bottom accent on hover */
+.n-why-item::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: var(--primary); transform: scaleX(0); transform-origin: left;
+    transition: transform .25s var(--ease-smooth);
+}
+.n-why-item:hover::after { transform: scaleX(1); }
+.n-why-icon { color: var(--primary); margin-bottom: .85rem; }
+.n-why-icon i { width: 20px; height: 20px; }
+.n-why-title { font-size: .88rem; font-weight: 700; margin: 0 0 .4rem; text-transform: uppercase; letter-spacing: .04em; }
+.n-why-desc  { font-size: .8rem; color: var(--muted); line-height: 1.6; }
 
+/* Live dot — Nothing style, subtle */
+.n-live-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--ok);
+    display: inline-block; margin-right: .4rem; position: relative;
+    vertical-align: middle;
+}
+.n-live-dot::after {
+    content: ''; position: absolute; top: -3px; left: -3px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: transparent; border: 1px solid var(--ok);
+    animation: n-ping 2s ease-in-out infinite; opacity: .6;
+}
+@keyframes n-ping { 0% { transform: scale(.5); opacity: .8; } 100% { transform: scale(1.5); opacity: 0; } }
 
+/* ── CTA strip ────────────────────────────────────────────────── */
+.n-cta {
+    border: 1px solid var(--border); background: var(--surface);
+    padding: 3rem 2.5rem; position: relative; overflow: hidden; margin: 2.5rem 0;
+}
+/* Dot-matrix overlay on CTA */
+.n-cta::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(circle, rgba(255,0,0,.05) 1px, transparent 1px);
+    background-size: 18px 18px; pointer-events: none;
+}
+/* Red corner accent */
+.n-cta::after {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 2px; height: 40px; background: var(--primary);
+}
+.n-cta-inner { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap; }
+.n-cta-text h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; margin: 0 0 .35rem; }
+.n-cta-text p  { color: var(--muted); font-size: .88rem; }
+.n-cta-btns { display: flex; gap: .5rem; flex-shrink: 0; }
+
+/* ── Reveal animations ────────────────────────────────────────── */
+.n-reveal {
+    opacity: 0; transform: translateY(16px);
+    transition: opacity .55s var(--ease-smooth), transform .55s var(--motion-spring);
+}
+.n-reveal.n-visible { opacity: 1; transform: translateY(0); }
+.n-d1 { transition-delay: .1s; }
+.n-d2 { transition-delay: .2s; }
+.n-d3 { transition-delay: .3s; }
+.n-d4 { transition-delay: .4s; }
+
+/* ── Mobile nav ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    body > header { display: none !important; }
+    .n-mobile-nav {
+        display: flex !important; position: fixed; top: 0; left: 0; right: 0;
+        height: 56px; background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        align-items: center; justify-content: space-between;
+        padding: 0 1.1rem; z-index: 1000;
+    }
+    .n-mobile-nav .n-brand { font-size: 1rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text); display: flex; align-items: center; gap: .4rem; }
+    .n-mobile-nav .n-brand i { color: var(--primary); }
+    body { padding-top: 56px; padding-bottom: 80px; }
+    .n-hero { padding: 2rem 0 2rem; }
+    .n-hero-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .n-how-grid  { grid-template-columns: 1fr; }
+    .n-how-step  { border-right: none; border-bottom: 1px solid var(--border); }
+    .n-how-step:last-child { border-bottom: none; }
+    .n-why-grid  { grid-template-columns: repeat(2,1fr); }
+    .n-card-grid { grid-template-columns: 1fr; }
+    .n-card-grid .n-ev-card { border-right: none; }
+    .n-cta-inner { flex-direction: column; }
+    .n-cta { padding: 2rem 1.25rem; }
+    .n-mobile-bottom {
+        display: flex !important; position: fixed; bottom: 0; left: 0; right: 0;
+        background: var(--surface); border-top: 1px solid var(--border);
+        padding: .65rem 1.5rem; justify-content: space-around; z-index: 1000;
+    }
+    .n-bottom-item { display: flex; flex-direction: column; align-items: center; gap: .2rem; color: var(--muted); font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; text-decoration: none; transition: color .15s; }
+    .n-bottom-item i { width: 20px; height: 20px; }
+    .n-bottom-item.active { color: var(--primary); }
+    .main-content { padding: 0 !important; }
+    .n-hero, .n-section { padding-left: 3%; padding-right: 3%; }
+}
+@media (min-width: 769px) {
+    .n-mobile-nav, .n-mobile-bottom { display: none !important; }
+}
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- ==========================================================================
-     MOBILE SPECIFIC NAVIGATION LAYERS
-     Visible only on Mobile (<768px). 
-     Note: You can later extract these to base.html if needed globally.
-     ========================================================================== -->
+<!-- Background dot grid + glow -->
+<div class="home-dot-grid" aria-hidden="true"></div>
+<div class="home-glow" aria-hidden="true"></div>
 
-<!-- 1. Top Navbar (Mobile Only) -->
-<div class="mobile-top-nav mobile-only">
-    <a href="{% url 'events:home' %}" class="brand mobile-brand">
-        <i data-lucide="trophy" style="width: 20px; height: 20px;"></i>
-        CampusArena
+<!-- ══════════════════════════════════════════════════════════
+     MOBILE NAV
+     ══════════════════════════════════════════════════════════ -->
+<div class="n-mobile-nav" style="display:none;">
+    <a href="{% url 'events:home' %}" class="n-brand">
+        <i data-lucide="zap" style="width:16px;height:16px;"></i> CampusArena
     </a>
-    <div class="mobile-actions">
-        <button class="mobile-icon-btn" id="mobile-theme-toggle">
-            <i data-lucide="moon"></i>
+    <div style="display:flex;align-items:center;gap:.75rem;">
+        <button id="nm-theme" style="background:none;border:none;color:var(--muted);cursor:pointer;display:flex;">
+            <i data-lucide="sun-moon" style="width:20px;height:20px;"></i>
         </button>
-        <a href="{% url 'dashboard:notifications' %}" class="mobile-icon-btn" style="text-decoration: none;">
-            <i data-lucide="bell"></i>
-            <span style="position: absolute; top: 3px; right: 5px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
+        {% if user.is_authenticated %}
+        <a href="{% url 'dashboard:notifications' %}" style="color:var(--muted);position:relative;display:flex;">
+            <i data-lucide="bell" style="width:20px;height:20px;"></i>
         </a>
-        <button class="mobile-icon-btn" id="hamburger-menu-btn">
-            <i data-lucide="menu"></i>
+        {% endif %}
+        <button id="nm-menu" style="background:none;border:none;color:var(--muted);cursor:pointer;display:flex;">
+            <i data-lucide="align-right" style="width:22px;height:22px;"></i>
         </button>
     </div>
 </div>
 
-<!-- 2. Hamburger Drawer (Mobile Only) -->
-    <div class="mobile-drawer-overlay mobile-only" id="drawer-overlay"></div>
-
-<div class="mobile-drawer mobile-only" id="mobile-drawer">
-        <div class="drawer-header">
-    <h4>Account</h4>
-
+<!-- Mobile slide drawer -->
+<div id="nm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1001;opacity:0;pointer-events:none;transition:opacity .25s;"></div>
+<div id="nm-drawer" style="position:fixed;top:0;right:-100%;width:72%;max-width:280px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:1002;transition:right .28s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:1.5rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--border);">
+        <span style="font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);">Menu</span>
+        <button id="nm-close" style="background:none;border:none;color:var(--muted);cursor:pointer;display:flex;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+    </div>
     {% if user.is_authenticated %}
-
-    <!-- Logged in user -->
-    <a href="{% url 'dashboard:my_profile' %}" class="profile-card">
-        <div class="drawer-avatar">
-            {{ user.first_name|first|upper }}
+    <div style="display:flex;align-items:center;gap:.65rem;padding:.75rem;border:1px solid var(--border);margin-bottom:1rem;">
+        <div style="width:36px;height:36px;background:var(--primary-glow);border:1px solid rgba(255,0,0,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;color:var(--primary);flex-shrink:0;">{{ user.first_name|first|upper|default:"U" }}</div>
+        <div>
+            <div style="font-size:.88rem;font-weight:600;">{{ user.get_full_name|default:"Student" }}</div>
+            <div style="font-size:.72rem;color:var(--muted);">{{ user.email }}</div>
         </div>
-
-        <div class="drawer-user-info">
-            <h3>{{ user.get_full_name|default:"Student User" }}</h3>
-            <p>
-                View Profile
-                <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
-            </p>
-        </div>
-    </a>
-
-    {% else %}
-
-<a href="{% url 'users:login' %}" class="profile-card">
-
-    <div style="
-width:48px;
-height:48px;
-border-radius:50%;
-display:flex;
-align-items:center;
-justify-content:center;
-border:1.5px solid #c0c3c8;
-background:rgba(0,0,0,0.03);
-flex-shrink:0;
-">
-    <i data-lucide="user" style="
-    width:20px;
-    height:20px;
-    color:var(--text-muted);
-    "></i>
-</div>
-
-    <div class="drawer-user-info">
-        <h3>Account</h3>
-        <p>
-            Login to continue
-            <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
-        </p>
     </div>
-
-</a>
-
-{% endif %}
-</div>
-    
-
-    <div class="drawer-nav">
-
-    <!-- DASHBOARD SECTION -->
-    <div class="drawer-section">
-        <p class="drawer-section-title">Dashboard</p>
-
-        <a href="{% url 'dashboard:user_dashboard' %}" class="drawer-link">
-            <i data-lucide="layout-dashboard"></i>
-            <span>Overview</span>
-        </a>
-
-        <a href="#" class="drawer-link">
-            <i data-lucide="calendar"></i>
-            <span>My Events</span>
-        </a>
-
-        <a href="#" class="drawer-link">
-            <i data-lucide="users"></i>
-            <span>My Teams</span>
-        </a>
-
-        <a href="#" class="drawer-link">
-            <i data-lucide="user-plus"></i>
-            <span>Find Teammates</span>
-        </a>
-
-        <a href="#" class="drawer-link">
-            <i data-lucide="clock"></i>
-            <span>Pending Requests</span>
-        </a>
-    </div>
-
-    <!-- SETTINGS SECTION -->
-    <div class="drawer-section">
-        <p class="drawer-section-title">Preferences</p>
-
-        <a href="#" class="drawer-link">
-            <i data-lucide="settings"></i>
-            <span>Settings</span>
-        </a>
-    </div>
-
-    <!-- LOGOUT SECTION -->
-    <div class="drawer-section logout-section">
-        <form method="POST" action="{% url 'users:logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="drawer-link drawer-logout">
-                <i data-lucide="log-out"></i>
-                <span>Logout</span>
+    {% endif %}
+    <div style="display:flex;flex-direction:column;gap:.15rem;">
+        {% for label, url in nm_links %}{% endfor %}
+        <a href="{% url 'events:home' %}" style="display:flex;align-items:center;gap:.65rem;padding:.65rem .5rem;color:var(--muted);font-size:.88rem;font-weight:500;border-bottom:1px solid var(--border-soft);"><i data-lucide="compass" style="width:16px;height:16px;color:var(--primary);"></i> Browse Events</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'dashboard:user_dashboard' %}" style="display:flex;align-items:center;gap:.65rem;padding:.65rem .5rem;color:var(--muted);font-size:.88rem;font-weight:500;border-bottom:1px solid var(--border-soft);"><i data-lucide="layout-dashboard" style="width:16px;height:16px;color:var(--primary);"></i> Dashboard</a>
+        <a href="{% url 'dashboard:my_profile' %}" style="display:flex;align-items:center;gap:.65rem;padding:.65rem .5rem;color:var(--muted);font-size:.88rem;font-weight:500;border-bottom:1px solid var(--border-soft);"><i data-lucide="user" style="width:16px;height:16px;color:var(--primary);"></i> My Profile</a>
+        <a href="{% url 'dashboard:my_events' %}" style="display:flex;align-items:center;gap:.65rem;padding:.65rem .5rem;color:var(--muted);font-size:.88rem;font-weight:500;border-bottom:1px solid var(--border-soft);"><i data-lucide="calendar" style="width:16px;height:16px;color:var(--primary);"></i> My Events</a>
+        <form method="POST" action="{% url 'users:logout' %}" style="margin-top:.5rem;">{% csrf_token %}
+            <button type="submit" style="display:flex;align-items:center;gap:.65rem;padding:.65rem .5rem;width:100%;background:none;border:none;color:var(--danger);font-size:.88rem;font-weight:600;cursor:pointer;font-family:var(--font);letter-spacing:.02em;">
+                <i data-lucide="log-out" style="width:16px;height:16px;"></i> Sign Out
             </button>
         </form>
+        {% else %}
+        <a href="{% url 'users:login' %}" style="display:flex;align-items:center;gap:.65rem;padding:.65rem .5rem;color:var(--primary);font-size:.88rem;font-weight:600;"><i data-lucide="log-in" style="width:16px;height:16px;"></i> Sign In</a>
+        {% endif %}
     </div>
-
-</div>
 </div>
 
-<!-- 3. Bottom Navigation Bar (Mobile Only) -->
-<div class="mobile-bottom-nav mobile-only">
-
-    <a href="{% url 'events:home' %}" class="bottom-nav-item">
-        <i data-lucide="home"></i> Events
-    </a>
-
+<!-- Mobile bottom nav -->
+<nav class="n-mobile-bottom" style="display:none;">
+    <a href="{% url 'events:home' %}" class="n-bottom-item active"><i data-lucide="home"></i>Events</a>
     {% if user.is_authenticated %}
-
-        {% if user.is_staff %}
-        <!-- Admin / Organizer -->
-        <a href="{% url 'eventManagement:organizer_dashboard' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-
-        {% else %}
-        <!-- Student -->
-        <a href="{% url 'dashboard:user_dashboard' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-        {% endif %}
-
+    <a href="{% url 'dashboard:user_dashboard' %}" class="n-bottom-item"><i data-lucide="grid-2x2"></i>Dash</a>
+    <a href="{% url 'dashboard:my_profile' %}" class="n-bottom-item"><i data-lucide="user"></i>Profile</a>
     {% else %}
-        <a href="{% url 'users:login' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
+    <a href="{% url 'users:login' %}" class="n-bottom-item"><i data-lucide="log-in"></i>Login</a>
     {% endif %}
+</nav>
 
-</div>
-<!-- ==========================================================================
-     STANDARD PAGE CONTENT
-     ========================================================================== -->
-
-<!-- Hero Section -->
-<section class="hero reveal">
-    <div class="hero-decor hero-decor-1"></div>
-    <div class="hero-decor hero-decor-2"></div>
-
-    <div>
-        <p class="eyebrow"><i data-lucide="sparkles"></i> Discover. Compete. Build.</p>
-        <h1>Your Campus,<br>Your <span>Arena.</span></h1>
-        <p class="muted" style="max-width:520px;">Find hackathons, workshops, and coding challenges designed for student
-            creators. Build your portfolio, grow your network.</p>
-        <form method="GET" action="" class="search-wrap" id="search-form">
-            <input type="text" name="q" placeholder="Search events, tech stacks, or colleges..." id="event-search" value="{{ q }}">
-            <button type="submit" class="btn-primary"><i data-lucide="search"></i> Search</button>
-        </form>
-        <div class="stats-row">
-            <div><strong>50+</strong><span>Events</span></div>
-            <div><strong>2000+</strong><span>Participants</span></div>
-            <div><strong>100+</strong><span>Teams</span></div>
+<!-- ══════════════════════════════════════════════════════════
+     HERO
+     ══════════════════════════════════════════════════════════ -->
+<section class="n-hero">
+    <div class="container">
+        <div class="n-hero-label">
+            <div class="n-hero-label-line"></div>
+            <span>Student Tech Platform</span>
         </div>
-    </div>
 
-    <div class="hero-card">
-        <h3><i data-lucide="flame"></i> Featured Event</h3>
-
-        {% if featured_events %}
-
-            <div class="event-badge">{{ featured_events.0.get_category_display }}</div>
-            <h2 style="font-size:1.25rem;">{{ featured_events.0.title }}</h2>
-
-            <div class="event-meta">
-                <span><i data-lucide="calendar"></i> {{ featured_events.0.event_start|date:"M d, Y" }}</span>
-                <span><i data-lucide="radio"></i> {{ featured_events.0.get_mode_display }}</span>
-            </div>
-
+        <div class="n-hero-grid">
             <div>
-                <div class="progress-track">
-                    <div class="progress-fill" style="width:{% widthratio featured_events.0.registered_count featured_events.0.capacity 100 %}%;"></div>
+                <h1 class="n-hero-title">
+                    Your<br>Campus,<br>Your <span class="n-red">Arena.</span>
+                </h1>
+                <p class="n-hero-sub">Discover hackathons, workshops &amp; competitions. Build your portfolio. Win prizes. Grow your network.</p>
+
+                <form method="GET" action="" class="n-search">
+                    <input type="text" name="q" id="event-search" value="{{ q }}" placeholder="Search events, tech stacks, colleges…" autocomplete="off">
+                    <button type="submit">
+                        <i data-lucide="search" style="width:14px;height:14px;"></i> Search
+                    </button>
+                </form>
+
+                <div class="n-stats">
+                    <div class="n-stat"><strong>50+</strong><span>Events</span></div>
+                    <div class="n-stat"><strong>2K+</strong><span>Students</span></div>
+                    <div class="n-stat"><strong>100+</strong><span>Teams</span></div>
                 </div>
-                <div class="progress-label"><span>{{ featured_events.0.registered_count }}/{{ featured_events.0.capacity }} spots filled</span></div>
             </div>
 
-            {% if featured_events.0.prize_pool %}
-            <div class="hero-prize-row">
-                <i data-lucide="trophy" style="width:15px;height:15px;color:#f59e0b;flex-shrink:0;"></i>
-                <span>Prize: ₹{{ featured_events.0.prize_pool|floatformat:0 }}</span>
+            <!-- Featured event card -->
+            <div class="n-featured">
+                <div class="n-featured-inner">
+                    {% if featured_events %}{% with ev=featured_events.0 %}
+                    <div class="n-featured-tag">Featured Event</div>
+                    <h2 class="n-featured-title">{{ ev.title }}</h2>
+                    <div class="n-featured-rows">
+                        <div class="n-featured-row">
+                            <span>Date</span><span>{{ ev.event_start|date:"d M Y" }}</span>
+                        </div>
+                        <div class="n-featured-row">
+                            <span>Mode</span><span>{{ ev.get_mode_display }}</span>
+                        </div>
+                        <div class="n-featured-row">
+                            <span>Type</span><span>{{ ev.get_category_display }}</span>
+                        </div>
+                        {% if ev.prize_pool %}
+                        <div class="n-featured-row">
+                            <span>Prize</span><span style="color:var(--warn);">₹{{ ev.prize_pool|floatformat:0 }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="n-progress">
+                        <div class="n-progress-bar">
+                            <div class="n-progress-fill" style="width:{% widthratio ev.registered_count ev.capacity 100 %}%;"></div>
+                        </div>
+                        <div class="n-progress-label">
+                            <span>{{ ev.registered_count }} registered</span>
+                            <span>{{ ev.capacity }} total</span>
+                        </div>
+                    </div>
+                    <div class="n-featured-cta">
+                        <a href="{% url 'events:event_detail' ev.id %}" class="n-btn-primary">
+                            View Details <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+                        </a>
+                        <a href="{% url 'events:event_detail' ev.id %}" class="n-btn-outline">
+                            <i data-lucide="bookmark" style="width:14px;height:14px;"></i>
+                        </a>
+                    </div>
+                    {% endwith %}{% else %}
+                    <div class="n-featured-tag">Featured Event</div>
+                    <div style="padding:2rem 0;text-align:center;color:var(--muted);font-size:.85rem;">No featured events yet.</div>
+                    {% endif %}
+                </div>
             </div>
-            {% endif %}
-
-            <a href="{% url 'events:event_detail' featured_events.0.id %}" class="btn-primary" style="margin-top:.85rem;">
-                <i data-lucide="arrow-right"></i> View Details
-            </a>
-
-        {% else %}
-            <div class="empty-state">
-                <i data-lucide="calendar-x"></i>
-                <p>No featured events yet</p>
-            </div>
-        {% endif %}
-
+        </div>
     </div>
 </section>
 
-<!-- Featured Events Chips -->
-<section class="section reveal">
-    <div class="section-head">
-        <h2><i data-lucide="star"></i> Featured Events</h2>
-        <div class="chip-row" style="margin-top:.5rem;">
-            {% for event in featured_events %}
-            <a class="chip" href="{% url 'events:event_detail' event.id %}">
-                {{ event.title }} · <strong>{{ event.get_status_display }}</strong>
-            </a>
+<!-- ══════════════════════════════════════════════════════════
+     EVENTS
+     ══════════════════════════════════════════════════════════ -->
+<section class="n-section n-reveal" id="events-section">
+    <div class="container">
+        <div class="n-section-header">
+            <div class="n-section-title">
+                <span class="n-section-number">01</span>
+                <span class="n-section-name">All Events</span>
+            </div>
+            <form method="GET" action="" id="filter-form" style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+                <div class="n-filters">
+                    <a href="?{% if q %}q={{ q }}&{% endif %}sort={{ active_sort }}" class="n-chip {% if not active_category %}active{% endif %}">All</a>
+                    {% for val, label in categories %}
+                    <a href="?{% if q %}q={{ q }}&{% endif %}category={{ val }}&sort={{ active_sort }}" class="n-chip {% if active_category == val %}active{% endif %}">{{ label }}</a>
+                    {% endfor %}
+                </div>
+                <div class="n-sort">
+                    {% if active_category %}<input type="hidden" name="category" value="{{ active_category }}">{% endif %}
+                    <select name="sort" onchange="this.form.submit()">
+                        <option value="newest"   {% if active_sort == 'newest'   %}selected{% endif %}>Newest</option>
+                        <option value="deadline" {% if active_sort == 'deadline' %}selected{% endif %}>Deadline</option>
+                        <option value="popular"  {% if active_sort == 'popular'  %}selected{% endif %}>Popular</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <div class="n-card-grid">
+            {% for event in event_grid %}
+            <article class="n-ev-card">
+                <div class="n-ev-cat">{{ event.get_category_display }}</div>
+                <h3 class="n-ev-title">{{ event.title }}</h3>
+                <div class="n-ev-meta">
+                    <span class="n-ev-tag"><i data-lucide="calendar"></i>{{ event.event_start|date:"d M" }}{% if event.event_end and event.event_end != event.event_start %}→{{ event.event_end|date:"d M" }}{% endif %}</span>
+                    <span class="n-ev-tag"><i data-lucide="radio"></i>{{ event.get_mode_display }}</span>
+                    <span class="n-ev-tag"><i data-lucide="users"></i>{{ event.get_participation_type_display }}</span>
+                </div>
+                <div class="n-ev-progress">
+                    <div class="n-ev-bar"><div class="n-ev-bar-fill" style="width:{% widthratio event.registered_count event.capacity 100 %}%;"></div></div>
+                    <div class="n-ev-bar-label"><span>{{ event.registered_count }}/{{ event.capacity }}</span><span>{% widthratio event.registered_count event.capacity 100 %}%</span></div>
+                </div>
+                <div class="n-ev-footer">
+                    <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
+                        <span class="n-ev-status {% if event.status == 'registration_open' %}open{% elif event.status == 'completed' or event.status == 'registration_closed' %}closed{% else %}other{% endif %}">
+                            {{ event.get_status_display }}
+                        </span>
+                        {% if event.prize_pool %}<span class="n-ev-prize">₹{{ event.prize_pool|floatformat:0 }}</span>{% endif %}
+                    </div>
+                    {% if event.status == 'completed' or event.status == 'registration_closed' %}
+                    <span class="n-ev-cta-closed">Closed</span>
+                    {% else %}
+                    <a href="{% url 'events:event_detail' event.id %}" class="n-ev-cta">
+                        Register <i data-lucide="arrow-right" style="width:11px;height:11px;"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </article>
             {% empty %}
-            <span class="muted">No featured events available.</span>
+            <div style="grid-column:1/-1;padding:3rem;text-align:center;color:var(--muted);font-size:.88rem;border-bottom:1px solid var(--border);">
+                No events found. Try adjusting your filters.
+            </div>
             {% endfor %}
         </div>
     </div>
 </section>
 
-<!-- Browse All Events -->
-<section class="section reveal" id="events-section">
-    <div class="section-head split">
-        <h2><i data-lucide="grid-3x3"></i> Browse All Events</h2>
-        <form method="GET" action="" id="filter-form" style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
-            {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
-            <div class="filters">
-                <a href="?{% if q %}q={{ q }}&{% endif %}sort={{ active_sort }}"
-                   class="chip {% if not active_category %}active{% endif %}"><i data-lucide="layers"></i> All</a>
-                {% for val, label in categories %}
-                <a href="?{% if q %}q={{ q }}&{% endif %}category={{ val }}&sort={{ active_sort }}"
-                   class="chip {% if active_category == val %}active{% endif %}">{{ label }}</a>
-                {% endfor %}
+<!-- ══════════════════════════════════════════════════════════
+     HOW IT WORKS
+     ══════════════════════════════════════════════════════════ -->
+<section class="n-section n-reveal">
+    <div class="container">
+        <div class="n-section-header">
+            <div class="n-section-title">
+                <span class="n-section-number">02</span>
+                <span class="n-section-name">How It Works</span>
             </div>
-            <select name="sort" onchange="this.form.submit()" style="padding:.35rem .7rem;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.88rem;">
-                {% if active_category %}<input type="hidden" name="category" value="{{ active_category }}">{% endif %}
-                <option value="newest" {% if active_sort == 'newest' %}selected{% endif %}>Newest</option>
-                <option value="deadline" {% if active_sort == 'deadline' %}selected{% endif %}>Deadline Soon</option>
-                <option value="popular" {% if active_sort == 'popular' %}selected{% endif %}>Most Popular</option>
-            </select>
-        </form>
-    </div>
-
-    <div class="card-grid">
-        {% for event in event_grid %}
-        <article class="event-card reveal">
-            <div class="event-card-banner">
-                <span class="event-badge">{{ event.get_category_display }}</span>
+        </div>
+        <div class="n-how-grid">
+            <div class="n-how-step n-reveal n-d1">
+                <span class="n-how-num">01 / 03</span>
+                <div class="n-how-icon"><i data-lucide="search"></i></div>
+                <h3 class="n-how-title">Discover Events</h3>
+                <p class="n-how-desc">Browse hackathons, workshops, and contests nearby or online. Filter by tech stack, date, or mode.</p>
             </div>
-            <div class="event-card-body">
-                <h3>{{ event.title }}</h3>
-                
-                <div class="event-meta">
-                    <span><i data-lucide="calendar"></i> {{ event.event_start|date:"M d" }}{% if event.event_end and event.event_end != event.event_start %}–{{ event.event_end|date:"M d" }}{% endif %}</span>
-                    <span><i data-lucide="radio"></i> {{ event.get_mode_display }}</span>
-                    <span><i data-lucide="users"></i> {{ event.get_participation_type_display }}</span>
-                </div>
-                
-                <div class="event-card-footer">
-                    
-                    <div class="footer-left">
-                        <span class="status {% if event.status == 'registration_open' %}open{% elif event.status == 'completed' or event.status == 'registration_closed' %}closed{% endif %}">
-                            {% if event.status == 'registration_open' %}
-                                <i data-lucide="circle-check" style="width: 14px; height: 14px;"></i>
-                            {% elif event.status == 'completed' or event.status == 'registration_closed' %}
-                                <i data-lucide="circle-x" style="width: 14px; height: 14px;"></i>
-                            {% else %}
-                                <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
-                            {% endif %}
-                            {{ event.get_status_display }}
-                        </span>
-                        
-                        {% if event.prize_pool %}
-                        <span class="prize-badge" data-prize="₹{{ event.prize_pool|floatformat:0 }}">
-                            <i data-lucide="trophy" style="width: 14px; height: 14px;"></i> 
-                            <span>₹{{ event.prize_pool|floatformat:0 }}</span>
-                        </span>
-                        {% endif %}
-                    </div>
-
-                    {% if event.status == 'completed' or event.status == 'registration_closed' %}
-                        <button class="btn-closed" disabled>
-                            Closed <i data-lucide="lock" style="width: 16px; height: 16px;"></i>
-                        </button>
-                    {% else %}
-                        <a class="btn-primary btn-small" href="{% url 'events:event_detail' event.id %}">
-                            Register <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
-                        </a>
-                    {% endif %}
-                    
-                </div>
+            <div class="n-how-step n-reveal n-d2">
+                <span class="n-how-num">02 / 03</span>
+                <div class="n-how-icon"><i data-lucide="users"></i></div>
+                <h3 class="n-how-title">Build Your Team</h3>
+                <p class="n-how-desc">Register solo or use AI matching to find teammates with complementary skills for your domain.</p>
             </div>
-        </article>
-        {% empty %}
-        <div class="empty-state" style="grid-column:1/-1;">
-            <i data-lucide="inbox"></i>
-            <p>No events available right now. Check back soon!</p>
-        </div>
-        {% endfor %}
-    </div>
-</section>
-
-<!-- HOW IT WORKS SECTION -->
-<section class="feature-section bordered reveal" style="padding-top: 60px; margin-top: 100px;">
-    <div class="feature-header center reveal" style="flex-direction: column; align-items: center; text-align: center;">
-        <h2>How It Works</h2>
-        <p>Three simple steps to start building your future</p>
-    </div>
-    
-    <div class="how-it-works-grid">
-        <div class="step-card reveal delay-1">
-            <div class="step-icon"><i data-lucide="search"></i></div>
-            <h3 class="step-title">1. Discover Events</h3>
-            <p class="step-desc">Browse college hackathons, technical workshops, and coding contests happening around you.</p>
-        </div>
-        <div class="step-card reveal delay-2">
-            <div class="step-icon"><i data-lucide="users"></i></div>
-            <h3 class="step-title">2. Form Teams</h3>
-            <p class="step-desc">Register solo or build a balanced team by connecting with peers having complementary tech skills.</p>
-        </div>
-        <div class="step-card reveal delay-3">
-            <div class="step-icon"><i data-lucide="trophy"></i></div>
-            <h3 class="step-title">3. Compete & Win</h3>
-            <p class="step-desc">Coordinate via in-team chat, submit your projects, and win amazing prizes and certificates.</p>
+            <div class="n-how-step n-reveal n-d3">
+                <span class="n-how-num">03 / 03</span>
+                <div class="n-how-icon"><i data-lucide="trophy"></i></div>
+                <h3 class="n-how-title">Compete &amp; Win</h3>
+                <p class="n-how-desc">Submit your project, earn QR-verified certificates, and win prizes that matter for your career.</p>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- WHY CHOOSE US SECTION -->
-<section class="feature-section reveal">
-    <div class="feature-header reveal">
-        <h2>Why CampusArena?</h2>
-        <p>Designed specifically for the college ecosystem to streamline event management.</p>
-    </div>
-
-    <div class="why-us-grid">
-        <div class="why-card reveal delay-1">
-            <div class="why-icon"><i data-lucide="cpu"></i></div>
-            <h3 class="why-title">Tech Stack Matching</h3>
-            <p class="why-desc">Intelligent suggestions to balance your team's frontend, backend, and design capabilities.</p>
+<!-- ══════════════════════════════════════════════════════════
+     WHY CAMPUS ARENA
+     ══════════════════════════════════════════════════════════ -->
+<section class="n-section n-reveal">
+    <div class="container">
+        <div class="n-section-header">
+            <div class="n-section-title">
+                <span class="n-section-number">03</span>
+                <span class="n-section-name">Why CampusArena</span>
+            </div>
         </div>
-        <div class="why-card reveal delay-2">
-            <div class="why-icon"><i data-lucide="radio"></i></div>
-            <h3 class="why-title"><span class="live-dot"></span>Real-Time Updates</h3>
-            <p class="why-desc">Watch registrations and available team slots update live without refreshing the page.</p>
-        </div>
-        <div class="why-card reveal delay-3">
-            <div class="why-icon"><i data-lucide="message-square"></i></div>
-            <h3 class="why-title">In-Team Messaging</h3>
-            <p class="why-desc">Dedicated chat rooms for every team to coordinate effortlessly before and during the event.</p>
-        </div>
-        <div class="why-card reveal delay-4">
-            <div class="why-icon"><i data-lucide="shield-check"></i></div>
-            <h3 class="why-title">Secure & Verified</h3>
-            <p class="why-desc">College email verification ensures a trusted environment for genuine student participants.</p>
+        <div class="n-why-grid">
+            <div class="n-why-item n-reveal n-d1">
+                <div class="n-why-icon"><i data-lucide="cpu"></i></div>
+                <h3 class="n-why-title">AI Matching</h3>
+                <p class="n-why-desc">Smart teammate suggestions that balance frontend, backend, and design skills automatically.</p>
+            </div>
+            <div class="n-why-item n-reveal n-d2">
+                <div class="n-why-icon"><i data-lucide="activity"></i></div>
+                <h3 class="n-why-title"><span class="n-live-dot"></span>Live Updates</h3>
+                <p class="n-why-desc">Registration counts and team slots sync in real-time via WebSockets. No page refresh.</p>
+            </div>
+            <div class="n-why-item n-reveal n-d3">
+                <div class="n-why-icon"><i data-lucide="message-square"></i></div>
+                <h3 class="n-why-title">Team Chat</h3>
+                <p class="n-why-desc">Dedicated chat rooms per team to coordinate strategy and resources before the event.</p>
+            </div>
+            <div class="n-why-item n-reveal n-d4">
+                <div class="n-why-icon"><i data-lucide="award"></i></div>
+                <h3 class="n-why-title">Certificates</h3>
+                <p class="n-why-desc">Auto-generated digital certificates with QR verification. Instantly shareable.</p>
+            </div>
         </div>
     </div>
 </section>
+
+<!-- ══════════════════════════════════════════════════════════
+     CTA
+     ══════════════════════════════════════════════════════════ -->
+<div class="container">
+    <div class="n-cta n-reveal">
+        <div class="n-cta-inner">
+            <div class="n-cta-text">
+                <h2>Ready to Compete?</h2>
+                <p>Join thousands of student builders on CampusArena — it's free.</p>
+            </div>
+            <div class="n-cta-btns">
+                {% if user.is_authenticated %}
+                <a href="#events-section" class="n-btn-primary">Browse Events <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></a>
+                {% else %}
+                <a href="{% url 'users:register' %}" class="n-btn-primary">Create Account <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></a>
+                <a href="{% url 'users:login' %}" class="n-btn-outline">Sign In</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Force scroll to top immediately — before DOMContentLoaded
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
+document.addEventListener('DOMContentLoaded', () => {
+
+    /* ── Scroll reveal ─────────────────────────────────────────── */
+    const obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('n-visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.05, rootMargin: '0px 0px -32px 0px' });
+    document.querySelectorAll('.n-reveal').forEach(el => obs.observe(el));
+
+    /* ── Mobile drawer ─────────────────────────────────────────── */
+    const menuBtn   = document.getElementById('nm-menu');
+    const closeBtn  = document.getElementById('nm-close');
+    const overlay   = document.getElementById('nm-overlay');
+    const drawer    = document.getElementById('nm-drawer');
+    if (menuBtn && drawer && overlay) {
+        const open  = () => { drawer.style.right='0'; overlay.style.display='block'; overlay.style.opacity='1'; overlay.style.pointerEvents='auto'; document.body.style.overflow='hidden'; };
+        const close = () => { drawer.style.right='-100%'; overlay.style.opacity='0'; overlay.style.pointerEvents='none'; setTimeout(()=>{ overlay.style.display='none'; },280); document.body.style.overflow=''; };
+        menuBtn.addEventListener('click', open);
+        closeBtn?.addEventListener('click', close);
+        overlay.addEventListener('click', close);
+        drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
     }
-    window.scrollTo(0, 0);
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Ensure top again after DOM ready
-        window.scrollTo(0, 0);
-
-        /* ==========================================================================
-           MOBILE DRAWER LOGIC
-           ========================================================================== */
-        const hamburgerBtn = document.getElementById('hamburger-menu-btn');
-        const drawerOverlay = document.getElementById('drawer-overlay');
-        const mobileDrawer = document.getElementById('mobile-drawer');
-        
-        if (hamburgerBtn && drawerOverlay && mobileDrawer) {
-            function toggleDrawer() {
-                const isOpen = mobileDrawer.classList.contains('open');
-                if (isOpen) {
-                    mobileDrawer.classList.remove('open');
-                    drawerOverlay.classList.remove('open');
-                    document.body.style.overflow = ''; // Restore scroll
-                } else {
-                    mobileDrawer.classList.add('open');
-                    drawerOverlay.classList.add('open');
-                    document.body.style.overflow = 'hidden'; // Prevent body scroll while menu is open
-                }
-            }
-
-            hamburgerBtn.addEventListener('click', toggleDrawer);
-            drawerOverlay.addEventListener('click', toggleDrawer);
-
-            // Close automatically when a menu link is clicked
-            const drawerLinks = mobileDrawer.querySelectorAll('.drawer-link');
-            drawerLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    mobileDrawer.classList.remove('open');
-                    drawerOverlay.classList.remove('open');
-                    document.body.style.overflow = ''; 
-                });
+    /* ── Mobile theme toggle ──────────────────────────────────── */
+    document.getElementById('nm-theme')?.addEventListener('click', (e) => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const next   = isDark ? 'light' : 'dark';
+        if (document.startViewTransition) {
+            const x = e.clientX, y = e.clientY;
+            const r = Math.hypot(Math.max(x,innerWidth-x), Math.max(y,innerHeight-y));
+            document.documentElement.classList.add('vt-active');
+            const t = document.startViewTransition(() => {
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('campusarena-theme', next);
             });
-        }
-
-
-        /* ==========================================================================
-           MOBILE THEME TOGGLE LOGIC
-           ========================================================================== */
-        const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
-        if (mobileThemeToggle) {
-            mobileThemeToggle.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                const nextTheme = isDark ? 'light' : 'dark';
-
-                const updateTheme = () => {
-                    document.documentElement.setAttribute('data-theme', nextTheme);
-                    localStorage.setItem('campusarena-theme', nextTheme);
-                    const label = document.getElementById('theme-label');
-                    if(label) label.textContent = nextTheme === 'dark' ? 'Dark' : 'Light';
-                };
-
-                if (!document.startViewTransition) {
-                    updateTheme();
-                    return;
-                }
-
-                // Get coordinates for the ripple effect from mobile click/touch
-                const x = e.clientX || (e.touches && e.touches[0].clientX) || window.innerWidth / 2;
-                const y = e.clientY || (e.touches && e.touches[0].clientY) || 30;
-
-                const endRadius = Math.hypot(
-                    Math.max(x, window.innerWidth - x),
-                    Math.max(y, window.innerHeight - y)
+            t.ready.then(() => {
+                const a = document.documentElement.animate(
+                    { clipPath: [`circle(0px at ${x}px ${y}px)`,`circle(${r}px at ${x}px ${y}px)`] },
+                    { duration: 560, easing: 'cubic-bezier(.34,1.1,.64,1)', pseudoElement: '::view-transition-new(root)' }
                 );
-
-                document.documentElement.classList.add('vt-active');
-                const transition = document.startViewTransition(updateTheme);
-
-                transition.ready.then(() => {
-                    const animation = document.documentElement.animate(
-                        {
-                            clipPath: [
-                                `circle(0px at ${x}px ${y}px)`,
-                                `circle(${endRadius}px at ${x}px ${y}px)`
-                            ]
-                        },
-                        {
-                            duration: 600,
-                            easing: 'cubic-bezier(0.34, 1.2, 0.64, 1)', 
-                            pseudoElement: '::view-transition-new(root)'
-                        }
-                    );
-
-                    animation.onfinish = () => {
-                        document.documentElement.classList.remove('vt-active');
-                    };
-                });
-                
-                transition.finished.finally(() => {
-                    document.documentElement.classList.remove('vt-active');
-                });
+                a.onfinish = () => document.documentElement.classList.remove('vt-active');
             });
-        }
-
-
-        /* ==========================================================================
-           EXISTING FUNCTIONALITY
-           ========================================================================== */
-
-        // --- Activation logic for .reveal class ---
-        const revealElements = document.querySelectorAll('.reveal');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { 
-            threshold: 0.08, 
-            rootMargin: '0px 0px -40px 0px' 
-        });
-
-        // Staggered fade-in delay for event cards by their position in the grid
-        const eventCards = document.querySelectorAll('.card-grid .event-card');
-        eventCards.forEach((card, i) => {
-            card.style.transitionDelay = (i * 0.12) + 's';
-        });
-
-        revealElements.forEach(el => observer.observe(el));
-
-        /* -------------------------------------------------------------
-           1. Event Filtering Logic
-           ------------------------------------------------------------- */
-        const filterBtns = document.querySelectorAll('.filters .chip');
-        const cards = document.querySelectorAll('.card-grid .event-card');
-
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                filterBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const filterText = btn.textContent.trim().toLowerCase();
-
-                cards.forEach(card => {
-                    const badge = card.querySelector('.event-badge').textContent.trim().toLowerCase();
-                    let isMatch = false;
-                    if (filterText === 'all') isMatch = true;
-                    else if (filterText.includes('hackathon') && badge.includes('hackathon')) isMatch = true;
-                    else if (filterText.includes('workshop') && badge.includes('workshop')) isMatch = true;
-                    else if (filterText.includes('quiz') && badge.includes('quiz')) isMatch = true;
-                    else if (filterText.includes('competition') && badge.includes('competition')) isMatch = true;
-
-                    if (isMatch) {
-                        card.style.display = '';
-                        card.classList.remove('active');
-                        requestAnimationFrame(() => {
-                            requestAnimationFrame(() => { card.classList.add('active'); });
-                        });
-                    } else {
-                        card.style.display = 'none';
-                        card.classList.remove('active');
-                    }
-                });
-            });
-        });
-
-        /* -------------------------------------------------------------
-           2. High Prize Enhancer Logic
-           ------------------------------------------------------------- */
-        const prizeBadges = document.querySelectorAll('.prize-badge');
-        let needsIconRender = false;
-
-        prizeBadges.forEach(badge => {
-            const prizeText = badge.getAttribute('data-prize') || '';
-            const normalized = prizeText.toLowerCase().replace(/,/g, '');
-            const numericMatch = normalized.match(/\d+/);
-            
-            let isHighPrize = false;
-            if (numericMatch) {
-                let value = parseInt(numericMatch[0], 10);
-                if (normalized.includes('k')) value *= 1000;
-                if (normalized.includes('lakh')) value *= 100000;
-                if (value >= 15000) isHighPrize = true;
-            } else if (normalized.includes('macbook') || normalized.includes('ipad') || normalized.includes('iphone')) {
-                isHighPrize = true;
-            }
-
-            if (isHighPrize) {
-                badge.classList.add('high-prize');
-                const icon = badge.querySelector('i');
-                if (icon) {
-                    icon.setAttribute('data-lucide', 'sparkles');
-                    needsIconRender = true;
-                }
-            }
-        });
-
-        if (needsIconRender && typeof lucide !== 'undefined') {
-            lucide.createIcons();
+            t.finished.finally(() => document.documentElement.classList.remove('vt-active'));
+        } else {
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('campusarena-theme', next);
         }
     });
+
+    /* ── Live search ───────────────────────────────────────────── */
+    const searchInput = document.getElementById('event-search');
+    const cards = document.querySelectorAll('.n-ev-card');
+    if (searchInput && cards.length) {
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.trim().toLowerCase();
+            cards.forEach(c => { c.style.display = (!q || c.textContent.toLowerCase().includes(q)) ? '' : 'none'; });
+        });
+    }
+
+    /* ── Lucide icons ──────────────────────────────────────────── */
+    if (window.lucide) lucide.createIcons();
+});
 </script>
 {% endblock %}

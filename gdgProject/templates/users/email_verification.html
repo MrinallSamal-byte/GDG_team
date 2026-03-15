@@ -1,45 +1,88 @@
 {% extends 'base.html' %}
-
 {% block title %}CampusArena | Verify Email{% endblock %}
-
+{% block extra_css %}
+<style>
+.site-header,.site-footer{display:none!important}
+.main-content{padding:0!important;max-width:100%!important;width:100%!important}
+.n-auth{display:grid;grid-template-columns:320px 1fr;min-height:100vh}
+.n-auth-side{background:var(--surface);border-right:1px solid var(--border);padding:3rem 2.5rem;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.n-auth-side::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,0,0,.06) 1px,transparent 1px);background-size:18px 18px}
+.n-auth-side>*{position:relative;z-index:1}
+.n-auth-main{background:var(--bg);display:flex;align-items:center;justify-content:center;padding:2rem}
+.n-auth-box{width:100%;max-width:380px}
+.n-ey{font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
+.n-ey::after{content:'';flex:1;height:1px;background:rgba(255,0,0,.18)}
+.n-auth-box h1{font-size:1.5rem;font-weight:800;letter-spacing:-.03em;margin:0 0 .3rem}
+.n-auth-box .sub{color:var(--muted);font-size:.85rem;margin-bottom:1.75rem}
+.n-otp{display:grid;grid-template-columns:repeat(6,1fr);gap:.5rem;margin-bottom:1.25rem}
+.n-otp input{text-align:center;font-family:var(--font-mono);font-size:1.2rem;font-weight:700;padding:.7rem;border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;transition:border-color .15s;border-radius:0}
+.n-otp input:focus{border-color:var(--primary)}
+.n-btn-r{width:100%;padding:.8rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-bottom:.5rem}
+.n-btn-r:hover{background:var(--primary-2)}
+.n-btn-o{width:100%;padding:.72rem;background:transparent;color:var(--muted);border:1px solid var(--border);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.n-btn-o:hover{border-color:var(--border-hover);color:var(--text)}
+.n-alert{display:flex;align-items:flex-start;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:1rem;border:1px solid}
+.n-alert.err{background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger)}
+@media(max-width:720px){.n-auth{grid-template-columns:1fr}.n-auth-side{padding:2rem 1.5rem;border-right:none;border-bottom:1px solid var(--border)}.n-auth-main{padding:2rem 1.25rem}}
+</style>
+{% endblock %}
 {% block content %}
-<section class="auth-wrap">
-    <div class="auth-layout reveal">
-        <div class="auth-decor">
-            <div class="auth-decor-icon"><i data-lucide="mail-check"></i></div>
-            <h2>Almost There!</h2>
-            <p>Check your inbox for the 6-digit verification code we just sent you.</p>
+{% include 'includes/_n_page.html' %}
+<div class="n-auth">
+    <div class="n-auth-side">
+        <div>
+            <a href="{% url 'events:home' %}" style="display:flex;align-items:center;gap:.45rem;font-size:1rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text);text-decoration:none;margin-bottom:2.5rem;">
+                <i data-lucide="zap" style="width:16px;height:16px;color:var(--primary);"></i> CampusArena
+            </a>
+            <div style="font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.75rem;">04 / VERIFY</div>
+            <h2 style="font-size:1.6rem;font-weight:800;letter-spacing:-.03em;margin:0 0 .75rem;">Almost There.</h2>
+            <p style="color:var(--muted);font-size:.88rem;line-height:1.7;">A 6-digit code has been sent to your email. Enter it to activate your account.</p>
         </div>
-        <div class="auth-form">
-            <h1>Email Verification</h1>
-            <p class="muted">A verification code has been sent to your email. Enter the code below.</p>
+        <a href="{% url 'users:login' %}" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;">
+            <i data-lucide="arrow-left" style="width:13px;height:13px;"></i> Back to Sign In
+        </a>
+    </div>
+    <div class="n-auth-main">
+        <div class="n-auth-box">
+            <div class="n-ey">Email Verification</div>
+            <h1>Enter Your Code</h1>
+            <p class="sub">Check your inbox for the 6-digit verification code.</p>
 
-            <form method="POST" action="" novalidate id="verify-form">
+            {% if messages %}{% for message in messages %}
+            <div class="n-alert err"><i data-lucide="alert-circle" style="width:14px;height:14px;flex-shrink:0;"></i><span>{{ message }}</span></div>
+            {% endfor %}{% endif %}
+
+            {% if expired %}
+            <div class="n-alert err"><i data-lucide="clock" style="width:14px;height:14px;flex-shrink:0;"></i><span>Your code has expired. Click Resend to get a new one.</span></div>
+            {% endif %}
+
+            <form method="POST" action="">
                 {% csrf_token %}
-
-                <div class="field-grid otp-grid">
-                    <input type="text" name="otp_1" maxlength="1" inputmode="numeric" pattern="[0-9]"
-                        aria-label="Digit 1" required>
-                    <input type="text" name="otp_2" maxlength="1" inputmode="numeric" pattern="[0-9]"
-                        aria-label="Digit 2" required>
-                    <input type="text" name="otp_3" maxlength="1" inputmode="numeric" pattern="[0-9]"
-                        aria-label="Digit 3" required>
-                    <input type="text" name="otp_4" maxlength="1" inputmode="numeric" pattern="[0-9]"
-                        aria-label="Digit 4" required>
-                    <input type="text" name="otp_5" maxlength="1" inputmode="numeric" pattern="[0-9]"
-                        aria-label="Digit 5" required>
-                    <input type="text" name="otp_6" maxlength="1" inputmode="numeric" pattern="[0-9]"
-                        aria-label="Digit 6" required>
+                <div class="n-otp" id="otp-grid">
+                    <input type="text" name="otp_1" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 1" required>
+                    <input type="text" name="otp_2" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 2" required>
+                    <input type="text" name="otp_3" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 3" required>
+                    <input type="text" name="otp_4" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 4" required>
+                    <input type="text" name="otp_5" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 5" required>
+                    <input type="text" name="otp_6" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 6" required>
                 </div>
-
-                <button type="submit" class="btn-primary full-btn" style="margin-top:.75rem;"><i
-                        data-lucide="check-circle"></i> Verify Email</button>
-                <button type="button" class="btn-secondary full-btn" data-action="resend-otp"><i data-lucide="refresh-cw"></i> Resend Code</button>
+                <button type="submit" name="action" value="verify" class="n-btn-r"><i data-lucide="check-circle" style="width:13px;height:13px;display:inline;"></i> Verify Email</button>
+                <button type="submit" name="action" value="resend" class="n-btn-o"><i data-lucide="refresh-cw" style="width:12px;height:12px;display:inline;"></i> Resend Code</button>
             </form>
-
-            <a class="auth-back" href="{% url 'users:login' %}" style="margin-top:.5rem;"><i
-                    data-lucide="arrow-left"></i> Back to login</a>
         </div>
     </div>
-</section>
+</div>
+<script>
+// OTP auto-advance
+const otpInputs = document.querySelectorAll('#otp-grid input');
+otpInputs.forEach((inp, i) => {
+    inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/,''); if(inp.value && i < otpInputs.length-1) otpInputs[i+1].focus(); });
+    inp.addEventListener('keydown', e => { if(e.key==='Backspace' && !inp.value && i>0) otpInputs[i-1].focus(); });
+    inp.addEventListener('paste', e => {
+        e.preventDefault();
+        const digits = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');
+        digits.split('').forEach((ch,j) => { if(otpInputs[i+j]) otpInputs[i+j].value=ch; });
+    });
+});
+</script>
 {% endblock %}

@@ -2,39 +2,49 @@
 # CampusArena — Python Dependencies
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Core
+# ── Core ──────────────────────────────────────────────────────────────────────
 Django>=6.0,<7.0
 python-decouple>=3.8
 gunicorn>=22.0
 
-# Image handling (required for Event.banner ImageField)
+# ── Image handling ────────────────────────────────────────────────────────────
 Pillow>=10.0
 
-# Database
-psycopg[binary]>=3.1
+# ── Database ──────────────────────────────────────────────────────────────────
 mysqlclient>=2.2
+# psycopg[binary]>=3.1   # only needed if switching to PostgreSQL
 
-# Static files (production)
+# ── Static files (production) ─────────────────────────────────────────────────
 whitenoise>=6.6
 
-# Real-time (Django Channels + WebSocket support)
+# ── Real-time (Django Channels + WebSocket) ────────────────────────────────────
 channels>=4.0
 channels-redis>=4.2
 daphne>=4.1
 
-# HTML sanitization (XSS prevention for rich text)
+# ── HTML sanitization (XSS prevention) ────────────────────────────────────────
 bleach>=6.1
 
-# Calendar export (.ics file generation)
+# ── Calendar export (.ics) ────────────────────────────────────────────────────
 icalendar>=5.0
 
-# Excel export
+# ── Excel export ──────────────────────────────────────────────────────────────
 openpyxl>=3.1
 
-# Filtering
+# ── Filtering ─────────────────────────────────────────────────────────────────
 django-filter>=24.0
 
-# Development / Testing
+# ── [E1] Payment — Razorpay ───────────────────────────────────────────────────
+razorpay>=1.4
+
+# ── [E2] Certificate PDF generation ──────────────────────────────────────────
+reportlab>=4.1
+qrcode[pil]>=7.4          # shared with [E11] QR check-in
+
+# ── [E6] OAuth (Google + GitHub) ──────────────────────────────────────────────
+django-allauth>=0.61
+
+# ── Development / Testing ──────────────────────────────────────────────────────
 coverage>=7.4
 factory-boy>=3.3
 pytest-django>=4.8
@@ -42,6 +52,9 @@ ruff>=0.3
 black>=24.0
 isort>=5.13
 
-# Security scanning
+# ── Security scanning ─────────────────────────────────────────────────────────
 safety>=3.0
 bandit>=1.7
+
+# ── Optional: AI matching LLM explanation (E15) ───────────────────────────────
+# anthropic>=0.25          # uncomment to enable Claude-powered match explanations

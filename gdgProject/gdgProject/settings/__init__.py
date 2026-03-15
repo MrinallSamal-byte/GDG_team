@@ -1,7 +1,3 @@
-# Settings package — import from base, then environment-specific overlay.
-try:
-    import pymysql
-except ModuleNotFoundError:
-    pymysql = None
-else:
-    pymysql.install_as_MySQLdb()
+# Settings package — environment-specific overlays import from base.py.
+# pymysql is installed as MySQLdb once in gdgProject/__init__.py;
+# no need to repeat it here.
