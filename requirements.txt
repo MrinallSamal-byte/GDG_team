@@ -11,8 +11,7 @@ gunicorn>=22.0
 Pillow>=10.0
 
 # ── Database ──────────────────────────────────────────────────────────────────
-mysqlclient>=2.2
-# psycopg[binary]>=3.1   # only needed if switching to PostgreSQL
+# psycopg[binary]>=3.1   # alternative PostgreSQL driver (psycopg v3)
 
 # ── Static files (production) ─────────────────────────────────────────────────
 whitenoise>=6.6
@@ -22,8 +21,6 @@ whitenoise>=6.6
 dj-database-url>=2.1
 
 # ── PostgreSQL driver (Vercel → Neon/Supabase, Railway, Render) ───────────────
-# Install when deploying to PostgreSQL-based platforms.
-# On Docker/self-hosted with MySQL, leave this commented out.
 psycopg2-binary>=2.9
 
 # ── Real-time (Django Channels + WebSocket) ────────────────────────────────────
