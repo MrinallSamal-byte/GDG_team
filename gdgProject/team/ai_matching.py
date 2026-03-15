@@ -30,6 +30,7 @@ class TeamMatchResult:
     complementary_skills: list[str]
     shared_skills: list[str]
     match_reason: str
+    user_preferred_role: Optional[str] = None
 
 
 def get_team_recommendations(
@@ -178,6 +179,7 @@ def _score_team(
         complementary_skills=complementary[:5],
         shared_skills=shared[:5],
         match_reason="Good match — " + " and ".join(reasons),
+        user_preferred_role=user_role,
     )
 
 
@@ -192,13 +194,24 @@ def get_ai_explanation(match: TeamMatchResult, user) -> str:
     try:
         import anthropic
 
+        from team.models import MemberRole
+        role_labels = dict(MemberRole.choices)
+
+        # Use the user_preferred_role stored on the match result
+        user_role_label = (
+            role_labels.get(match.user_preferred_role, match.user_preferred_role)
+            if match.user_preferred_role
+            else "not specified"
+        )
+
         all_skills = match.complementary_skills + match.shared_skills
+
         prompt = (
             f"A student named {user.get_full_name() or user.username} is looking for a hackathon team.\n\n"
             f"Their skills: {', '.join(all_skills) or 'not specified'}\n"
-            f"Their preferred role: {user_role if (user_role := match.complementary_skills[0] if match.complementary_skills else None) else 'not specified'}\n\n"
+            f"Their preferred role: {user_role_label}\n\n"
             f"Team '{match.team_name}' has {match.spots_remaining} open spot(s).\n"
-            f"Team already has: {', '.join(match.shared_skills) or 'none'}\n"
+            f"Skills the team already has: {', '.join(match.shared_skills) or 'none'}\n"
             f"Skills team is missing (student can fill): {', '.join(match.complementary_skills) or 'none'}\n"
             f"Roles still needed: {', '.join(match.missing_roles[:3]) or 'none'}\n\n"
             "In 2-3 sentences, explain why this student and team are a great match. "

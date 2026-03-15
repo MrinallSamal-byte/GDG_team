@@ -17,6 +17,15 @@ mysqlclient>=2.2
 # ── Static files (production) ─────────────────────────────────────────────────
 whitenoise>=6.6
 
+# ── Database URL parsing (Vercel / Railway / Render / Heroku) ─────────────────
+# Parses DATABASE_URL env var into Django DATABASES dict.
+dj-database-url>=2.1
+
+# ── PostgreSQL driver (Vercel → Neon/Supabase, Railway, Render) ───────────────
+# Install when deploying to PostgreSQL-based platforms.
+# On Docker/self-hosted with MySQL, leave this commented out.
+psycopg2-binary>=2.9
+
 # ── Real-time (Django Channels + WebSocket) ────────────────────────────────────
 channels>=4.0
 channels-redis>=4.2

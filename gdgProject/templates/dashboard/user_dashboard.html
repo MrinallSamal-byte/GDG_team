@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}CampusArena | Dashboard{% endblock %}
+
 {% block extra_css %}
 <style>
 .main-content{padding:0!important;max-width:100%!important;width:100%!important}
 .n-dash{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
 .n-dash-content{padding:2rem 2.5rem 4rem;overflow-x:hidden}
-@media(max-width:900px){.n-dash{grid-template-columns:1fr}}
 .n-metric-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--border);overflow:hidden;margin-bottom:1.5rem}
 .n-metric{padding:1.1rem 1.25rem;background:var(--surface);border-right:1px solid var(--border);transition:background .15s}
 .n-metric:last-child{border-right:none}
@@ -13,9 +13,45 @@
 .n-metric .lbl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.35rem}
 .n-metric .val{font-family:var(--font-mono);font-size:1.6rem;font-weight:700}
 .n-card{background:var(--surface);border:1px solid var(--border);margin-bottom:1px}
-.n-card-head{padding:.85rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.n-card-head{padding:.85rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem}
 .n-card-head .lbl{font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:.5rem}
 .n-card-head .lbl i{width:13px;height:13px;color:var(--primary)}
+.n-row{padding:.75rem 1.1rem;border-bottom:1px solid var(--border-soft);transition:background .15s}
+.n-row:last-child{border-bottom:none}
+.n-row:hover{background:var(--surface-2)}
+/* Mobile sidebar toggle — hidden on desktop, shown on tablet/mobile via global CSS */
+.n-dash-sidebar-btn{
+    display:none;align-items:center;gap:.4rem;padding:.3rem .65rem;
+    border:1px solid var(--border);background:var(--surface);color:var(--muted);
+    font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    cursor:pointer;border-radius:var(--radius-md);transition:all .15s;
+}
+.n-dash-sidebar-btn:hover{border-color:var(--border-hover);color:var(--text)}
+/* Dashboard page header */
+.n-head{display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--border);
+    flex-wrap:wrap;gap:.5rem}
+.n-head-l{display:flex;align-items:center;gap:.5rem}
+.n-num{font-family:var(--font-mono);font-size:.65rem;font-weight:700;color:var(--primary);letter-spacing:.1em;opacity:.7}
+.n-name{font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text)}
+/* Inner two-col grid for cards — stacks on tablet */
+.n-dash-inner-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-bottom:1px}
+/* Responsive overrides */
+@media(max-width:1024px){
+    .n-dash{grid-template-columns:1fr}
+    .n-dash-content{padding:1.5rem 1.25rem 4rem}
+    .n-dash-sidebar-btn{display:inline-flex}
+}
+@media(max-width:768px){
+    .n-dash-inner-grid{grid-template-columns:1fr}
+    .n-metric-grid{grid-template-columns:repeat(2,1fr)}
+    .n-dash-content{padding:1.25rem .9rem 5rem}
+}
+@media(max-width:480px){
+    .n-metric-grid{grid-template-columns:1fr}
+    .n-metric{border-right:none;border-bottom:1px solid var(--border)}
+    .n-dash-content{padding:1rem .75rem 5rem}
+}
 </style>
 {% endblock %}
 
@@ -29,9 +65,14 @@
 
         <!-- Page header -->
         <div class="n-head n-reveal">
-            <div class="n-head-l">
-                <span class="n-num">01</span>
-                <span class="n-name">Overview</span>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+                <button class="n-dash-sidebar-btn" onclick="openDashSidebar()" aria-label="Open sidebar menu">
+                    <i data-lucide="menu" style="width:14px;height:14px;"></i> Menu
+                </button>
+                <div class="n-head-l">
+                    <span class="n-num">01</span>
+                    <span class="n-name">Overview</span>
+                </div>
             </div>
             <a href="{% url 'events:home' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;">
                 <i data-lucide="compass" style="width:13px;height:13px;"></i> Browse Events
@@ -40,7 +81,9 @@
 
         <!-- Welcome -->
         <div class="n-reveal" style="margin-bottom:1.5rem;">
-            <div style="font-size:1.2rem;font-weight:700;letter-spacing:-.02em;">Welcome back, <span style="color:var(--primary);">{{ request.user.first_name|default:request.user.username }}</span></div>
+            <div style="font-size:clamp(1rem,3vw,1.2rem);font-weight:700;letter-spacing:-.02em;">
+                Welcome back, <span style="color:var(--primary);">{{ request.user.first_name|default:request.user.username }}</span>
+            </div>
             <div style="font-size:.85rem;color:var(--muted);margin-top:.2rem;">Here's a snapshot of your recent activity.</div>
         </div>
 
@@ -61,7 +104,7 @@
         </div>
 
         <!-- Recent events + teams grid -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-bottom:1px;" class="n-reveal n-d2">
+        <div class="n-dash-inner-grid n-reveal n-d2">
 
             <!-- Recent Events -->
             <div class="n-card">
@@ -70,12 +113,14 @@
                     <a href="{% url 'dashboard:my_events' %}" style="font-size:.68rem;color:var(--primary);text-decoration:none;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">View All</a>
                 </div>
                 {% for event in my_events %}
-                <div class="n-row" style="border-bottom:1px solid var(--border);">
+                <div class="n-row">
                     <div style="font-size:.9rem;font-weight:600;margin-bottom:.2rem;">{{ event.title }}</div>
                     <div style="font-size:.75rem;color:var(--muted);font-family:var(--font-mono);">{{ event.status }}</div>
                 </div>
                 {% empty %}
-                <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem;">No events yet. <a href="{% url 'events:home' %}" style="color:var(--primary);">Browse events</a></div>
+                <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem;">
+                    No events yet. <a href="{% url 'events:home' %}" style="color:var(--primary);">Browse events</a>
+                </div>
                 {% endfor %}
             </div>
 
@@ -86,7 +131,7 @@
                     <a href="{% url 'dashboard:my_teams' %}" style="font-size:.68rem;color:var(--primary);text-decoration:none;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">View All</a>
                 </div>
                 {% for team in my_teams %}
-                <div class="n-row" style="border-bottom:1px solid var(--border);">
+                <div class="n-row">
                     <div style="font-size:.9rem;font-weight:600;margin-bottom:.2rem;">{{ team.name }}</div>
                     <div style="font-size:.75rem;color:var(--muted);">{{ team.event }} · <span style="font-family:var(--font-mono);">{{ team.role }}</span></div>
                 </div>
@@ -105,12 +150,12 @@
             </div>
             {% for notif in notifications %}
             <div class="n-row">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;">
-                    <div>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:0;">
                         <div style="font-size:.88rem;font-weight:600;">{{ notif.title }}</div>
                         <div style="font-size:.78rem;color:var(--muted);margin-top:.18rem;">{{ notif.body|truncatechars:80 }}</div>
                     </div>
-                    <div style="font-size:.65rem;color:var(--muted-soft);font-family:var(--font-mono);white-space:nowrap;">{{ notif.created_at|timesince }} ago</div>
+                    <div style="font-size:.65rem;color:var(--muted-soft);font-family:var(--font-mono);white-space:nowrap;flex-shrink:0;">{{ notif.created_at|timesince }} ago</div>
                 </div>
             </div>
             {% empty %}
@@ -120,4 +165,33 @@
 
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openDashSidebar() {
+    const s = document.getElementById('n-sidebar');
+    const o = document.getElementById('n-sidebar-overlay');
+    if (s) s.classList.add('open');
+    if (o) o.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeDashSidebar() {
+    const s = document.getElementById('n-sidebar');
+    const o = document.getElementById('n-sidebar-overlay');
+    if (s) s.classList.remove('open');
+    if (o) o.classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.getElementById('n-sidebar');
+    if (sidebar) {
+        sidebar.querySelectorAll('a').forEach(a =>
+            a.addEventListener('click', () => {
+                if (window.innerWidth <= 1024) closeDashSidebar();
+            })
+        );
+    }
+});
+</script>
 {% endblock %}

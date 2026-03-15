@@ -1,31 +1,44 @@
 # ═══════════════════════════════════════════════════════════════════════════════
-# CampusArena — Docker Compose (Django + PostgreSQL + Redis)
+# CampusArena — Docker Compose  (local dev + CI)
+#
+# Services: MySQL 8 · Redis 7 · Django (Daphne ASGI)
+#
+# Usage:
+#   cp .env.example .env          # fill in secrets
+#   docker compose up --build -d
+#   docker compose logs -f web
 # ═══════════════════════════════════════════════════════════════════════════════
 
 services:
-  # ── MySQL ────────────────────────────────────────────────────────────────
+
+  # ── MySQL 8 ────────────────────────────────────────────────────────────────
   db:
     image: mysql:8.0
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: campusarena
-      MYSQL_USER: campusarena
-      MYSQL_PASSWORD: ${DB_PASSWORD:-changeme}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-changeme}
+      MYSQL_DATABASE:      campusarena
+      MYSQL_USER:          campusarena
+      MYSQL_PASSWORD:      ${DB_PASSWORD:-changeme}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootchangeme}
     volumes:
       - mysqldata:/var/lib/mysql
     ports:
       - "3306:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost",
+             "-u", "campusarena", "-p${DB_PASSWORD:-changeme}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
-  # ── Redis (cache + future Celery broker) ─────────────────────────────────
+  # ── Redis 7 (cache + Channels layer) ───────────────────────────────────────
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redisdata:/data
     ports:
       - "6379:6379"
     healthcheck:
@@ -34,25 +47,28 @@ services:
       timeout: 3s
       retries: 5
 
-  # ── Django Application ───────────────────────────────────────────────────
+  # ── Django / Daphne ASGI ────────────────────────────────────────────────────
   web:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        SECRET_KEY: ${SECRET_KEY:-build-time-placeholder}
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${PORT:-8000}:8000"
     env_file:
       - .env
     environment:
-      DB_ENGINE: django.db.backends.mysql
-      DB_NAME: campusarena
-      DB_USER: campusarena
+      DJANGO_SETTINGS_MODULE: gdgProject.settings.prod
+      DB_ENGINE:   django.db.backends.mysql
+      DB_NAME:     campusarena
+      DB_USER:     campusarena
       DB_PASSWORD: ${DB_PASSWORD:-changeme}
-      DB_HOST: db
-      DB_PORT: 3306
-      REDIS_URL: redis://redis:6379/0
-      CACHE_BACKEND: django.core.cache.backends.redis.RedisCache
+      DB_HOST:     db
+      DB_PORT:     "3306"
+      REDIS_URL:   redis://redis:6379/0
+      CACHE_BACKEND:  django.core.cache.backends.redis.RedisCache
       CACHE_LOCATION: redis://redis:6379/1
     depends_on:
       db:
@@ -60,10 +76,15 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/health/"]
       interval: 30s
-      timeout: 5s
+      timeout: 10s
+      start_period: 60s
       retries: 3
+    # The entrypoint.sh already runs migrations; CMD starts Daphne.
+    # Override CMD here only if you need a different server during local dev:
+    # command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 volumes:
   mysqldata:
+  redisdata:

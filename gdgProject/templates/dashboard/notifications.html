@@ -1,30 +1,39 @@
 {% extends 'base.html' %}
 {% block title %}CampusArena | Notifications{% endblock %}
+
 {% block extra_css %}
-<style>
-.main-content{padding:0!important;max-width:100%!important;width:100%!important}
-.n-dash{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
-.n-dash-content{padding:2rem 2.5rem 4rem}
-@media(max-width:900px){.n-dash{grid-template-columns:1fr}}
-</style>
+{% include 'includes/_dash_layout.html' %}
 {% endblock %}
+
 {% block content %}
 {% include 'includes/_n_page.html' %}
 <div class="n-dash">
     {% include 'dashboard/_sidebar.html' with current_page='notifications' %}
+
     <div class="n-dash-content">
 
         <div class="n-head n-reveal">
-            <div class="n-head-l"><span class="n-num">05</span><span class="n-name">Notifications</span></div>
-            <form method="POST" action="{% url 'dashboard:mark_all_read' %}" id="mark-all-read-form">
+            <div style="display:flex;align-items:center;gap:.5rem;">
+                <button class="n-dash-sidebar-btn" onclick="openDashSidebar()" aria-label="Open menu">
+                    <i data-lucide="menu" style="width:14px;height:14px;"></i> Menu
+                </button>
+                <div class="n-head-l">
+                    <span class="n-num">05</span>
+                    <span class="n-name">Notifications</span>
+                </div>
+            </div>
+            <form method="POST" action="{% url 'dashboard:mark_all_read' %}">
                 {% csrf_token %}
-                <button type="submit" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:none;border:1px solid var(--border);padding:.35rem .7rem;cursor:pointer;font-family:var(--font);transition:all .15s;">
+                <button type="submit"
+                    style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:none;border:1px solid var(--border);padding:.35rem .7rem;cursor:pointer;font-family:var(--font);transition:all .15s;"
+                    onmouseover="this.style.borderColor='var(--border-hover)';this.style.color='var(--text)'"
+                    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
                     <i data-lucide="check-check" style="width:12px;height:12px;"></i> Mark all read
                 </button>
             </form>
         </div>
 
-        <div class="n-list n-reveal">
+        <div class="n-reveal" style="border:1px solid var(--border);">
             {% for notif in notifications %}
             <div class="n-row{% if not notif.read %}" style="border-left:2px solid var(--primary);{% endif %}">
                 <div style="display:flex;align-items:flex-start;gap:.75rem;">
@@ -32,18 +41,21 @@
                         {% if notif.type == 'request_approved' %}background:var(--ok-soft);color:var(--ok);
                         {% elif notif.type == 'join_request' or notif.type == 'announcement' %}background:var(--primary-glow);color:var(--primary);
                         {% else %}background:var(--surface-3);color:var(--muted);{% endif %}">
-                        <i data-lucide="{% if notif.type == 'request_approved' %}check-circle{% elif notif.type == 'request_declined' %}x-circle{% elif notif.type == 'announcement' %}megaphone{% elif notif.type == 'join_request' %}user-plus{% else %}bell{% endif %}" style="width:14px;height:14px;"></i>
+                        <i data-lucide="{% if notif.type == 'request_approved' %}check-circle{% elif notif.type == 'request_declined' %}x-circle{% elif notif.type == 'announcement' %}megaphone{% elif notif.type == 'join_request' %}user-plus{% else %}bell{% endif %}"
+                           style="width:14px;height:14px;"></i>
                     </div>
                     <div style="flex:1;min-width:0;">
                         <div style="font-size:.88rem;font-weight:{% if not notif.read %}700{% else %}500{% endif %};">{{ notif.title }}</div>
                         <div style="font-size:.8rem;color:var(--muted);margin-top:.18rem;line-height:1.55;">{{ notif.body }}</div>
                     </div>
-                    <div style="font-size:.65rem;color:var(--muted-soft);font-family:var(--font-mono);white-space:nowrap;flex-shrink:0;">{{ notif.created_at|timesince }} ago</div>
+                    <div style="font-size:.65rem;color:var(--muted-soft);font-family:var(--font-mono);white-space:nowrap;flex-shrink:0;">
+                        {{ notif.created_at|timesince }} ago
+                    </div>
                 </div>
             </div>
             {% empty %}
             <div style="padding:3rem;text-align:center;color:var(--muted);">
-                <i data-lucide="bell-off" style="width:28px;height:28px;opacity:.35;margin-bottom:.5rem;"></i>
+                <i data-lucide="bell-off" style="width:28px;height:28px;opacity:.35;margin-bottom:.5rem;display:block;margin-left:auto;margin-right:auto;"></i>
                 <div style="font-size:.85rem;">No notifications yet. You're all caught up.</div>
             </div>
             {% endfor %}

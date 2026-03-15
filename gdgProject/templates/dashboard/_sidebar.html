@@ -1,5 +1,8 @@
 {% load static %}
-<aside style="background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;gap:.1rem;">
+<!-- Sidebar overlay for mobile -->
+<div id="n-sidebar-overlay" onclick="closeDashSidebar()"></div>
+
+<aside id="n-sidebar" style="background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;gap:.1rem;">
 
     <!-- Profile -->
     <div style="padding-bottom:1rem;margin-bottom:.75rem;border-bottom:1px solid var(--border);">
@@ -50,3 +53,22 @@
         <i data-lucide="settings" style="width:15px;height:15px;flex-shrink:0;"></i> Settings
     </a>
 </aside>
+
+<!-- Sidebar JS — auto-injected on every dashboard page -->
+<script>
+function openDashSidebar() {
+    document.getElementById('n-sidebar')?.classList.add('open');
+    document.getElementById('n-sidebar-overlay')?.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeDashSidebar() {
+    document.getElementById('n-sidebar')?.classList.remove('open');
+    document.getElementById('n-sidebar-overlay')?.classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('n-sidebar')?.querySelectorAll('a').forEach(a =>
+        a.addEventListener('click', () => { if (window.innerWidth <= 1024) closeDashSidebar(); })
+    );
+});
+</script>

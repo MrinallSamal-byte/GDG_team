@@ -1,11 +1,9 @@
 {% extends 'base.html' %}
 {% block title %}CampusArena | Edit Profile{% endblock %}
 {% block extra_css %}
+{% include 'includes/_dash_layout.html' %}
 <style>
-.main-content{padding:0!important;max-width:100%!important;width:100%!important}
-.n-dash{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
-.n-dash-content{padding:2rem 2.5rem 4rem;max-width:660px}
-@media(max-width:900px){.n-dash{grid-template-columns:1fr}}
+.n-dash-content{max-width:660px!important}
 .n-card{background:var(--surface);border:1px solid var(--border);padding:1.25rem;margin-bottom:1px}
 .n-card-head{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;display:flex;align-items:center;gap:.4rem}
 .n-card-head i{width:12px;height:12px;color:var(--primary)}
@@ -26,7 +24,12 @@
     <div class="n-dash-content">
 
         <div class="n-head n-reveal" style="margin-bottom:1.5rem;">
-            <div class="n-head-l"><span class="n-num">EDIT</span><span class="n-name">Edit Profile</span></div>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+                <button class="n-dash-sidebar-btn" onclick="openDashSidebar()" aria-label="Open menu">
+                    <i data-lucide="menu" style="width:14px;height:14px;"></i> Menu
+                </button>
+                <div class="n-head-l"><span class="n-num">EDIT</span><span class="n-name">Edit Profile</span></div>
+            </div>
             <a href="{% url 'dashboard:my_profile' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;">
                 <i data-lucide="arrow-left" style="width:12px;height:12px;"></i> Cancel
             </a>

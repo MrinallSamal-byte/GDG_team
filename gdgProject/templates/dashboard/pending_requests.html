@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 {% block title %}CampusArena | Pending Requests{% endblock %}
 {% block extra_css %}
+{% include 'includes/_dash_layout.html' %}
 <style>
-.main-content{padding:0!important;max-width:100%!important;width:100%!important}
-.n-dash{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
-.n-dash-content{padding:2rem 2.5rem 4rem}
-@media(max-width:900px){.n-dash{grid-template-columns:1fr}}
-.n-req-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)}
+.n-req-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:1px;
+    background:var(--border);border:1px solid var(--border)
+}
 @media(max-width:700px){.n-req-grid{grid-template-columns:1fr}}
 </style>
 {% endblock %}
@@ -17,7 +17,12 @@
     <div class="n-dash-content">
 
         <div class="n-head n-reveal">
-            <div class="n-head-l"><span class="n-num">07</span><span class="n-name">Requests</span></div>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+                <button class="n-dash-sidebar-btn" onclick="openDashSidebar()" aria-label="Open menu">
+                    <i data-lucide="menu" style="width:14px;height:14px;"></i> Menu
+                </button>
+                <div class="n-head-l"><span class="n-num">07</span><span class="n-name">Requests</span></div>
+            </div>
         </div>
 
         <div class="n-req-grid n-reveal">
