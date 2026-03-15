@@ -5,13 +5,12 @@ Usage:
     DJANGO_SETTINGS_MODULE=gdgProject.settings.dev python manage.py runserver
 
 Database:
-    Tries to connect to MySQL (from .env / environment).
-    If MySQL is unreachable, automatically falls back to SQLite so the
-    project runs for front-end / feature work without a running DB server.
+    Uses POSTGRES_URL when set in the environment / .env file.
+    If POSTGRES_URL is not configured, automatically falls back to SQLite so
+    the project runs for front-end / feature work without a running DB server.
 """
 
 import os
-import socket
 
 from .base import *  # noqa: F401,F403
 
@@ -24,36 +23,18 @@ CACHES["default"]["BACKEND"] = "django.core.cache.backends.locmem.LocMemCache"  
 
 CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
 
-# ─── Database — MySQL with automatic SQLite fallback ─────────────────────────
-def _mysql_reachable(host: str, port: int, timeout: float = 1.0) -> bool:
-    """Return True if something is listening on host:port."""
-    try:
-        with socket.create_connection((host, int(port)), timeout=timeout):
-            return True
-    except OSError:
-        return False
-
-
-_db = DATABASES["default"]  # noqa: F405 — pulled from base.py
-
-if _db["ENGINE"] == "django.db.backends.mysql" and not _mysql_reachable(
-    _db.get("HOST", "127.0.0.1"), _db.get("PORT", 3306)
-):
+# ─── Database — PostgreSQL with automatic SQLite fallback ─────────────────────
+# base.py already defaults to sqlite:///db.sqlite3 when POSTGRES_URL is absent.
+# Log a notice so developers know which database is active.
+if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":  # noqa: F405
     import warnings
 
     warnings.warn(
-        "\n\n  ⚠️  MySQL is not reachable at "
-        f"{_db.get('HOST', '127.0.0.1')}:{_db.get('PORT', 3306)}.\n"
+        "\n\n  ℹ️  POSTGRES_URL is not set.\n"
         "  Falling back to SQLite for this session.\n"
-        "  Start MySQL and restart the server to use the real database.\n",
+        "  Set POSTGRES_URL in your .env file to connect to PostgreSQL.\n",
         stacklevel=2,
     )
-    DATABASES = {  # noqa: F405
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db_dev_fallback.sqlite3",  # noqa: F405
-        }
-    }
 
 # ─── Django Channels — Redis if available, in-memory fallback ────────────────
 _redis_url = os.environ.get("REDIS_URL", "")

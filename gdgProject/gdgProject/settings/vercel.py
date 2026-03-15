@@ -12,7 +12,7 @@ Vercel serverless settings for CampusArena.
 
 Required environment variables (set in Vercel Dashboard → Settings → Env Vars):
     SECRET_KEY          — Django secret key (generate with: python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
-    DATABASE_URL        — PostgreSQL URL from Neon / Supabase  e.g. postgresql://user:pass@host/db?sslmode=require
+    POSTGRES_URL        — PostgreSQL URL from Neon / Supabase  e.g. postgresql://user:pass@host/db?sslmode=require
     ALLOWED_HOSTS       — comma-separated  e.g. campusarena.vercel.app,campusarena.com
     REDIS_URL           — Upstash Redis URL  e.g. redis://default:token@host:port
     EMAIL_HOST_USER     — SMTP user
@@ -74,13 +74,14 @@ CSRF_TRUSTED_ORIGINS = (
     + ["https://*.vercel.app"]
 )
 
-# ── Database — PostgreSQL via DATABASE_URL ───────────────────────────────────
-# Free options: Neon (https://neon.tech), Supabase (https://supabase.com)
-#
-# PlanetScale (MySQL-compatible) also works if you prefer MySQL:
-#   pip install PyMySQL  and set DB_ENGINE=django.db.backends.mysql
-#
-_database_url = os.environ.get("DATABASE_URL", "")
+# ── Database — PostgreSQL via POSTGRES_URL (Vercel Postgres / Supabase / Neon) ─
+# POSTGRES_URL is the standard variable name for Vercel Postgres integration.
+# DATABASE_URL is accepted as a fallback for other providers.
+_database_url = (
+    os.environ.get("POSTGRES_URL")
+    or os.environ.get("DATABASE_URL")
+    or ""
+)
 if _database_url:
     DATABASES["default"] = dj_database_url.config(  # noqa: F405
         default=_database_url,

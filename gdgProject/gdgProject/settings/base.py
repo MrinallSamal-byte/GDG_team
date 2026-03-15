@@ -11,6 +11,11 @@ import os
 from pathlib import Path
 
 try:
+    import dj_database_url as _dj_database_url
+except ModuleNotFoundError:
+    _dj_database_url = None  # type: ignore[assignment]
+
+try:
     from decouple import Csv, config
 except ModuleNotFoundError:
     # Minimal fallback used only before `pip install -r requirements.txt`
@@ -110,23 +115,25 @@ WSGI_APPLICATION = "gdgProject.wsgi.application"
 ASGI_APPLICATION = "gdgProject.asgi.application"
 
 # ─── Database ─────────────────────────────────────────────────────────────────
-DATABASES = {
-    "default": {
-        "ENGINE": config("DB_ENGINE", default="django.db.backends.mysql"),
-        "NAME": config("DB_NAME", default="campusarena"),
-        "USER": config("DB_USER", default="campusarena"),
-        "PASSWORD": config("DB_PASSWORD", default="changeme"),
-        "HOST": config("DB_HOST", default="127.0.0.1"),
-        "PORT": config("DB_PORT", default="3306"),
-        "ATOMIC_REQUESTS": True,
-    }
-}
+_postgres_url = config("POSTGRES_URL", default="")
 
-if DATABASES["default"]["ENGINE"] == "django.db.backends.mysql":
-    DATABASES["default"]["OPTIONS"] = {
-        "charset": "utf8mb4",
-        "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+if _dj_database_url is not None:
+    DATABASES = {
+        "default": _dj_database_url.config(
+            default=_postgres_url or f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
+else:
+    # Minimal fallback only before `pip install -r requirements.txt`
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+DATABASES["default"]["ATOMIC_REQUESTS"] = True
 
 # ─── Django Channels ─────────────────────────────────────────────────────────
 CHANNEL_LAYERS = {

@@ -22,14 +22,11 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
 
-# ─── Database (MySQL) ────────────────────────────────────────────────────────
-DATABASES["default"]["ENGINE"] = "django.db.backends.mysql"  # noqa: F405
+# ─── Database (PostgreSQL via POSTGRES_URL) ──────────────────────────────────
+# base.py already configures DATABASES from POSTGRES_URL using dj_database_url.
+# Override only the connection pool settings appropriate for a long-running server.
 DATABASES["default"]["CONN_MAX_AGE"] = 600  # noqa: F405
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True  # noqa: F405
-DATABASES["default"]["OPTIONS"] = {  # noqa: F405
-    **DATABASES["default"].get("OPTIONS", {}),  # noqa: F405
-    "connect_timeout": 5,
-}
 
 # ─── Cache (Redis) ───────────────────────────────────────────────────────────
 CACHES["default"] = {  # noqa: F405
