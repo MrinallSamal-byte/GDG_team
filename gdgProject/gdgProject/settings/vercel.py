@@ -77,12 +77,26 @@ CSRF_TRUSTED_ORIGINS = (
 # ── Database — PostgreSQL via DATABASE_URL ───────────────────────────────────
 # Free options: Neon (https://neon.tech), Supabase (https://supabase.com)
 #
-# PlanetScale (MySQL-compatible) also works if you prefer MySQL:
-#   pip install PyMySQL  and set DB_ENGINE=django.db.backends.mysql
+# IMPORTANT: Always override the MySQL default inherited from base.py.
+# Vercel build images do not have the MySQL C headers required by mysqlclient,
+# so keeping the MySQL engine would cause an ImproperlyConfigured crash on
+# every cold-start even before a request is served.
 #
-_database_url = os.environ.get("DATABASE_URL", "")
+# Fallback chain:
+#   1. DATABASE_URL set  → PostgreSQL (psycopg2-binary, included in api/requirements.txt)
+#   2. DATABASE_URL unset → SQLite in /tmp so Django can start and return the
+#      helpful 503 error page rather than a raw Python traceback.
+#
+DATABASES = {  # noqa: F405
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "/tmp/campusarena.sqlite3",
+    }
+}
+
+_database_url = os.environ.get("DATABASE_URL", "").strip()
 if _database_url:
-    DATABASES["default"] = dj_database_url.config(  # noqa: F405
+    DATABASES["default"] = dj_database_url.config(
         default=_database_url,
         conn_max_age=0,          # serverless: don't persist connections
         conn_health_checks=True,
