@@ -1,0 +1,58 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# CampusArena — .dockerignore
+# Keeps the build context lean — never sends secrets, caches, or dev files.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── Python ───────────────────────────────────────────────────────────────────
+**/__pycache__/
+**/*.py[cod]
+**/*.pyo
+**/.pytest_cache/
+**/.ruff_cache/
+**/*.egg-info/
+**/dist/
+**/build/
+
+# ── Virtual environments ─────────────────────────────────────────────────────
+env/
+venv/
+.venv/
+ENV/
+
+# ── Secrets — NEVER bake .env into the image ─────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Dev / editor files ────────────────────────────────────────────────────────
+.git/
+.gitignore
+.github/
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Local SQLite databases ────────────────────────────────────────────────────
+**/*.sqlite3
+**/*.db
+
+# ── Already-collected static & media (re-collected during build) ─────────────
+gdgProject/staticfiles/
+gdgProject/mediafiles/
+gdgProject/media/
+
+# ── Test artefacts ────────────────────────────────────────────────────────────
+**/.coverage
+**/htmlcov/
+**/coverage.xml
+
+# ── Docs ─────────────────────────────────────────────────────────────────────
+README.md
+docs/
+
+# ── Docker files (don't recurse into themselves) ─────────────────────────────
+docker-compose*.yml
+*.dockerfile

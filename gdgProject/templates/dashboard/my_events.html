@@ -1,28 +1,36 @@
 {% extends 'base.html' %}
 {% block title %}CampusArena | My Events{% endblock %}
+
 {% block extra_css %}
-<style>
-.main-content{padding:0!important;max-width:100%!important;width:100%!important}
-.n-dash{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
-.n-dash-content{padding:2rem 2.5rem 4rem}
-@media(max-width:900px){.n-dash{grid-template-columns:1fr}}
-</style>
+{% include 'includes/_dash_layout.html' %}
 {% endblock %}
+
 {% block content %}
 {% include 'includes/_n_page.html' %}
 <div class="n-dash">
     {% include 'dashboard/_sidebar.html' with current_page='events' %}
+
     <div class="n-dash-content">
 
         <div class="n-head n-reveal">
-            <div class="n-head-l"><span class="n-num">03</span><span class="n-name">My Events</span></div>
-            <a href="{% url 'events:home' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;"><i data-lucide="compass" style="width:13px;height:13px;"></i> Discover More</a>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+                <button class="n-dash-sidebar-btn" onclick="openDashSidebar()" aria-label="Open menu">
+                    <i data-lucide="menu" style="width:14px;height:14px;"></i> Menu
+                </button>
+                <div class="n-head-l">
+                    <span class="n-num">03</span>
+                    <span class="n-name">My Events</span>
+                </div>
+            </div>
+            <a href="{% url 'events:home' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;">
+                <i data-lucide="compass" style="width:13px;height:13px;"></i> Discover More
+            </a>
         </div>
 
-        <div class="n-list n-reveal">
+        <div class="n-list n-reveal" style="border:1px solid var(--border);">
             {% for event in events %}
             <div class="n-row">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
                     <div style="flex:1;min-width:0;">
                         <div style="font-size:.95rem;font-weight:700;margin-bottom:.3rem;">{{ event.title }}</div>
                         <div style="display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;">
@@ -33,13 +41,16 @@
                     </div>
                     <div style="display:flex;align-items:center;gap:.6rem;flex-shrink:0;">
                         <span class="n-tag {% if event.status == 'Confirmed' %}green{% elif event.status == 'Cancelled' %}red{% else %}amber{% endif %}">{{ event.status }}</span>
-                        <a href="{% url 'events:event_detail' event.id %}" style="display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);text-decoration:none;padding:.3rem .65rem;border:1px solid var(--border);transition:border-color .15s;" onmouseover="this.style.borderColor='var(--border-hover)'" onmouseout="this.style.borderColor='var(--border)'">
+                        <a href="{% url 'events:event_detail' event.id %}"
+                           style="display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);text-decoration:none;padding:.3rem .65rem;border:1px solid var(--border);transition:border-color .15s;"
+                           onmouseover="this.style.borderColor='var(--border-hover)'"
+                           onmouseout="this.style.borderColor='var(--border)'">
                             <i data-lucide="external-link" style="width:11px;height:11px;"></i> View
                         </a>
                     </div>
                 </div>
                 {% if event.team %}
-                <div style="margin-top:.55rem;padding-top:.55rem;border-top:1px solid var(--border-soft);font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:.35rem;">
+                <div style="margin-top:.55rem;padding-top:.55rem;border-top:1px solid var(--border-soft);font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;">
                     <i data-lucide="users" style="width:12px;height:12px;color:var(--primary);"></i>
                     Team: <strong style="color:var(--text);">{{ event.team }}</strong> · <span style="font-family:var(--font-mono);">{{ event.role }}</span>
                 </div>
@@ -48,7 +59,8 @@
             {% empty %}
             <div style="padding:3rem;text-align:center;color:var(--muted);">
                 <div style="font-size:.85rem;margin-bottom:.75rem;">You haven't joined any events yet.</div>
-                <a href="{% url 'events:home' %}" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;padding:.6rem 1.1rem;border:1px solid var(--primary);">
+                <a href="{% url 'events:home' %}"
+                   style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;padding:.6rem 1.1rem;border:1px solid var(--primary);">
                     <i data-lucide="compass" style="width:13px;height:13px;"></i> Browse Events
                 </a>
             </div>

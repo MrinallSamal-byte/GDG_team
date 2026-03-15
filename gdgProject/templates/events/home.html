@@ -380,6 +380,9 @@
         align-items: center; justify-content: space-between;
         padding: 0 1.1rem; z-index: 1000;
     }
+    .n-why-grid { grid-template-columns: repeat(2,1fr) !important; }
+    .n-stats { max-width: 100%; }
+    .n-search { max-width: 100%; }
     .n-mobile-nav .n-brand { font-size: 1rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text); display: flex; align-items: center; gap: .4rem; }
     .n-mobile-nav .n-brand i { color: var(--primary); }
     body { padding-top: 56px; padding-bottom: 80px; }
@@ -406,6 +409,21 @@
 }
 @media (min-width: 769px) {
     .n-mobile-nav, .n-mobile-bottom { display: none !important; }
+}
+@media (max-width: 480px) {
+    .n-why-grid     { grid-template-columns: 1fr !important; }
+    .n-how-grid     { grid-template-columns: 1fr; }
+    .n-how-step     { border-right: none; border-bottom: 1px solid var(--border); }
+    .n-hero-title   { font-size: clamp(2.2rem, 10vw, 3.5rem); }
+    .n-stat strong  { font-size: 1.15rem; }
+    .n-stat span    { font-size: .6rem; }
+    .n-cta          { padding: 1.5rem 1rem; }
+    .n-cta-btns     { flex-direction: column; width: 100%; }
+    .n-btn-primary, .n-btn-outline { text-align: center; justify-content: center; }
+    .n-section      { padding-left: 2%; padding-right: 2%; }
+    .n-hero         { padding-left: 2%; padding-right: 2%; }
+    .n-featured-inner { padding: 1rem; }
+    /* Card grid already 1-col at this breakpoint from parent CSS */
 }
 </style>
 {% endblock %}

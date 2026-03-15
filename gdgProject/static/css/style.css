@@ -947,26 +947,157 @@ button { font-family: var(--font); cursor: pointer; }
 html.vt-active, html.vt-active *, html.vt-active *::before, html.vt-active *::after { transition: none !important; }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
+
+/* ── Large screens (1400px+) ────────────────────────────────────────────── */
+@media (min-width: 1400px) {
+    .container { width: min(1360px, 90%); }
+    .n-hero-title { font-size: 5.5rem; }
+    .footer-grid { grid-template-columns: 2.5fr 1fr 1fr 1fr; }
+}
+
+/* ── Tablet landscape (max 1024px) ──────────────────────────────────────── */
 @media (max-width: 1024px) {
     .card-grid          { grid-template-columns: repeat(2,1fr); }
     .metric-grid        { grid-template-columns: repeat(2,1fr); }
-    .dashboard-main, .two-col, .tabs-grid, .event-header, .hero, .dashboard-layout, .prize-grid, .footer-grid { grid-template-columns: 1fr; }
-    .footer-grid        { grid-template-columns: 1fr 1fr; }
+    .dashboard-main, .two-col, .tabs-grid, .event-header, .hero, .dashboard-layout, .prize-grid { grid-template-columns: 1fr; }
+    .footer-grid        { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
     .nav-center         { display: none; }
     .mobile-toggle      { display: flex; }
     .sidebar            { position: static; }
     .auth-layout        { grid-template-columns: 1fr; }
     .auth-decor         { display: none; }
+    /* Dashboard sidebar collapses */
+    .n-dash             { grid-template-columns: 1fr !important; }
+    #n-sidebar          { display: none; position: fixed; top: 0; left: -280px; width: 260px;
+                          height: 100vh; z-index: 300; padding: 1.5rem 1rem;
+                          transition: left var(--motion-base) var(--motion-spring);
+                          box-shadow: var(--shadow-lg); overflow-y: auto; }
+    #n-sidebar.open     { display: flex !important; left: 0; }
+    #n-sidebar-overlay  { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
+                          z-index: 299; backdrop-filter: blur(2px); }
+    #n-sidebar-overlay.open { display: block; }
+    .n-dash-sidebar-btn { display: inline-flex !important; }
+    .n-dash-content     { padding: 1.5rem 1.25rem 4rem !important; }
 }
+
+/* ── Tablet portrait (max 768px) ────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .container          { width: 94%; }
+    .hero               { grid-template-columns: 1fr; }
+    .hero h1            { font-size: clamp(2rem, 7vw, 3rem); }
+    .footer-grid        { grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .metric-grid        { grid-template-columns: repeat(2,1fr); }
+    .profile-info-grid  { grid-template-columns: 1fr; }
+    .two-col            { grid-template-columns: 1fr; }
+    .card-grid          { grid-template-columns: repeat(2,1fr); }
+    .event-header       { grid-template-columns: 1fr; }
+    .dashboard-main     { grid-template-columns: 1fr; }
+    .prize-grid         { grid-template-columns: repeat(3,1fr); }
+    .n-metric-grid      { grid-template-columns: repeat(2,1fr) !important; }
+    /* Make inner dashboard cards stack */
+    .n-dash-inner-grid  { grid-template-columns: 1fr !important; }
+    .tabs-grid          { grid-template-columns: 1fr; }
+    /* Auth */
+    .auth-card          { width: 100%; }
+    .auth-form          { padding: 1.75rem 1.25rem; }
+    /* Modal fits on screen */
+    .modal              { width: min(96%, 440px); padding: 1.25rem; }
+    /* Toast positioning */
+    .toast-container    { bottom: 1rem; right: .75rem; left: .75rem; align-items: stretch; }
+    .toast              { max-width: 100%; min-width: unset; }
+    /* Section head */
+    .section-head.split { flex-direction: column; align-items: flex-start; }
+}
+
+/* ── Mobile (max 680px) ─────────────────────────────────────────────────── */
 @media (max-width: 680px) {
-    .nav-wrap     { min-height: 56px; }
-    .container    { width: 94%; }
-    .search-wrap  { flex-direction: column; }
-    .card-grid    { grid-template-columns: 1fr; }
-    .stats-row, .field-grid { grid-template-columns: 1fr; }
-    .footer-grid  { grid-template-columns: 1fr; }
-    .metric-grid  { grid-template-columns: repeat(2,1fr); }
+    .nav-wrap           { min-height: 56px; }
+    .container          { width: 95%; }
+    .search-wrap        { flex-direction: column; }
+    .card-grid          { grid-template-columns: 1fr; }
+    .stats-row, .field-grid  { grid-template-columns: 1fr; }
+    .footer-grid        { grid-template-columns: 1fr; }
+    .metric-grid        { grid-template-columns: repeat(2,1fr); }
     .section-head.split, .footer-bottom, .auth-links { flex-direction: column; align-items: flex-start; }
-    .main-content { padding: 1.5rem 0 5rem; }
-    .site-footer  { padding-bottom: 5rem; }
+    .main-content       { padding: 1.5rem 0 5rem; }
+    .site-footer        { padding-bottom: 5rem; padding-top: 2rem; }
+    /* Typography scale-down */
+    h1                  { font-size: clamp(1.6rem, 6vw, 2.5rem); }
+    h2                  { font-size: clamp(1.2rem, 5vw, 1.8rem); }
+    /* Countdown wrap */
+    .countdown          { grid-template-columns: repeat(4,1fr); }
+    .countdown-unit strong { font-size: 1.1rem; }
+    /* Prize grid — 1 row of 3 keeps but smaller text */
+    .prize-grid         { grid-template-columns: repeat(3,1fr); }
+    .prize-card         { padding: .9rem .5rem; }
+    /* OTP inputs */
+    .otp-grid           { grid-template-columns: repeat(6,1fr); gap: .3rem; }
+    .otp-grid input     { padding: .55rem .3rem; font-size: .9rem; }
+    /* Stats row */
+    .stats-row          { grid-template-columns: repeat(3,1fr); }
+    .stats-row strong   { font-size: 1.1rem; }
+    /* Avatar sizes */
+    .avatar-xl          { width: 52px; height: 52px; font-size: 1.1rem; }
+    /* Dashboard metric grid — 2 cols on mobile */
+    .n-metric-grid      { grid-template-columns: repeat(2,1fr) !important; }
+    .n-dash-content     { padding: 1.25rem .85rem 5rem !important; }
+    /* Event card footer wraps */
+    .event-card-footer  { flex-direction: column; align-items: flex-start; }
+    /* Meta row wraps naturally */
+    .meta-row           { gap: .25rem; }
+    /* Stepper scrolls horizontally */
+    .stepper            { overflow-x: auto; flex-wrap: nowrap; }
+    /* Tab bar already scrolls — ensure it */
+    .tab-bar            { overflow-x: auto; }
+    /* Footer social */
+    .footer-bottom      { flex-direction: column; align-items: flex-start; }
+}
+
+/* ── Small phones (max 480px) ───────────────────────────────────────────── */
+@media (max-width: 480px) {
+    .container          { width: 96%; }
+    .brand              { font-size: .95rem; }
+    .nav-wrap           { min-height: 52px; }
+    /* Hero text */
+    .hero h1            { font-size: clamp(1.5rem, 9vw, 2.2rem); }
+    /* Countdown — keep 4 cols but more compact */
+    .countdown-unit     { padding: .55rem .25rem; }
+    .countdown-unit strong { font-size: 1rem; }
+    /* Buttons on tiny screens */
+    .btn-primary, .btn-secondary { padding: .55rem .85rem; font-size: .82rem; }
+    /* Prize grid wraps to 1 col on tiny phones */
+    .prize-grid         { grid-template-columns: 1fr; }
+    .prize-card         { text-align: left; display: flex; align-items: center; gap: .75rem; padding: .75rem; }
+    .prize-card .prize-icon { font-size: 1.3rem; margin: 0; flex-shrink: 0; }
+    /* Metric grid — 1 col on tiny phones */
+    .metric-grid        { grid-template-columns: 1fr !important; }
+    .n-metric-grid      { grid-template-columns: 1fr !important; }
+    /* OTP grid adjust */
+    .otp-grid           { grid-template-columns: repeat(6,1fr); gap: .2rem; }
+    .otp-grid input     { padding: .5rem .15rem; font-size: .85rem; }
+    /* Stats row — 3 cols but smaller */
+    .stats-row strong   { font-size: 1rem; }
+    .stats-row span     { font-size: .65rem; }
+    /* Auth form tighter */
+    .auth-form          { padding: 1.25rem 1rem; }
+    /* Modal full-width */
+    .modal              { width: 96%; border-radius: var(--radius-lg); padding: 1rem; }
+    /* Toast full-width */
+    .toast-container    { left: .5rem; right: .5rem; bottom: .75rem; }
+    /* Table/grid overflow safety */
+    .event-header, .two-col, .tabs-grid { grid-template-columns: 1fr; }
+    /* Profile grid — 1 col */
+    .profile-info-grid  { grid-template-columns: 1fr; }
+    /* Social buttons stack */
+    .social-btns        { flex-direction: column; }
+    /* Dashboard content */
+    .n-dash-content     { padding: 1rem .75rem 5rem !important; }
+    /* Field grid — 1 col */
+    .field-grid         { grid-template-columns: 1fr; }
+    /* Footer col headings closer */
+    .footer-col         { margin-top: 0; }
+    /* Section title smaller */
+    .section-title      { font-size: 1.15rem; }
+    /* Form labels */
+    label               { font-size: .82rem; }
 }

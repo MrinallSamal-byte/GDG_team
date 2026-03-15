@@ -1,43 +1,82 @@
 {% extends 'base.html' %}
 {% block title %}CampusArena | Settings{% endblock %}
+
 {% block extra_css %}
+{% include 'includes/_dash_layout.html' %}
 <style>
-.main-content{padding:0!important;max-width:100%!important;width:100%!important}
-.n-dash{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
-.n-dash-content{padding:2rem 2.5rem 4rem}
-@media(max-width:900px){.n-dash{grid-template-columns:1fr}}
-.n-settings-block{background:var(--surface);border:1px solid var(--border);margin-bottom:1px}
-.n-settings-head{padding:.85rem 1.1rem;border-bottom:1px solid var(--border);font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:.45rem}
-.n-settings-head i{width:13px;height:13px;color:var(--primary)}
-.n-settings-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.9rem 1.1rem;border-bottom:1px solid var(--border-soft);flex-wrap:wrap}
-.n-settings-row:last-child{border-bottom:none}
-.n-settings-row .info strong{display:block;font-size:.88rem;font-weight:600;margin-bottom:.18rem}
-.n-settings-row .info p{font-size:.78rem;color:var(--muted);margin:0}
-.n-settings-inp{border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-family:var(--font);font-size:.88rem;padding:.5rem .8rem;border-radius:0;outline:none;width:220px;transition:border-color .15s}
-.n-settings-inp:focus{border-color:var(--primary)}
-.n-toggle{position:relative;display:inline-block;width:38px;height:20px;flex-shrink:0}
-.n-toggle input{opacity:0;width:0;height:0}
-.n-toggle-sl{position:absolute;cursor:pointer;inset:0;background:var(--surface-3);transition:background .2s}
-.n-toggle-sl::before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:var(--muted);transition:transform .2s,background .2s}
-.n-toggle input:checked+.n-toggle-sl{background:var(--primary)}
-.n-toggle input:checked+.n-toggle-sl::before{transform:translateX(18px);background:#fff}
+.n-settings-block { background: var(--surface); border: 1px solid var(--border); margin-bottom: 1px; }
+.n-settings-head  {
+    padding: .85rem 1.1rem; border-bottom: 1px solid var(--border);
+    font-size: .65rem; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted);
+    display: flex; align-items: center; gap: .45rem;
+}
+.n-settings-head i { width: 13px; height: 13px; color: var(--primary); }
+.n-settings-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; padding: .9rem 1.1rem;
+    border-bottom: 1px solid var(--border-soft); flex-wrap: wrap;
+}
+.n-settings-row:last-child { border-bottom: none; }
+.n-settings-row .info { flex: 1; min-width: 0; }
+.n-settings-row .info strong { display: block; font-size: .88rem; font-weight: 600; margin-bottom: .18rem; }
+.n-settings-row .info p { font-size: .78rem; color: var(--muted); margin: 0; }
+/* Responsive input — grows to full width on small screens */
+.n-settings-inp {
+    border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--text); font-family: var(--font); font-size: .88rem;
+    padding: .5rem .8rem; border-radius: 0; outline: none;
+    width: clamp(160px, 30vw, 220px); max-width: 100%;
+    transition: border-color .15s;
+}
+.n-settings-inp:focus { border-color: var(--primary); }
+@media (max-width: 600px) {
+    .n-settings-inp { width: 100%; }
+    .n-settings-row { flex-direction: column; align-items: flex-start; }
+}
+/* Toggle switch */
+.n-toggle { position: relative; display: inline-block; width: 38px; height: 20px; flex-shrink: 0; }
+.n-toggle input { opacity: 0; width: 0; height: 0; }
+.n-toggle-sl { position: absolute; cursor: pointer; inset: 0; background: var(--surface-3); transition: background .2s; }
+.n-toggle-sl::before {
+    content: ''; position: absolute; height: 14px; width: 14px;
+    left: 3px; bottom: 3px; background: var(--muted); transition: transform .2s, background .2s;
+}
+.n-toggle input:checked + .n-toggle-sl { background: var(--primary); }
+.n-toggle input:checked + .n-toggle-sl::before { transform: translateX(18px); background: #fff; }
 </style>
 {% endblock %}
+
 {% block content %}
 {% include 'includes/_n_page.html' %}
 <div class="n-dash">
     {% include 'dashboard/_sidebar.html' with current_page='settings' %}
+
     <div class="n-dash-content">
 
         <div class="n-head n-reveal">
-            <div class="n-head-l"><span class="n-num">06</span><span class="n-name">Settings</span></div>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+                <button class="n-dash-sidebar-btn" onclick="openDashSidebar()" aria-label="Open menu">
+                    <i data-lucide="menu" style="width:14px;height:14px;"></i> Menu
+                </button>
+                <div class="n-head-l">
+                    <span class="n-num">06</span>
+                    <span class="n-name">Settings</span>
+                </div>
+            </div>
         </div>
 
-        {% if messages %}{% for message in messages %}
-        <div style="display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:.85rem;border:1px solid;{% if 'error' in message.tags %}background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger);{% else %}background:var(--ok-soft);border-color:rgba(0,230,118,.22);color:var(--ok);{% endif %}" class="n-reveal">
-            <i data-lucide="{% if 'error' in message.tags %}alert-circle{% else %}check-circle{% endif %}" style="width:14px;height:14px;flex-shrink:0;"></i>{{ message }}
+        {% if messages %}
+        {% for message in messages %}
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:.85rem;border:1px solid;
+            {% if 'error' in message.tags %}background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger);
+            {% else %}background:var(--ok-soft);border-color:rgba(0,230,118,.22);color:var(--ok);{% endif %}"
+             class="n-reveal">
+            <i data-lucide="{% if 'error' in message.tags %}alert-circle{% else %}check-circle{% endif %}" style="width:14px;height:14px;flex-shrink:0;"></i>
+            {{ message }}
         </div>
-        {% endfor %}{% endif %}
+        {% endfor %}
+        {% endif %}
 
         <form method="POST" action="" id="settings-form">
             {% csrf_token %}
@@ -55,7 +94,10 @@
                 </div>
                 <div class="n-settings-row">
                     <div class="info"><strong>Password</strong><p>Update your account password</p></div>
-                    <a href="{% url 'users:change_password' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);text-decoration:none;padding:.45rem .8rem;border:1px solid var(--border);transition:all .15s;" onmouseover="this.style.borderColor='var(--border-hover)'" onmouseout="this.style.borderColor='var(--border)'">
+                    <a href="{% url 'users:change_password' %}"
+                       style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);text-decoration:none;padding:.45rem .8rem;border:1px solid var(--border);transition:all .15s;white-space:nowrap;"
+                       onmouseover="this.style.borderColor='var(--border-hover)'"
+                       onmouseout="this.style.borderColor='var(--border)'">
                         <i data-lucide="key" style="width:12px;height:12px;"></i> Change
                     </a>
                 </div>
@@ -78,18 +120,25 @@
                 </div>
             </div>
 
-            <button type="submit" id="settings-save-btn" style="display:flex;align-items:center;gap:.4rem;padding:.75rem 1.5rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-top:1rem;" class="n-reveal n-d2">
+            <button type="submit" id="settings-save-btn"
+                style="display:inline-flex;align-items:center;gap:.4rem;padding:.75rem 1.5rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-top:1rem;"
+                class="n-reveal n-d2">
                 <i data-lucide="save" style="width:13px;height:13px;"></i> Save Changes
             </button>
         </form>
 
         <!-- Danger zone -->
         <div class="n-settings-block n-reveal n-d3" style="margin-top:1.5rem;border-color:rgba(255,82,82,.2);">
-            <div class="n-settings-head" style="color:var(--danger);"><i data-lucide="alert-triangle" style="color:var(--danger);"></i> Danger Zone</div>
+            <div class="n-settings-head" style="color:var(--danger);">
+                <i data-lucide="alert-triangle" style="color:var(--danger);"></i> Danger Zone
+            </div>
             <div class="n-settings-row">
                 <div class="info"><strong>Delete Account</strong><p>Permanently delete your account and all data</p></div>
-                <button style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--danger);background:transparent;border:1px solid rgba(255,82,82,.3);padding:.45rem .8rem;cursor:pointer;font-family:var(--font);transition:all .15s;"
-                    data-confirm data-confirm-title="Delete Account" data-confirm-msg="This will permanently delete your account. This cannot be undone." data-confirm-label="Delete" data-danger="true" data-toast-msg="Deletion requested.">
+                <button
+                    style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--danger);background:transparent;border:1px solid rgba(255,82,82,.3);padding:.45rem .8rem;cursor:pointer;font-family:var(--font);transition:all .15s;white-space:nowrap;"
+                    data-confirm data-confirm-title="Delete Account"
+                    data-confirm-msg="This will permanently delete your account. This cannot be undone."
+                    data-confirm-label="Delete" data-danger="true" data-toast-msg="Deletion requested.">
                     <i data-lucide="trash-2" style="width:12px;height:12px;"></i> Delete
                 </button>
             </div>

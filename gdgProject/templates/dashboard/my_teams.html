@@ -1,33 +1,75 @@
 {% extends 'base.html' %}
 {% block title %}CampusArena | My Teams{% endblock %}
+
 {% block extra_css %}
+{% include 'includes/_dash_layout.html' %}
 <style>
-.main-content{padding:0!important;max-width:100%!important;width:100%!important}
-.n-dash{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
-.n-dash-content{padding:2rem 2.5rem 4rem}
-@media(max-width:900px){.n-dash{grid-template-columns:1fr}}
-.n-team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-top:.25rem}
-.n-team-card{background:var(--surface);padding:1.25rem;display:flex;flex-direction:column;gap:.75rem;transition:background .15s;position:relative;overflow:hidden}
-.n-team-card:hover{background:var(--surface-2)}
-.n-team-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--primary);transform:scaleY(0);transform-origin:bottom;transition:transform .22s}
-.n-team-card:hover::before{transform:scaleY(1)}
-.n-team-av{width:44px;height:44px;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;font-family:var(--font-mono);color:var(--text);flex-shrink:0}
-.n-member-pill{display:inline-flex;align-items:center;gap:.3rem;padding:.18rem .55rem;border:1px solid var(--border-soft);font-size:.72rem;color:var(--muted);background:var(--surface-2)}
-.n-team-footer{display:flex;gap:.5rem;padding-top:.75rem;border-top:1px solid var(--border-soft);margin-top:auto}
-.n-team-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:.35rem;padding:.5rem;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.75rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:all .15s;font-family:var(--font)}
-.n-team-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-glow)}
-.n-team-btn i{width:13px;height:13px}
+.n-team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border); margin-top: .25rem;
+}
+.n-team-card {
+    background: var(--surface); padding: 1.25rem;
+    display: flex; flex-direction: column; gap: .75rem;
+    transition: background .15s; position: relative; overflow: hidden;
+}
+.n-team-card:hover { background: var(--surface-2); }
+.n-team-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--primary); transform: scaleY(0); transform-origin: bottom;
+    transition: transform .22s;
+}
+.n-team-card:hover::before { transform: scaleY(1); }
+.n-team-av {
+    width: 44px; height: 44px; background: var(--surface-3);
+    border: 1px solid var(--border); display: flex; align-items: center;
+    justify-content: center; font-size: 1rem; font-weight: 700;
+    font-family: var(--font-mono); color: var(--text); flex-shrink: 0;
+}
+.n-member-pill {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .18rem .55rem; border: 1px solid var(--border-soft);
+    font-size: .72rem; color: var(--muted); background: var(--surface-2);
+}
+.n-team-footer {
+    display: flex; gap: .5rem; padding-top: .75rem;
+    border-top: 1px solid var(--border-soft); margin-top: auto; flex-wrap: wrap;
+}
+.n-team-btn {
+    flex: 1; min-width: 80px; display: flex; align-items: center;
+    justify-content: center; gap: .35rem; padding: .5rem;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted); font-size: .75rem; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase; cursor: pointer;
+    transition: all .15s; font-family: var(--font); text-decoration: none;
+}
+.n-team-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-glow); }
+.n-team-btn i { width: 13px; height: 13px; }
 </style>
 {% endblock %}
+
 {% block content %}
 {% include 'includes/_n_page.html' %}
 <div class="n-dash">
     {% include 'dashboard/_sidebar.html' with current_page='teams' %}
+
     <div class="n-dash-content">
 
         <div class="n-head n-reveal">
-            <div class="n-head-l"><span class="n-num">04</span><span class="n-name">My Teams</span></div>
-            <a href="{% url 'events:home' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;"><i data-lucide="compass" style="width:13px;height:13px;"></i> Find Events</a>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+                <button class="n-dash-sidebar-btn" onclick="openDashSidebar()" aria-label="Open menu">
+                    <i data-lucide="menu" style="width:14px;height:14px;"></i> Menu
+                </button>
+                <div class="n-head-l">
+                    <span class="n-num">04</span>
+                    <span class="n-name">My Teams</span>
+                </div>
+            </div>
+            <a href="{% url 'events:home' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;">
+                <i data-lucide="compass" style="width:13px;height:13px;"></i> Find Events
+            </a>
         </div>
 
         {% if teams %}
@@ -36,11 +78,14 @@
             <div class="n-team-card">
                 <div style="display:flex;align-items:center;gap:.75rem;">
                     <div class="n-team-av">{{ team.name|first|upper }}</div>
-                    <div>
-                        <div style="font-size:.95rem;font-weight:700;">{{ team.name }}
-                            {% if team.is_leader %}<span style="margin-left:.4rem;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .4rem;border:1px solid rgba(255,0,0,.25);color:var(--primary);background:var(--primary-glow);">Leader</span>{% endif %}
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            {{ team.name }}
+                            {% if team.is_leader %}
+                            <span style="margin-left:.4rem;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .4rem;border:1px solid rgba(255,0,0,.25);color:var(--primary);background:var(--primary-glow);">Leader</span>
+                            {% endif %}
                         </div>
-                        <div style="font-size:.75rem;color:var(--muted);margin-top:.15rem;font-family:var(--font-mono);">{{ team.event }}</div>
+                        <div style="font-size:.75rem;color:var(--muted);margin-top:.15rem;font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ team.event }}</div>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
@@ -64,7 +109,7 @@
         </div>
         {% else %}
         <div style="border:1px solid var(--border);padding:3rem;text-align:center;color:var(--muted);" class="n-reveal">
-            <i data-lucide="users" style="width:32px;height:32px;opacity:.35;margin-bottom:.75rem;"></i>
+            <i data-lucide="users" style="width:32px;height:32px;opacity:.35;margin-bottom:.75rem;display:block;margin-left:auto;margin-right:auto;"></i>
             <div style="font-size:.9rem;margin-bottom:.75rem;">You're not part of any teams yet.</div>
             <a href="{% url 'events:home' %}" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;padding:.6rem 1.1rem;border:1px solid var(--primary);">
                 <i data-lucide="compass" style="width:13px;height:13px;"></i> Browse Events
