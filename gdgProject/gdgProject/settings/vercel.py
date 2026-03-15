@@ -90,7 +90,7 @@ CSRF_TRUSTED_ORIGINS = (
 DATABASES = {  # noqa: F405
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "/tmp/campusarena.sqlite3",
+        "NAME": "/tmp/db.sqlite3",
     }
 }
 
@@ -126,12 +126,19 @@ CHANNEL_LAYERS = {
 }
 
 # ── Static files — WhiteNoise (served directly by the WSGI process) ──────────
+# Vercel's production filesystem is read-only; only /tmp is writable.
+# api/index.py calls `collectstatic` on each cold start and writes into /tmp.
+STATIC_ROOT = Path("/tmp/staticfiles")  # noqa: F405  (Path imported via base.*)
+
 if "whitenoise.middleware.WhiteNoiseMiddleware" not in MIDDLEWARE:  # noqa: F405
     MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")  # noqa: F405
 
 STORAGES = {
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        # CompressedStaticFilesStorage: gzip/brotli-compresses files but does
+        # NOT use a hashed-filename manifest, so missing files never raise
+        # ValueError at request time.
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",

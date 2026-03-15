@@ -74,6 +74,28 @@ def _make_startup_error_app(exc):
 
 
 try:
+    import django  # noqa: E402
+    # django.setup() is called explicitly here (rather than letting
+    # get_wsgi_application() do it) because collectstatic must run *before*
+    # get_wsgi_application() builds the middleware chain — WhiteNoise needs the
+    # files to exist in STATIC_ROOT when it initialises.
+    django.setup()
+
+    # ── Collect static files into /tmp on every cold start ───────────────────
+    # Vercel's production filesystem is read-only.  WhiteNoise needs the files
+    # to exist in STATIC_ROOT before the middleware initialises, so we run
+    # collectstatic here (before get_wsgi_application builds the middleware
+    # chain).  A sentinel file prevents re-running on warm invocations within
+    # the same container instance, keeping subsequent requests fast.
+    from django.conf import settings as _settings  # noqa: E402
+    _sentinel = os.path.join(_settings.STATIC_ROOT, ".collected")
+    if not os.path.exists(_sentinel):
+        from django.core.management import call_command  # noqa: E402
+        call_command("collectstatic", "--noinput", verbosity=0)
+        # Write the sentinel so warm requests skip this step.
+        with open(_sentinel, "w") as _f:
+            _f.write("ok")
+
     from django.core.wsgi import get_wsgi_application  # noqa: E402
 
     app = get_wsgi_application()
