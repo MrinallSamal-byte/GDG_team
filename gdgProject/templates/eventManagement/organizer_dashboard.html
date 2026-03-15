@@ -4,302 +4,123 @@
 
 {% block extra_css %}
 <style>
-    /* ==========================================================================
-       GLOBAL REVEAL ANIMATIONS
-       ========================================================================== */
-    .reveal {
-        opacity: 0;
-        transform: translateY(40px);
-        transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    .reveal { opacity:0; transform:translateY(40px); transition:opacity .8s ease,transform .8s cubic-bezier(.16,1,.3,1); }
+    .reveal.active { opacity:1; transform:translateY(0); }
+    .mobile-only { display:none !important; }
+    @media(max-width:768px){
+        .mobile-only{display:flex !important;}
+        body>header,.navbar:not(.mobile-bottom-nav){display:none !important;}
+        body{padding-bottom:100px;padding-top:60px;}
+        .section{padding:1rem .5rem !important;margin-top:0 !important;}
+        .section-head.split{flex-direction:column !important;align-items:flex-start !important;gap:1rem;}
+        .section-head.split .btn-primary{width:100%;justify-content:center;}
+        .metric-grid{grid-template-columns:repeat(2,1fr) !important;gap:.75rem !important;}
+        .card-grid{grid-template-columns:1fr !important;}
+        .two-col{display:flex !important;flex-direction:column !important;gap:1.5rem !important;}
+        .mobile-top-nav{position:fixed;top:0;left:0;right:0;height:60px;background:var(--surface);border-bottom:1px solid var(--border-color);justify-content:space-between;align-items:center;padding:0 1.25rem;z-index:1000;}
+        .mobile-brand{font-size:1.2rem;font-weight:800;text-decoration:none;display:flex;align-items:center;gap:.4rem;color:var(--text-main);}
+        .mobile-actions{display:flex;align-items:center;gap:1rem;}
+        .mobile-icon-btn{background:none;border:none;padding:.25rem;color:var(--text-main);cursor:pointer;display:flex;align-items:center;position:relative;}
+        .mobile-drawer-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);z-index:1001;opacity:0;pointer-events:none;transition:opacity .3s ease;display:block !important;}
+        .mobile-drawer-overlay.open{opacity:1;pointer-events:auto;}
+        .mobile-drawer{position:fixed;top:0;right:-85%;width:75%;max-width:320px;height:100vh;background:var(--surface);z-index:1002;transition:right .3s cubic-bezier(.4,0,.2,1);display:flex !important;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.5);overflow-y:auto;}
+        .mobile-drawer.open{right:0;}
+        .drawer-header{padding:2.5rem 1.25rem 1.5rem;border-bottom:1px solid var(--border-color);display:flex;flex-direction:column;}
+        .drawer-header h4{margin:0 0 1rem 0;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);font-weight:700;}
+        .profile-card-drawer{display:flex;align-items:center;gap:1rem;padding:1rem;background:var(--bg-input,rgba(128,128,128,.05));border:1px solid var(--border-color);border-radius:16px;text-decoration:none;}
+        .drawer-avatar{width:48px;height:48px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--primary,#8b5cf6),#6d28d9);color:white;display:flex;justify-content:center;align-items:center;font-size:1.25rem;font-weight:bold;}
+        .drawer-user-info h3{margin:0 0 .2rem 0;font-size:1.05rem;color:var(--text-main);font-weight:700;}
+        .drawer-user-info p{margin:0;font-size:.85rem;color:var(--text-muted);display:flex;align-items:center;gap:.2rem;}
+        .drawer-nav{padding:1.5rem 1.25rem;display:flex;flex-direction:column;gap:.6rem;flex-grow:1;}
+        .drawer-link{display:flex;align-items:center;gap:1rem;padding:1rem 1.15rem;color:var(--text-main);text-decoration:none;font-size:1rem;font-weight:600;border-radius:14px;border:1px solid var(--border-color);background:var(--surface);}
+        .drawer-link i{color:var(--primary,#8b5cf6);width:20px;height:20px;}
+        .drawer-divider{height:1px;background:var(--border-color);margin:.5rem 0;}
+        .drawer-logout{border-color:rgba(239,68,68,.3) !important;background:rgba(239,68,68,.05) !important;color:#ef4444 !important;}
+        .drawer-logout i{color:#ef4444 !important;}
+        .mobile-bottom-nav{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border-color);border-radius:50px;padding:.5rem 1rem;gap:.5rem;box-shadow:0 8px 32px rgba(0,0,0,.15);z-index:1000;}
+        .bottom-nav-item{display:flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border-radius:30px;color:var(--text-muted);text-decoration:none;font-size:.95rem;font-weight:600;}
+        .bottom-nav-item.active{background:rgba(139,92,246,.15);color:var(--primary,#8b5cf6);}
     }
-    
-    .reveal.active { 
-        opacity: 1; 
-        transform: translateY(0); 
+    /* Event card feature toolbox */
+    .event-toolbox {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem;
+        padding-top: .75rem;
+        margin-top: .75rem;
+        border-top: 1px solid var(--border-color);
     }
-
-    /* ==========================================================================
-       MOBILE OPTIMIZATION (max-width: 768px)
-       ========================================================================== */
-    .mobile-only { display: none !important; }
-
-    @media (max-width: 768px) {
-        .mobile-only { display: flex !important; }
-
-        /* Hide default base.html navbar */
-        body > header, .navbar:not(.mobile-bottom-nav) { 
-            display: none !important; 
-        }
-
-        body { padding-bottom: 100px; padding-top: 60px; /* space for fixed navs */ }
-
-        /* Organizer Specific Layout Fixes */
-        .section {
-            padding: 1rem 0.5rem !important;
-            margin-top: 0 !important;
-        }
-
-        .section-head.split {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 1rem;
-        }
-
-        .section-head.split .btn-primary {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .metric-grid {
-            grid-template-columns: repeat(2, 1fr) !important; /* 2x2 grid for metrics */
-            gap: 0.75rem !important;
-        }
-
-        .card-grid {
-            grid-template-columns: 1fr !important;
-        }
-
-        .two-col {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 1.5rem !important;
-        }
-
-        .chart-placeholder {
-            padding: 2rem 1rem !important;
-        }
-
-        /* 1. Navbar Mobile Setup */
-        .mobile-top-nav {
-            position: fixed; top: 0; left: 0; right: 0;
-            height: 60px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border-color);
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 1.25rem;
-            z-index: 1000;
-        }
-
-        .mobile-brand {
-            font-size: 1.2rem;
-            font-weight: 800;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            color: var(--text-main);
-        }
-
-        .mobile-actions { display: flex; align-items: center; gap: 1rem; }
-        .mobile-icon-btn { 
-            background: none; border: none; padding: 0.25rem;
-            color: var(--text-main); cursor: pointer;
-            display: flex; align-items: center; position: relative;
-        }
-
-        /* 2. Hamburger Menu Drawer */
-        .mobile-drawer-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
-            z-index: 1001; opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease;
-            display: block !important;
-        }
-
-        .mobile-drawer-overlay.open { opacity: 1; pointer-events: auto; }
-
-        .mobile-drawer {
-            position: fixed; top: 0; right: -85%;
-            width: 75%; max-width: 320px; height: 100vh;
-            background: var(--surface); z-index: 1002;
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex !important; flex-direction: column;
-            box-shadow: -4px 0 24px rgba(0,0,0,0.5); overflow-y: auto;
-        }
-
-        .mobile-drawer.open { right: 0; }
-
-        .drawer-header {
-            padding: 2.5rem 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex; flex-direction: column;
-        }
-
-        .drawer-header h4 {
-            margin: 0 0 1rem 0; font-size: 0.8rem; text-transform: uppercase; 
-            letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700;
-        }
-
-        .profile-card-drawer {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem; background: var(--bg-input, rgba(128,128,128,0.05));
-            border: 1px solid var(--border-color); border-radius: 16px;
-            text-decoration: none; transition: all 0.2s;
-        }
-
-        .profile-card-drawer:active { background: var(--border-color); }
-
-        .drawer-avatar {
-            width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
-            background: linear-gradient(135deg, var(--primary, #8b5cf6), #6d28d9); color: white;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 1.25rem; font-weight: bold; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
-        }
-
-        .drawer-user-info { flex-grow: 1; }
-        .drawer-user-info h3 { margin: 0 0 0.2rem 0; font-size: 1.05rem; color: var(--text-main); font-weight: 700; }
-        .drawer-user-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.2rem; }
-
-        .drawer-nav { padding: 1.5rem 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; flex-grow: 1; }
-        
-        .drawer-link {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem 1.15rem; color: var(--text-main);
-            text-decoration: none; font-size: 1rem; font-weight: 600;
-            border-radius: 14px; transition: all 0.2s;
-            border: 1px solid var(--border-color);
-            background: var(--surface);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-
-        .drawer-link:active { transform: scale(0.98); background: var(--bg-input, rgba(128,128,128,0.05)); }
-        .drawer-link i { color: var(--primary, #8b5cf6); width: 20px; height: 20px; }
-        .drawer-divider { height: 1px; background: var(--border-color); margin: 0.5rem 0; }
-        
-        .drawer-logout { 
-            border-color: rgba(239, 68, 68, 0.3) !important; 
-            background: rgba(239, 68, 68, 0.05) !important; 
-            color: #ef4444 !important; 
-        }
-        .drawer-logout i { color: #ef4444 !important; }
-
-        /* 3. Floating Bottom Nav */
-        .mobile-bottom-nav {
-            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 50px;
-            padding: 0.5rem 1rem; gap: 0.5rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15); z-index: 1000;
-        }
-
-        .bottom-nav-item {
-            display: flex; align-items: center; gap: 0.5rem;
-            padding: 0.6rem 1rem; border-radius: 30px;
-            color: var(--text-muted);
-            text-decoration: none; font-size: 0.95rem; font-weight: 600;
-        }
-
-        .bottom-nav-item.active { background: rgba(139, 92, 246, 0.15); color: var(--primary, #8b5cf6); }
-        .bottom-nav-item i { width: 18px; height: 18px; }
+    .event-toolbox a, .event-toolbox button, .event-toolbox form button {
+        font-size: .75rem;
+        padding: .3rem .6rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- ==========================================================================
-     MOBILE SPECIFIC NAVIGATION LAYERS
-     ========================================================================== -->
-
-<!-- 1. Top Navbar (Mobile Only) -->
+<!-- Mobile Top Nav -->
 <div class="mobile-top-nav mobile-only">
     <a href="{% url 'events:home' %}" class="brand mobile-brand">
-        <i data-lucide="trophy" style="width: 20px; height: 20px;"></i>
-        CampusArena
+        <i data-lucide="trophy" style="width:20px;height:20px;"></i> CampusArena
     </a>
     <div class="mobile-actions">
-        <button class="mobile-icon-btn" id="mobile-theme-toggle">
-            <i data-lucide="moon"></i>
-        </button>
-        <a href="{% url 'dashboard:notifications' %}" class="mobile-icon-btn" style="text-decoration: none;">
+        <button class="mobile-icon-btn" id="mobile-theme-toggle"><i data-lucide="moon"></i></button>
+        <a href="{% url 'dashboard:notifications' %}" class="mobile-icon-btn" style="text-decoration:none;">
             <i data-lucide="bell"></i>
-            <span style="position: absolute; top: 3px; right: 5px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
         </a>
-        <button class="mobile-icon-btn" id="hamburger-menu-btn">
-            <i data-lucide="menu"></i>
-        </button>
+        <button class="mobile-icon-btn" id="hamburger-menu-btn"><i data-lucide="menu"></i></button>
     </div>
 </div>
 
-<!-- 2. Hamburger Drawer (Mobile Only) -->
+<!-- Mobile Drawer -->
 <div class="mobile-drawer-overlay mobile-only" id="drawer-overlay"></div>
 <div class="mobile-drawer mobile-only" id="mobile-drawer">
     <div class="drawer-header">
         <h4>Account</h4>
-        {% if user.is_authenticated %}
         <a href="{% url 'dashboard:my_profile' %}" class="profile-card-drawer">
-            <div class="drawer-avatar">
-                {{ user.first_name|default:"U"|make_list|first|upper }}
-            </div>
+            <div class="drawer-avatar">{{ user.first_name|default:"U"|make_list|first|upper }}</div>
             <div class="drawer-user-info">
-                <h3>
-                {% if user.is_staff %}
-                Admin User
-                {% else %}
-                {{ user.get_full_name|default:"Student User" }}
-                {% endif %}
-                </h3>
-                <p>View Profile <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i></p>
+                <h3>{% if user.is_staff %}Admin User{% else %}{{ user.get_full_name|default:"Student User" }}{% endif %}</h3>
+                <p>View Profile</p>
             </div>
         </a>
-        {% else %}
-        <div class="profile-card-drawer" style="justify-content: center; text-align: center;">
-            <div class="drawer-user-info">
-                <h3>Guest User</h3>
-                <p style="justify-content: center;">Join the community</p>
-            </div>
-        </div>
-        {% endif %}
     </div>
     <div class="drawer-nav">
         {% if user.is_authenticated %}
-            {% if user.is_staff %}
-            <a href="{% url 'eventManagement:organizer_dashboard' %}" class="drawer-link"><i data-lucide="settings-2"></i> Organizer Panel</a>
-            {% endif %}
+            {% if user.is_staff %}<a href="{% url 'eventManagement:organizer_dashboard' %}" class="drawer-link"><i data-lucide="settings-2"></i> Organizer Panel</a>{% endif %}
             <a href="{% url 'dashboard:user_dashboard' %}" class="drawer-link"><i data-lucide="layout-dashboard"></i> Overview</a>
             <a href="{% url 'dashboard:my_events' %}" class="drawer-link"><i data-lucide="calendar"></i> My Events</a>
-            <a href="{% url 'dashboard:my_teams' %}" class="drawer-link"><i data-lucide="users"></i> My Teams</a>
-            <a href="{% url 'team:find_teammates' %}" class="drawer-link"><i data-lucide="user-plus"></i> Find Teammates</a>
-            <a href="{% url 'dashboard:pending_requests' %}" class="drawer-link"><i data-lucide="clock"></i> Pending Requests</a>
             <a href="{% url 'dashboard:settings' %}" class="drawer-link"><i data-lucide="settings"></i> Settings</a>
             <div class="drawer-divider"></div>
             <form method="POST" action="{% url 'users:logout' %}" style="margin:0;">
                 {% csrf_token %}
-                <button type="submit" class="drawer-link drawer-logout" style="width:100%; text-align:left; background:none; border:none; font-family:inherit; cursor:pointer;">
+                <button type="submit" class="drawer-link drawer-logout" style="width:100%;text-align:left;background:none;border:none;font-family:inherit;cursor:pointer;">
                     <i data-lucide="log-out"></i> Logout
                 </button>
             </form>
         {% else %}
             <a href="{% url 'users:login' %}" class="drawer-link"><i data-lucide="log-in"></i> Login</a>
-            <a href="{% url 'users:register' %}" class="drawer-link"><i data-lucide="user-plus"></i> Register</a>
         {% endif %}
     </div>
 </div>
 
-<!-- 3. Bottom Navigation Bar (Mobile Only) -->
+<!-- Mobile Bottom Nav -->
 <div class="mobile-bottom-nav mobile-only">
-    <a href="{% url 'events:home' %}" class="bottom-nav-item">
-        <i data-lucide="home"></i> Events
-    </a>
-    <a href="{% url 'eventManagement:organizer_dashboard' %}" class="bottom-nav-item active">
-        <i data-lucide="settings-2"></i> Organizer
-    </a>
+    <a href="{% url 'events:home' %}" class="bottom-nav-item"><i data-lucide="home"></i> Events</a>
+    <a href="{% url 'eventManagement:organizer_dashboard' %}" class="bottom-nav-item active"><i data-lucide="settings-2"></i> Organizer</a>
 </div>
 
-<!-- ==========================================================================
-     STANDARD DASHBOARD CONTENT
-     ========================================================================== -->
-
+<!-- ── Main Content ── -->
 <section class="section">
     <div class="section-head split reveal">
         <div>
             <p class="eyebrow"><i data-lucide="settings-2"></i> Organizer Panel</p>
             <h1>Organizer Dashboard</h1>
         </div>
-        <!-- Requirement 4 & 5: Routes properly. Note: Ensure backend views.py handles the DB saving (Event.objects.create) -->
-        <a href="{% url 'eventManagement:create_event' %}" class="btn-primary"><i data-lucide="plus"></i> Create Event</a>
+        <a href="{% url 'eventManagement:create_event' %}" class="btn-primary">
+            <i data-lucide="plus"></i> Create Event
+        </a>
     </div>
 
     <!-- Metrics -->
@@ -307,331 +128,242 @@
         <article class="surface metric">
             <div class="metric-icon"><i data-lucide="users"></i></div>
             <p>Total Registrations</p>
-            <strong data-counter>{{ analytics.total_registrations|default:"3,492" }}</strong>
+            <strong>{{ analytics.total_registrations }}</strong>
         </article>
         <article class="surface metric">
-            <div class="metric-icon" style="background:var(--ok-soft);color:var(--ok);"><i data-lucide="git-branch"></i>
-            </div>
+            <div class="metric-icon" style="background:var(--ok-soft,#E1F5EE);color:var(--ok,#0F6E56);"><i data-lucide="git-branch"></i></div>
             <p>Team vs Solo</p>
-            <strong>{{ analytics.team_vs_solo|default:"68% / 32%" }}</strong>
+            <strong>{{ analytics.team_vs_solo|default:"—" }}</strong>
         </article>
         <article class="surface metric">
-            <div class="metric-icon" style="background:var(--warn-soft);color:var(--warn);"><i data-lucide="cpu"></i>
-            </div>
+            <div class="metric-icon" style="background:var(--warn-soft,#FAEEDA);color:var(--warn,#854F0B);"><i data-lucide="cpu"></i></div>
             <p>Top Tech Stacks</p>
-            <strong>{{ analytics.top_stack|default:"React, Python" }}</strong>
+            <strong>{{ analytics.top_stack|default:"—" }}</strong>
         </article>
         <article class="surface metric">
-            <div class="metric-icon"
-                style="background:color-mix(in srgb, var(--primary-3), transparent 88%);color:var(--primary-3);"><i
-                    data-lucide="calendar-check"></i></div>
+            <div class="metric-icon" style="background:var(--primary-subtle,#EEEDFE);color:var(--primary,#534AB7);"><i data-lucide="calendar-check"></i></div>
             <p>Active Events</p>
-            <strong data-counter>{{ analytics.active_events|default:"3" }}</strong>
+            <strong>{{ analytics.active_events }}</strong>
         </article>
     </div>
 
-    <!-- Requirement 1: My Events Section -->
-    <div class="section-head reveal" style="margin-top: 2rem;">
+    <!-- My Events -->
+    <div class="section-head reveal" style="margin-top:2rem;">
         <h2><i data-lucide="calendar"></i> My Events</h2>
-        <p class="text-soft">Manage your ongoing and upcoming events.</p>
     </div>
-    
-    <div class="card-grid reveal" style="margin-bottom: 2.5rem;">
-        <!-- Django Loop Setup -->
+
+    <div class="card-grid reveal" style="margin-bottom:2.5rem;">
         {% for event in my_events %}
-        <article class="surface" style="padding: 1.25rem;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1rem;">
+        <article class="surface" style="padding:1.25rem;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem;">
                 <div>
-                    <h3 style="margin:0; font-size: 1.15rem;">{{ event.title }}</h3>
-                    <span class="text-soft" style="font-size: 0.85rem;">{{ event.event_start|date:"M d" }}–{{ event.event_end|date:"M d, Y" }}</span>
+                    <h3 style="margin:0;font-size:1.1rem;">{{ event.title }}</h3>
+                    <span class="text-soft" style="font-size:.85rem;">
+                        {{ event.event_start|date:"M d" }}–{{ event.event_end|date:"M d, Y" }}
+                    </span>
                 </div>
-                <span class="status {% if event.status == 'registration_open' or event.status == 'ongoing' %}open{% elif event.status == 'completed' %}closed{% else %}closing{% endif %}">{{ event.get_status_display }}</span>
+                <span class="status {% if event.status == 'registration_open' or event.status == 'ongoing' %}open{% elif event.status == 'completed' %}closed{% else %}closing{% endif %}">
+                    {{ event.get_status_display }}
+                </span>
             </div>
-            <div class="text-soft" style="font-size: 0.9rem; margin-bottom: 1.5rem;">
-                <i data-lucide="users" style="width:14px;height:14px; vertical-align:middle;"></i> {{ event.registration_count }} Registrations
+
+            <p class="text-soft" style="font-size:.88rem;margin:.4rem 0 .75rem;">
+                <i data-lucide="users" style="width:13px;height:13px;vertical-align:middle;"></i>
+                {{ event.registration_count }} registrant{{ event.registration_count|pluralize }}
+            </p>
+
+            <!-- Primary actions row -->
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+                <a href="{% url 'events:event_detail' event.pk %}" class="btn-secondary btn-small">
+                    <i data-lucide="eye"></i> View
+                </a>
+                <a href="{% url 'eventManagement:edit_event' event.pk %}" class="btn-secondary btn-small">
+                    <i data-lucide="edit-2"></i> Edit
+                </a>
+                <a href="{% url 'eventManagement:export_registrations' event.pk %}" class="btn-secondary btn-small">
+                    <i data-lucide="download"></i> Export
+                </a>
             </div>
-            <!-- Requirement 2 & 3: Actions + Delete/Archive -->
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <a href="{% url 'events:event_detail' event.pk %}" class="btn-secondary btn-small"><i data-lucide="eye"></i> View</a>
-                <button class="btn-secondary btn-small"><i data-lucide="users"></i> Participants</button>
-                <button class="btn-secondary btn-small"><i data-lucide="megaphone"></i> Announce</button>
+
+            <!-- Feature toolbox — new features wired in -->
+            <div class="event-toolbox">
+                {# [E10] Clone #}
+                <form method="POST" action="{% url 'eventManagement:clone_event' event.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-secondary btn-small" title="Clone this event as a new draft">
+                        <i data-lucide="copy"></i> Clone
+                    </button>
+                </form>
+
+                {# [E3] Leaderboard #}
+                <a href="{% url 'leaderboard:manage' event.pk %}" class="btn-secondary btn-small"
+                   title="Manage leaderboard">
+                    <i data-lucide="trophy"></i> Leaderboard
+                </a>
+
+                {# [E4] Submissions #}
+                <a href="{% url 'submissions:review' event.pk %}" class="btn-secondary btn-small"
+                   title="Review project submissions">
+                    <i data-lucide="clipboard-list"></i> Submissions
+                </a>
+
+                {# [E11] Check-in #}
+                <a href="{% url 'checkin:dashboard' event.pk %}" class="btn-secondary btn-small"
+                   title="QR check-in dashboard">
+                    <i data-lucide="qr-code"></i> Check-in
+                </a>
+
+                {# [E2] Issue certificates #}
+                {% if event.participation_certificate %}
+                <a href="{% url 'eventManagement:organizer_dashboard' %}"
+                   class="btn-secondary btn-small"
+                   title="Issue certificates via management command: python manage.py issue_certificates --event-id {{ event.pk }}">
+                    <i data-lucide="award"></i> Certs
+                </a>
+                {% endif %}
+
+                {# Status update form #}
+                <form method="POST" action="{% url 'eventManagement:update_event_status' event.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <select name="new_status" onchange="this.form.submit()"
+                            style="font-size:.75rem;padding:.3rem .5rem;border:1px solid var(--border-color);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-main);cursor:pointer;"
+                            title="Change event status">
+                        <option value="">Set status…</option>
+                        {% if event.status == 'draft' %}
+                            <option value="published">→ Publish</option>
+                            <option value="cancelled">→ Cancel</option>
+                        {% elif event.status == 'published' %}
+                            <option value="registration_open">→ Open Registration</option>
+                            <option value="draft">→ Back to Draft</option>
+                            <option value="cancelled">→ Cancel</option>
+                        {% elif event.status == 'registration_open' %}
+                            <option value="registration_closed">→ Close Registration</option>
+                            <option value="cancelled">→ Cancel</option>
+                        {% elif event.status == 'registration_closed' %}
+                            <option value="ongoing">→ Start Event</option>
+                            <option value="registration_open">→ Reopen Registration</option>
+                            <option value="cancelled">→ Cancel</option>
+                        {% elif event.status == 'ongoing' %}
+                            <option value="completed">→ Mark Completed</option>
+                            <option value="cancelled">→ Cancel</option>
+                        {% endif %}
+                    </select>
+                </form>
+
+                {# Delete (soft) #}
+                <form method="POST" action="{% url 'eventManagement:delete_event' event.pk %}"
+                      onsubmit="return confirm('Archive &quot;{{ event.title }}&quot;? This cannot be undone easily.');"
+                      style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="confirm" value="yes">
+                    <button type="submit" class="btn-secondary btn-small" style="color:var(--danger);" title="Archive event">
+                        <i data-lucide="archive"></i>
+                    </button>
+                </form>
             </div>
         </article>
+
         {% empty %}
-        <article class="surface" style="padding: 1.5rem; text-align: center;">
-            <i data-lucide="calendar-x" style="width:32px;height:32px;color:var(--muted);margin-bottom:.5rem;"></i>
+        <article class="surface" style="padding:1.5rem;text-align:center;grid-column:1/-1;">
+            <i data-lucide="calendar-x" style="width:32px;height:32px;color:var(--muted);margin-bottom:.5rem;display:block;margin-left:auto;margin-right:auto;"></i>
             <p class="text-soft">You haven't created any events yet.</p>
-            <a href="{% url 'eventManagement:create_event' %}" class="btn-primary" style="margin-top:.75rem;"><i data-lucide="plus"></i> Create Your First Event</a>
+            <a href="{% url 'eventManagement:create_event' %}" class="btn-primary" style="margin-top:.75rem;">
+                <i data-lucide="plus"></i> Create Your First Event
+            </a>
         </article>
         {% endfor %}
     </div>
 
-    <!-- Main Workspace Area -->
+    <!-- Analytics placeholder -->
     <div class="two-col">
-        
-        <!-- LEFT COLUMN: Builders & Comms -->
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-            
-            <!-- Requirement 2: Event Announcements -->
-            <article class="surface reveal">
-                <h2><i data-lucide="megaphone"></i> Broadcast Announcement</h2>
-                <p class="text-soft" style="margin-bottom: 1.2rem;">Push instant notifications directly to registered participants.</p>
-                <form class="form-layout" method="POST" action="">
-                    {% csrf_token %}
-                    <div class="form-field">
-                        <i data-lucide="target"></i>
-                        <select required style="padding-left: 2.6rem;" name="event_id">
-                            <option value="">Select Event Target...</option>
-                            {% for event in my_events %}
-                            <option value="{{ event.pk }}">{{ event.title }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <textarea rows="3" placeholder="e.g., Round 1 submissions close at 9PM tonight! Ensure your GitHub repos are public." required></textarea>
-                    </div>
-                    <button type="submit" class="btn-primary" style="width: fit-content;"><i data-lucide="send"></i> Send Update</button>
-                </form>
-            </article>
-
-            <!-- Requirement 7: Event Rounds Builder -->
-            <article class="surface reveal">
-                <h2><i data-lucide="git-commit"></i> Event Rounds Builder</h2>
-                <p class="text-soft">Define multiple evaluation stages for your hackathons or competitions.</p>
-                <div style="margin: 1.2rem 0; padding-left: 1.2rem; border-left: 2px solid var(--border-soft); display: flex; flex-direction: column; gap: 0.8rem;">
-                    <div style="color: var(--text-soft);"><strong style="color: var(--text);">Round 1:</strong> Idea Submission</div>
-                    <div style="color: var(--text-soft);"><strong style="color: var(--text);">Round 2:</strong> Prototype & Build</div>
-                    <div style="color: var(--text-soft);"><strong style="color: var(--text);">Round 3:</strong> Final Presentation</div>
+        <article class="surface reveal">
+            <h2><i data-lucide="megaphone"></i> Broadcast Announcement</h2>
+            <p class="text-soft" style="margin-bottom:1.2rem;">Push a notification to all registrants of an event.</p>
+            <form method="POST" action="">
+                {% csrf_token %}
+                <div class="form-group">
+                    <select name="event_id" required class="form-input">
+                        <option value="">Select event…</option>
+                        {% for event in my_events %}
+                        <option value="{{ event.pk }}">{{ event.title }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                <button class="btn-secondary" data-action="open-wizard"><i data-lucide="settings-2"></i> Configure Rounds</button>
-            </article>
-
-            <!-- Requirement 8: Form Builder -->
-            <article class="surface reveal">
-                <h2><i data-lucide="layout-template"></i> Custom Form Builder</h2>
-                <p class="text-soft" style="margin-bottom: 1rem;">Design custom registration forms. Drag and drop required fields.</p>
-                <div class="chip-row" style="margin-bottom: 1.2rem;">
-                    <span class="chip"><i data-lucide="type"></i> Text Input</span>
-                    <span class="chip"><i data-lucide="list"></i> Dropdown</span>
-                    <span class="chip"><i data-lucide="upload-cloud"></i> File Upload</span>
-                    <span class="chip"><i data-lucide="github"></i> GitHub Link</span>
-                    <span class="chip"><i data-lucide="link"></i> Portfolio Link</span>
+                <div class="form-group">
+                    <input type="text" name="title" placeholder="Announcement title" class="form-input" required>
                 </div>
-                <button class="btn-secondary" data-action="customize-form"><i data-lucide="pencil-ruler"></i> Edit Form UI</button>
-            </article>
-
-        </div>
-
-        <!-- RIGHT COLUMN: Data & People -->
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-            
-            <!-- Requirement 6: Improved Participants -->
-            <article class="surface reveal" id="participants">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.5rem;">
-                    <h2 style="margin: 0;"><i data-lucide="list"></i> Recent Participants</h2>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn-primary btn-small"><i data-lucide="users"></i> Manage</button>
-                        <button class="btn-secondary btn-small" data-action="export-csv"><i data-lucide="download"></i> Export</button>
-                    </div>
+                <div class="form-group">
+                    <textarea name="content" rows="3" placeholder="Message to participants…" class="form-input" required></textarea>
                 </div>
-                <ul class="list" style="margin-bottom: 0;">
-                    <!-- Dummy Student 1 -->
-                    <li>
-                        <div style="display:flex;align-items:center;gap:.55rem;">
-                            <div class="avatar avatar-sm" style="background: var(--primary);">P</div>
-                            <div style="flex:1;">
-                                <strong style="display: block; font-size: 0.95rem;">Priya Verma</strong>
-                                <span style="font-size: 0.8rem;">HackFest 2026</span>
-                            </div>
-                            <span class="status open"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> Confirmed</span>
-                        </div>
-                    </li>
-                    <!-- Dummy Student 2 -->
-                    <li>
-                        <div style="display:flex;align-items:center;gap:.55rem;">
-                            <div class="avatar avatar-sm" style="background: var(--warn);">R</div>
-                            <div style="flex:1;">
-                                <strong style="display: block; font-size: 0.95rem;">Rahul Sharma</strong>
-                                <span style="font-size: 0.8rem;">Design Jam Pro</span>
-                            </div>
-                            <span class="status open"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> Confirmed</span>
-                        </div>
-                    </li>
-                    <!-- Dummy Student 3 -->
-                    <li>
-                        <div style="display:flex;align-items:center;gap:.55rem;">
-                            <div class="avatar avatar-sm" style="background: var(--primary-3);">A</div>
-                            <div style="flex:1;">
-                                <strong style="display: block; font-size: 0.95rem;">Ananya Singh</strong>
-                                <span style="font-size: 0.8rem;">HackFest 2026</span>
-                            </div>
-                            <span class="status closing"><i data-lucide="clock" style="width:12px;height:12px;"></i> Pending</span>
-                        </div>
-                    </li>
-                    <!-- Dummy Student 4 -->
-                    <li>
-                        <div style="display:flex;align-items:center;gap:.55rem;">
-                            <div class="avatar avatar-sm" style="background: var(--primary-2);">K</div>
-                            <div style="flex:1;">
-                                <strong style="display: block; font-size: 0.95rem;">Karan Patel</strong>
-                                <span style="font-size: 0.8rem;">CloudSprint Workshop</span>
-                            </div>
-                            <span class="status open"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> Confirmed</span>
-                        </div>
-                    </li>
-                </ul>
-            </article>
+                <button type="submit" class="btn-primary"><i data-lucide="send"></i> Send</button>
+            </form>
+        </article>
 
-            <!-- Requirement 10: Event Analytics -->
-            <article class="surface reveal" id="analytics">
-                <h2><i data-lucide="bar-chart-3"></i> Advanced Analytics</h2>
-                <p class="text-soft" style="margin-bottom: 1.2rem;">Track growth and demographic insights.</p>
-                <div class="chart-placeholder" style="padding: 3rem 1rem;">
-                    <i data-lucide="trending-up" style="display:block;margin:0 auto .5rem; color: var(--primary); width: 32px; height: 32px;"></i>
-                    <strong style="color: var(--text); display: block; margin-bottom: 0.25rem;">Registrations Over Time</strong>
-                    Connect chart.js / DB backend to render graph
-                </div>
-                <div class="chart-placeholder" style="padding: 3rem 1rem;">
-                    <i data-lucide="pie-chart" style="display:block;margin:0 auto .5rem; color: var(--primary-2); width: 32px; height: 32px;"></i>
-                    <strong style="color: var(--text); display: block; margin-bottom: 0.25rem;">Skill Distribution</strong>
-                    Connect chart.js / DB backend to render graph
-                </div>
-            </article>
-
-        </div>
+        <article class="surface reveal" id="analytics">
+            <h2><i data-lucide="bar-chart-3"></i> Analytics</h2>
+            <div style="padding:3rem 1rem;text-align:center;color:var(--text-muted);">
+                <i data-lucide="trending-up" style="display:block;margin:0 auto .5rem;width:32px;height:32px;color:var(--primary,#534AB7);"></i>
+                <strong style="color:var(--text-main);display:block;margin-bottom:.25rem;">Registrations Over Time</strong>
+                <span style="font-size:.85rem;">Chart.js integration — wire to /api/v1/events/:id/stats</span>
+            </div>
+        </article>
     </div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        /* ==========================================================================
-           REVEAL ANIMATIONS
-           ========================================================================== */
-        const revealElements = document.querySelectorAll('.reveal');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target);
-                }
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.reveal').forEach(function (el) {
+        new IntersectionObserver(function (entries, obs) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) { entry.target.classList.add('active'); obs.unobserve(entry.target); }
             });
-        }, { 
-            threshold: 0.08, 
-            rootMargin: '0px 0px -20px 0px' 
-        });
-
-        revealElements.forEach(el => observer.observe(el));
-
-        /* ==========================================================================
-           EXISTING NAV OVERRIDE (For desktop)
-           ========================================================================== */
-        const navCenter = document.querySelector('.nav-center');
-        
-        // This smartly simplifies the central navbar when viewing the Organizer Dashboard.
-        if(navCenter) {
-            navCenter.innerHTML = `
-                <a href="{% url 'events:home' %}"><i data-lucide="compass"></i> Events</a>
-                <a href="{% url 'eventManagement:organizer_dashboard' %}" class="active"><i data-lucide="layout-dashboard"></i> Organizer</a>
-            `;
-            if(typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        /* ==========================================================================
-           MOBILE DRAWER LOGIC
-           ========================================================================== */
-        const hamburgerBtn = document.getElementById('hamburger-menu-btn');
-        const drawerOverlay = document.getElementById('drawer-overlay');
-        const mobileDrawer = document.getElementById('mobile-drawer');
-        
-        if (hamburgerBtn && drawerOverlay && mobileDrawer) {
-            function toggleDrawer() {
-                const isOpen = mobileDrawer.classList.contains('open');
-                if (isOpen) {
-                    mobileDrawer.classList.remove('open');
-                    drawerOverlay.classList.remove('open');
-                    document.body.style.overflow = ''; // Restore scroll
-                } else {
-                    mobileDrawer.classList.add('open');
-                    drawerOverlay.classList.add('open');
-                    document.body.style.overflow = 'hidden'; // Prevent body scroll while menu is open
-                }
-            }
-
-            hamburgerBtn.addEventListener('click', toggleDrawer);
-            drawerOverlay.addEventListener('click', toggleDrawer);
-
-            const drawerLinks = mobileDrawer.querySelectorAll('.drawer-link');
-            drawerLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    mobileDrawer.classList.remove('open');
-                    drawerOverlay.classList.remove('open');
-                    document.body.style.overflow = ''; 
-                });
-            });
-        }
-
-        /* ==========================================================================
-           MOBILE THEME TOGGLE LOGIC
-           ========================================================================== */
-        const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
-        if (mobileThemeToggle) {
-            mobileThemeToggle.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                const nextTheme = isDark ? 'light' : 'dark';
-
-                const updateTheme = () => {
-                    document.documentElement.setAttribute('data-theme', nextTheme);
-                    localStorage.setItem('campusarena-theme', nextTheme);
-                    const label = document.getElementById('theme-label');
-                    if(label) label.textContent = nextTheme === 'dark' ? 'Dark' : 'Light';
-                };
-
-                if (!document.startViewTransition) {
-                    updateTheme();
-                    return;
-                }
-
-                const x = e.clientX || (e.touches && e.touches[0].clientX) || window.innerWidth / 2;
-                const y = e.clientY || (e.touches && e.touches[0].clientY) || 30;
-
-                const endRadius = Math.hypot(
-                    Math.max(x, window.innerWidth - x),
-                    Math.max(y, window.innerHeight - y)
-                );
-
-                document.documentElement.classList.add('vt-active');
-                const transition = document.startViewTransition(updateTheme);
-
-                transition.ready.then(() => {
-                    const animation = document.documentElement.animate(
-                        {
-                            clipPath: [
-                                `circle(0px at ${x}px ${y}px)`,
-                                `circle(${endRadius}px at ${x}px ${y}px)`
-                            ]
-                        },
-                        {
-                            duration: 600,
-                            easing: 'cubic-bezier(0.34, 1.2, 0.64, 1)', 
-                            pseudoElement: '::view-transition-new(root)'
-                        }
-                    );
-
-                    animation.onfinish = () => {
-                        document.documentElement.classList.remove('vt-active');
-                    };
-                });
-                
-                transition.finished.finally(() => {
-                    document.documentElement.classList.remove('vt-active');
-                });
-            });
-        }
+        }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' }).observe(el);
     });
+
+    var navCenter = document.querySelector('.nav-center');
+    if (navCenter) {
+        navCenter.innerHTML = '<a href="{% url "events:home" %}"><i data-lucide="compass"></i> Events</a><a href="{% url "eventManagement:organizer_dashboard" %}" class="active"><i data-lucide="layout-dashboard"></i> Organizer</a>';
+        if (window.lucide) lucide.createIcons();
+    }
+
+    var hamburgerBtn = document.getElementById('hamburger-menu-btn');
+    var drawerOverlay = document.getElementById('drawer-overlay');
+    var mobileDrawer  = document.getElementById('mobile-drawer');
+    if (hamburgerBtn && drawerOverlay && mobileDrawer) {
+        function toggleDrawer() {
+            var open = mobileDrawer.classList.contains('open');
+            mobileDrawer.classList.toggle('open', !open);
+            drawerOverlay.classList.toggle('open', !open);
+            document.body.style.overflow = open ? '' : 'hidden';
+        }
+        hamburgerBtn.addEventListener('click', toggleDrawer);
+        drawerOverlay.addEventListener('click', toggleDrawer);
+        mobileDrawer.querySelectorAll('.drawer-link').forEach(function (l) { l.addEventListener('click', function () { mobileDrawer.classList.remove('open'); drawerOverlay.classList.remove('open'); document.body.style.overflow = ''; }); });
+    }
+
+    var mobileTheme = document.getElementById('mobile-theme-toggle');
+    if (mobileTheme) {
+        mobileTheme.addEventListener('click', function (e) {
+            e.preventDefault(); e.stopPropagation();
+            var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            var update = function () { document.documentElement.setAttribute('data-theme', next); localStorage.setItem('campusarena-theme', next); };
+            if (!document.startViewTransition) { update(); return; }
+            var x = e.clientX || window.innerWidth / 2, y = e.clientY || 30;
+            var r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+            document.documentElement.classList.add('vt-active');
+            var t = document.startViewTransition(update);
+            t.ready.then(function () {
+                var a = document.documentElement.animate(
+                    { clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + r + 'px at ' + x + 'px ' + y + 'px)'] },
+                    { duration: 600, easing: 'cubic-bezier(.34,1.2,.64,1)', pseudoElement: '::view-transition-new(root)' }
+                );
+                a.onfinish = function () { document.documentElement.classList.remove('vt-active'); };
+            });
+            t.finished.finally(function () { document.documentElement.classList.remove('vt-active'); });
+        });
+    }
+});
 </script>
 {% endblock %}

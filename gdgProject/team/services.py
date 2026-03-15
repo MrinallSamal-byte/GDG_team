@@ -1,12 +1,11 @@
 """
-Team Join-Request Service — reference service-layer implementation.
+Team Join-Request Service — service-layer implementation.
 
-Demonstrates the Controller → Service → Repository → Model pattern with:
+Pattern: Controller → Service → Repository → Model
 - Atomic transactions
 - Permission checks
 - Business rule validation
-- Notification side-effects
-- Idempotency handling
+- Notification side-effects deferred via transaction.on_commit
 - Structured logging
 """
 
@@ -25,7 +24,6 @@ from django.utils import timezone
 logger = logging.getLogger("campusarena.team")
 
 
-# ─── Data Transfer Objects ──────────────────────────────────────────────────
 @dataclass(frozen=True)
 class JoinRequestResult:
     request_id: int
@@ -34,10 +32,7 @@ class JoinRequestResult:
     message: str
 
 
-# ─── Repository Layer ────────────────────────────────────────────────────────
 class TeamRepository:
-    """Encapsulates all Team/JoinRequest DB queries."""
-
     @staticmethod
     def get_team_with_event(team_id: int):
         from team.models import Team
@@ -93,15 +88,7 @@ class TeamRepository:
         )
 
 
-# ─── Service Layer ───────────────────────────────────────────────────────────
 class TeamJoinRequestService:
-    """
-    Business logic for the team join-request workflow.
-
-    Handles: create request, approve, decline, cancel.
-    All methods are atomic and raise typed exceptions.
-    """
-
     def __init__(self, repo: TeamRepository | None = None):
         self.repo = repo or TeamRepository()
 
@@ -115,42 +102,21 @@ class TeamJoinRequestService:
         skills: str = "",
         message: str = "",
     ) -> JoinRequestResult:
-        """
-        A user requests to join a team.
-
-        Business rules:
-        1. Team must exist and be open.
-        2. Event registration must be open.
-        3. User cannot already be in a team for this event.
-        4. User cannot be the team leader (they are already a member).
-        5. Team must not be full.
-        6. No duplicate pending request.
-        """
-        team = self.repo.get_team_with_event(team_id)
-
-        # Rule 1: Team open
         from team.models import TeamStatus
+
+        team = self.repo.get_team_with_event(team_id)
 
         if team.status != TeamStatus.OPEN:
             raise ValidationError("This team is not accepting new members.")
-
-        # Rule 2: Registration open
         if not team.event.is_registration_open:
             raise ValidationError("Event registration is closed.")
-
-        # Rule 3: Not already in a team
         if self.repo.user_has_team_for_event(user.id, team.event_id):
             raise ConflictError("You are already in a team for this event.")
-
-        # Rule 4: Not the leader
         if team.leader_id == user.id:
             raise ValidationError("You cannot request to join your own team.")
-
-        # Rule 5: Team capacity
         if team.is_full:
             raise ValidationError("This team is full.")
 
-        # Rule 6: Idempotency — no duplicate pending request
         try:
             join_request = self.repo.create_join_request(
                 team=team, user=user, role=role, skills=skills, message=message
@@ -168,8 +134,23 @@ class TeamJoinRequestService:
             },
         )
 
-        # Side effect: notify team leader
-        self._notify_leader(team, user, join_request)
+        # Defer notification to after transaction commit so it never rolls back
+        # if the notification itself fails.
+        team_id_captured = team.id
+        leader_id = team.leader_id
+        requester_id = user.id
+        team_name = team.name
+        requester_name = user.get_full_name() or user.username
+
+        transaction.on_commit(
+            lambda: _notify_leader_async(
+                team_id=team_id_captured,
+                leader_id=leader_id,
+                requester_id=requester_id,
+                team_name=team_name,
+                requester_name=requester_name,
+            )
+        )
 
         return JoinRequestResult(
             request_id=join_request.id,
@@ -186,31 +167,18 @@ class TeamJoinRequestService:
         requester_user_id: int,
         approver,
     ) -> JoinRequestResult:
-        """
-        Team leader approves a join request.
-
-        Business rules:
-        1. Only the team leader can approve.
-        2. Request must be pending.
-        3. Team must still have capacity.
-        4. Requester must not already be in another team for this event.
-        """
         from team.models import JoinRequestStatus, TeamStatus
 
         team = self.repo.get_team_with_event(team_id)
 
-        # Rule 1: Permission
         if team.leader_id != approver.id:
             raise PermissionDeniedError("Only the team leader can approve requests.")
 
-        # Rule 2: Pending request
         join_request = self.repo.get_pending_request(team_id, requester_user_id)
 
-        # Rule 3: Capacity (re-check under transaction)
         if team.is_full:
             raise ValidationError("Team is already full. Cannot approve.")
 
-        # Rule 4: Requester hasn't joined another team meanwhile
         if self.repo.user_has_team_for_event(requester_user_id, team.event_id):
             join_request.status = JoinRequestStatus.DECLINED
             join_request.reviewed_by = approver
@@ -220,7 +188,6 @@ class TeamJoinRequestService:
             )
             raise ConflictError("Requester has already joined another team.")
 
-        # Approve
         join_request.status = JoinRequestStatus.APPROVED
         join_request.reviewed_by = approver
         join_request.reviewed_at = timezone.now()
@@ -228,7 +195,6 @@ class TeamJoinRequestService:
             update_fields=["status", "reviewed_by", "reviewed_at", "updated_at"]
         )
 
-        # Create membership
         self.repo.create_membership(
             team=team,
             user=join_request.user,
@@ -236,7 +202,19 @@ class TeamJoinRequestService:
             skills=join_request.skills,
         )
 
-        # Auto-close team if full
+        from registration.models import Registration, RegistrationStatus, RegistrationType
+
+        Registration.objects.get_or_create(
+            event=team.event,
+            user=join_request.user,
+            defaults={
+                "type": RegistrationType.TEAM,
+                "team": team,
+                "preferred_role": join_request.role,
+                "status": RegistrationStatus.CONFIRMED,
+            },
+        )
+
         if team.is_full:
             team.status = TeamStatus.CLOSED
             team.save(update_fields=["status", "updated_at"])
@@ -251,14 +229,35 @@ class TeamJoinRequestService:
             },
         )
 
-        # Side effect: notify requester
-        self._notify_requester_approved(team, join_request.user)
+        requester = join_request.user
+        team_name = team.name
+        event_title = team.event.title
+        leader = approver
+
+        transaction.on_commit(
+            lambda: _notify_requester_approved_async(
+                requester_id=requester.id,
+                team_name=team_name,
+                event_title=event_title,
+                leader_id=leader.id,
+            )
+        )
+
+        # Push WebSocket update to requester
+        transaction.on_commit(
+            lambda: _push_ws_notification(
+                user_id=requester.id,
+                title=f"Join request approved — {team_name}",
+                body=f"You have been added to team \"{team_name}\".",
+                notif_type="request_approved",
+            )
+        )
 
         return JoinRequestResult(
             request_id=join_request.id,
             team_name=team.name,
             status="approved",
-            message=f"{join_request.user.get_full_name()} added to {team.name}.",
+            message=f"{requester.get_full_name()} added to {team.name}.",
         )
 
     @transaction.atomic
@@ -269,7 +268,6 @@ class TeamJoinRequestService:
         requester_user_id: int,
         decliner,
     ) -> JoinRequestResult:
-        """Team leader declines a join request."""
         from team.models import JoinRequestStatus
 
         team = self.repo.get_team_with_event(team_id)
@@ -295,7 +293,17 @@ class TeamJoinRequestService:
             },
         )
 
-        self._notify_requester_declined(team, join_request.user)
+        requester = join_request.user
+        team_name = team.name
+        leader = decliner
+
+        transaction.on_commit(
+            lambda: _notify_requester_declined_async(
+                requester_id=requester.id,
+                team_name=team_name,
+                leader_id=leader.id,
+            )
+        )
 
         return JoinRequestResult(
             request_id=join_request.id,
@@ -304,63 +312,108 @@ class TeamJoinRequestService:
             message="Join request declined.",
         )
 
-    # ─── Notification Helpers ────────────────────────────────────────────
-    @staticmethod
-    def _notify_leader(team, requester, join_request):
-        """Create an in-app notification for the team leader about a new join request."""
-        try:
-            from notification.models import Notification
 
-            Notification.objects.create(
-                user=team.leader,
-                type="join_request",
-                title=f"New join request for {team.name}",
-                body=f'{requester.get_full_name() or requester.username} wants to join your team "{team.name}".',
-                actor=requester,
-            )
-        except Exception:
-            logger.error(
-                "Failed to create join_request notification for leader %d",
-                team.leader_id,
-                exc_info=True,
-            )
+# ─── Deferred notification helpers ───────────────────────────────────────────
 
-    @staticmethod
-    def _notify_requester_approved(team, requester):
-        """Notify the requester that their join request was approved."""
-        try:
-            from notification.models import Notification
 
-            Notification.objects.create(
-                user=requester,
-                type="request_approved",
-                title=f"Join request approved — {team.name}",
-                body=f'You have been added to team "{team.name}" for {team.event.title}.',
-                actor=team.leader,
-            )
-        except Exception:
-            logger.error(
-                "Failed to create approval notification for user %d",
-                requester.id,
-                exc_info=True,
-            )
+def _notify_leader_async(*, team_id, leader_id, requester_id, team_name, requester_name):
+    """Create notification for team leader — called after transaction commits."""
+    try:
+        from django.contrib.auth.models import User
+        from notification.models import Notification
 
-    @staticmethod
-    def _notify_requester_declined(team, requester):
-        """Notify the requester that their join request was declined."""
-        try:
-            from notification.models import Notification
+        users = {u.pk: u for u in User.objects.filter(pk__in=[leader_id, requester_id])}
+        leader = users.get(leader_id)
+        requester = users.get(requester_id)
+        if not leader:
+            return
 
-            Notification.objects.create(
-                user=requester,
-                type="request_declined",
-                title=f"Join request declined — {team.name}",
-                body=f'Your request to join team "{team.name}" was declined.',
-                actor=team.leader,
-            )
-        except Exception:
-            logger.error(
-                "Failed to create decline notification for user %d",
-                requester.id,
-                exc_info=True,
-            )
+        Notification.objects.create(
+            user=leader,
+            type="join_request",
+            title=f"New join request for {team_name}",
+            body=f'{requester_name} wants to join your team "{team_name}".',
+            actor=requester,
+        )
+        _push_ws_notification(
+            user_id=leader_id,
+            title=f"New join request for {team_name}",
+            body=f"{requester_name} wants to join.",
+            notif_type="join_request",
+        )
+    except Exception:
+        logger.error(
+            "Failed to notify leader %d for team %s", leader_id, team_name, exc_info=True
+        )
+
+
+def _notify_requester_approved_async(*, requester_id, team_name, event_title, leader_id):
+    try:
+        from django.contrib.auth.models import User
+        from notification.models import Notification
+
+        requester = User.objects.get(pk=requester_id)
+        leader = User.objects.get(pk=leader_id)
+
+        Notification.objects.create(
+            user=requester,
+            type="request_approved",
+            title=f"Join request approved — {team_name}",
+            body=f'You have been added to team "{team_name}" for {event_title}.',
+            actor=leader,
+        )
+    except Exception:
+        logger.error(
+            "Failed to notify requester %d of approval", requester_id, exc_info=True
+        )
+
+
+def _notify_requester_declined_async(*, requester_id, team_name, leader_id):
+    try:
+        from django.contrib.auth.models import User
+        from notification.models import Notification
+
+        # Fetch both users in a single query to avoid two round-trips
+        users = {u.pk: u for u in User.objects.filter(pk__in=[requester_id, leader_id])}
+        requester = users.get(requester_id)
+        leader = users.get(leader_id)
+
+        if not requester:
+            return
+
+        Notification.objects.create(
+            user=requester,
+            type="request_declined",
+            title=f"Join request declined — {team_name}",
+            body=f'Your request to join team "{team_name}" was declined.',
+            actor=leader,  # may be None if leader was deleted — model allows NULL
+        )
+    except Exception:
+        logger.error(
+            "Failed to notify requester %d of decline", requester_id, exc_info=True
+        )
+
+
+def _push_ws_notification(*, user_id, title, body, notif_type):
+    """Push a notification to the user's WebSocket channel asynchronously."""
+    try:
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+        from django.utils import timezone
+
+        channel_layer = get_channel_layer()
+        if channel_layer is None:
+            return
+
+        async_to_sync(channel_layer.group_send)(
+            f"user_{user_id}_notifications",
+            {
+                "type": "notify",
+                "title": title,
+                "body": body,
+                "notif_type": notif_type,
+                "timestamp": timezone.now().isoformat(),
+            },
+        )
+    except Exception:
+        logger.warning("Failed to push WS notification to user %d", user_id, exc_info=True)

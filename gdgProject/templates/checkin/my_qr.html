@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | My QR Code — {{ event.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.qr-card {
+    max-width: 360px;
+    margin: 0 auto;
+    text-align: center;
+}
+.qr-img-wrap {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    display: inline-block;
+    box-shadow: var(--shadow-md);
+    margin: 1rem 0;
+}
+.qr-img-wrap img { width: 220px; height: 220px; display: block; }
+.checkin-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .45rem 1rem;
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+    font-size: .9rem;
+    margin: .5rem 0 1rem;
+}
+.checkin-status.done   { background: var(--green-subtle); color: var(--green); }
+.checkin-status.pending { background: var(--surface-2); color: var(--text-muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="section qr-card">
+    <div class="section-head reveal">
+        <h1><i data-lucide="qr-code"></i> Check-in QR Code</h1>
+        <p class="muted">{{ event.title }}</p>
+    </div>
+
+    {% if checkin.checked_in %}
+    <span class="checkin-status done reveal">
+        <i data-lucide="check-circle"></i> Already Checked In — {{ checkin.checked_in_at|date:"N j, g:i A" }}
+    </span>
+    {% else %}
+    <span class="checkin-status pending reveal">
+        <i data-lucide="clock"></i> Not yet checked in
+    </span>
+    {% endif %}
+
+    <div class="qr-img-wrap reveal">
+        <img src="{% url 'checkin:qr_image' event.id %}"
+             alt="Check-in QR code for {{ event.title }}"
+             width="220" height="220">
+    </div>
+
+    <article class="surface reveal" style="margin-bottom:1.25rem;">
+        <h2 style="font-size:1rem;"><i data-lucide="receipt-text"></i> Your Details</h2>
+        <dl class="info-grid">
+            <dt>Name</dt><dd>{{ request.user.get_full_name|default:request.user.username }}</dd>
+            <dt>Registration ID</dt><dd>{{ registration.registration_id }}</dd>
+            <dt>Event</dt><dd>{{ event.title }}</dd>
+            <dt>Date</dt><dd>{{ event.event_start|date:"N j, Y" }}</dd>
+        </dl>
+    </article>
+
+    <p class="muted reveal" style="font-size:.82rem;">
+        Show this QR code to the event organiser at the venue.
+        You can also screenshot it for offline use.
+    </p>
+
+    <div class="btn-row reveal">
+        <a href="{% url 'events:event_detail' event.id %}" class="btn-secondary">
+            <i data-lucide="arrow-left"></i> Back to Event
+        </a>
+    </div>
+</section>
+{% endblock %}

@@ -1,541 +1,100 @@
 {% extends 'base.html' %}
-
 {% block title %}CampusArena | Settings{% endblock %}
-
 {% block extra_css %}
 <style>
-    /* ==========================================================================
-       GLOBAL REVEAL ANIMATIONS (Needed for dashboard elements)
-       ========================================================================== */
-    .reveal {
-        opacity: 0;
-        transform: translateY(40px);
-        transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    
-    .reveal.active { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
-
-    /* ==========================================================================
-       MOBILE OPTIMIZATION (max-width: 768px)
-       ========================================================================== */
-    .mobile-only { display: none !important; }
-
-    @media (max-width: 768px) {
-        .mobile-only { display: flex !important; }
-
-        /* Hide default base.html navbar AND the desktop dashboard sidebar */
-        body > header, .navbar:not(.mobile-bottom-nav), .desktop-sidebar { 
-            display: none !important; 
-        }
-
-        /* Dashboard specific mobile layout reset */
-        .dashboard-layout {
-            display: block !important;
-            grid-template-columns: 1fr !important;
-            padding: 0 0.5rem !important;
-        }
-
-        .welcome-header { margin-top: 1rem; }
-
-        /* Settings layout fix for mobile - stack inputs under labels */
-        .settings-item {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 0.75rem;
-        }
-        
-        .settings-item input[type="text"],
-        .settings-item input[type="email"] {
-            max-width: 100% !important;
-            width: 100%;
-        }
-
-        /* 1. Navbar Mobile Setup */
-        .mobile-top-nav {
-            position: fixed; top: 0; left: 0; right: 0;
-            height: 60px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border-color);
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 1.25rem;
-            z-index: 1000;
-        }
-
-        .mobile-brand {
-            font-size: 1.2rem;
-            font-weight: 800;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            color: var(--text-main);
-        }
-
-        .mobile-actions { display: flex; align-items: center; gap: 1rem; }
-        .mobile-icon-btn { 
-            background: none; border: none; padding: 0.25rem;
-            color: var(--text-main); cursor: pointer;
-            display: flex; align-items: center; position: relative;
-        }
-
-        /* 2. Hamburger Menu Drawer */
-        .mobile-drawer-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
-            z-index: 1001; opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease;
-            display: block !important;
-        }
-
-        .mobile-drawer-overlay.open { opacity: 1; pointer-events: auto; }
-
-        .mobile-drawer {
-            position: fixed; top: 0; right: -85%;
-            width: 75%; max-width: 320px; height: 100vh;
-            background: var(--surface); z-index: 1002;
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex !important; flex-direction: column;
-            box-shadow: -4px 0 24px rgba(0,0,0,0.5); overflow-y: auto;
-        }
-
-        .mobile-drawer.open { right: 0; }
-
-        .drawer-header {
-            padding: 2.5rem 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex; flex-direction: column;
-        }
-
-        .drawer-header h4 {
-            margin: 0 0 1rem 0; font-size: 0.8rem; text-transform: uppercase; 
-            letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700;
-        }
-
-        .profile-card {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem; background: var(--bg-input, rgba(128,128,128,0.05));
-            border: 1px solid var(--border-color); border-radius: 16px;
-            text-decoration: none; transition: all 0.2s;
-        }
-
-        .profile-card:active { background: var(--border-color); }
-
-        .drawer-avatar {
-            width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
-            background: linear-gradient(135deg, var(--primary, #8b5cf6), #6d28d9); color: white;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 1.25rem; font-weight: bold; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
-        }
-
-        .drawer-user-info { flex-grow: 1; }
-        .drawer-user-info h3 { margin: 0 0 0.2rem 0; font-size: 1.05rem; color: var(--text-main); font-weight: 700; }
-        .drawer-user-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.2rem; }
-
-        .drawer-nav { padding: 1.5rem 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; flex-grow: 1; }
-        
-        .drawer-link {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1rem 1.15rem; color: var(--text-main);
-            text-decoration: none; font-size: 1rem; font-weight: 600;
-            border-radius: 14px; transition: all 0.2s;
-            border: 1px solid var(--border-color);
-            background: var(--surface);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-
-        .drawer-link:active { transform: scale(0.98); background: var(--bg-input, rgba(128,128,128,0.05)); }
-        .drawer-link i { color: var(--primary, #8b5cf6); width: 20px; height: 20px; }
-        .drawer-divider { height: 1px; background: var(--border-color); margin: 0.5rem 0; }
-        
-        .drawer-logout { 
-            border-color: rgba(239, 68, 68, 0.3) !important; 
-            background: rgba(239, 68, 68, 0.05) !important; 
-            color: #ef4444 !important; 
-        }
-        .drawer-logout i { color: #ef4444 !important; }
-
-        /* 3. Floating Bottom Nav */
-        .mobile-bottom-nav {
-            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 50px;
-            padding: 0.5rem 1rem; gap: 0.5rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15); z-index: 1000;
-        }
-
-        .bottom-nav-item {
-            display: flex; align-items: center; gap: 0.5rem;
-            padding: 0.6rem 1rem; border-radius: 30px;
-            color: var(--text-muted);
-            text-decoration: none; font-size: 0.95rem; font-weight: 600;
-        }
-
-        .bottom-nav-item.active { background: rgba(139, 92, 246, 0.15); color: var(--primary, #8b5cf6); }
-        .bottom-nav-item i { width: 18px; height: 18px; }
-
-        body { padding-bottom: 100px; padding-top: 60px; /* space for fixed navs */ }
-    }
+.main-content{padding:0!important;max-width:100%!important;width:100%!important}
+.n-dash{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
+.n-dash-content{padding:2rem 2.5rem 4rem}
+@media(max-width:900px){.n-dash{grid-template-columns:1fr}}
+.n-settings-block{background:var(--surface);border:1px solid var(--border);margin-bottom:1px}
+.n-settings-head{padding:.85rem 1.1rem;border-bottom:1px solid var(--border);font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:.45rem}
+.n-settings-head i{width:13px;height:13px;color:var(--primary)}
+.n-settings-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.9rem 1.1rem;border-bottom:1px solid var(--border-soft);flex-wrap:wrap}
+.n-settings-row:last-child{border-bottom:none}
+.n-settings-row .info strong{display:block;font-size:.88rem;font-weight:600;margin-bottom:.18rem}
+.n-settings-row .info p{font-size:.78rem;color:var(--muted);margin:0}
+.n-settings-inp{border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-family:var(--font);font-size:.88rem;padding:.5rem .8rem;border-radius:0;outline:none;width:220px;transition:border-color .15s}
+.n-settings-inp:focus{border-color:var(--primary)}
+.n-toggle{position:relative;display:inline-block;width:38px;height:20px;flex-shrink:0}
+.n-toggle input{opacity:0;width:0;height:0}
+.n-toggle-sl{position:absolute;cursor:pointer;inset:0;background:var(--surface-3);transition:background .2s}
+.n-toggle-sl::before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:var(--muted);transition:transform .2s,background .2s}
+.n-toggle input:checked+.n-toggle-sl{background:var(--primary)}
+.n-toggle input:checked+.n-toggle-sl::before{transform:translateX(18px);background:#fff}
 </style>
 {% endblock %}
-
 {% block content %}
-<!-- ==========================================================================
-     MOBILE SPECIFIC NAVIGATION LAYERS
-     ========================================================================== -->
+{% include 'includes/_n_page.html' %}
+<div class="n-dash">
+    {% include 'dashboard/_sidebar.html' with current_page='settings' %}
+    <div class="n-dash-content">
 
-<!-- 1. Top Navbar (Mobile Only) -->
-<div class="mobile-top-nav mobile-only">
-    <a href="{% url 'events:home' %}" class="brand mobile-brand">
-        <i data-lucide="trophy" style="width: 20px; height: 20px;"></i>
-        CampusArena
-    </a>
-    <div class="mobile-actions">
-        <button class="mobile-icon-btn" id="mobile-theme-toggle">
-            <i data-lucide="moon"></i>
-        </button>
-        <a href="{% url 'dashboard:notifications' %}" class="mobile-icon-btn" style="text-decoration: none;">
-            <i data-lucide="bell"></i>
-            <span style="position: absolute; top: 3px; right: 5px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
-        </a>
-        <button class="mobile-icon-btn" id="hamburger-menu-btn">
-            <i data-lucide="menu"></i>
-        </button>
-    </div>
-</div>
-
-<!-- 2. Hamburger Drawer (Mobile Only) -->
-<div class="mobile-drawer-overlay mobile-only" id="drawer-overlay"></div>
-<div class="mobile-drawer mobile-only" id="mobile-drawer">
-    <div class="drawer-header">
-        <h4>Account</h4>
-        {% if user.is_authenticated %}
-        <a href="{% url 'dashboard:my_profile' %}" class="profile-card">
-            <div class="drawer-avatar">
-                {{ user.first_name|default:"U"|make_list|first|upper }}
-            </div>
-            <div class="drawer-user-info">
-                <h3>
-                {% if user.is_staff %}
-                Admin User
-                {% else %}
-                {{ user.get_full_name|default:"Student User" }}
-                {% endif %}
-                </h3>
-                <p>View Profile <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i></p>
-            </div>
-        </a>
-        {% else %}
-        <div class="profile-card" style="justify-content: center; text-align: center;">
-            <div class="drawer-user-info">
-                <h3>Guest User</h3>
-                <p style="justify-content: center;">Join the community</p>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-    <div class="drawer-nav">
-        {% if user.is_authenticated %}
-            <a href="{% url 'dashboard:user_dashboard' %}" class="drawer-link"><i data-lucide="layout-dashboard"></i> Overview</a>
-            <a href="{% url 'dashboard:my_events' %}" class="drawer-link"><i data-lucide="calendar"></i> My Events</a>
-            <a href="{% url 'dashboard:my_teams' %}" class="drawer-link"><i data-lucide="users"></i> My Teams</a>
-            <a href="{% url 'team:find_teammates' %}" class="drawer-link"><i data-lucide="user-plus"></i> Find Teammates</a>
-            <a href="{% url 'dashboard:pending_requests' %}" class="drawer-link"><i data-lucide="clock"></i> Pending Requests</a>
-            <a href="{% url 'dashboard:settings' %}" class="drawer-link"><i data-lucide="settings"></i> Settings</a>
-            <div class="drawer-divider"></div>
-            <form method="POST" action="{% url 'users:logout' %}" style="margin:0;">
-                {% csrf_token %}
-                <button type="submit" class="drawer-link drawer-logout" style="width:100%; text-align:left; background:none; border:none; font-family:inherit; cursor:pointer;">
-                    <i data-lucide="log-out"></i> Logout
-                </button>
-            </form>
-        {% else %}
-            <a href="{% url 'users:login' %}" class="drawer-link"><i data-lucide="log-in"></i> Login</a>
-            <a href="{% url 'users:register' %}" class="drawer-link"><i data-lucide="user-plus"></i> Register</a>
-        {% endif %}
-    </div>
-</div>
-
-<!-- 3. Bottom Navigation Bar (Mobile Only) -->
-<div class="mobile-bottom-nav mobile-only">
-
-    <a href="{% url 'events:home' %}" class="bottom-nav-item">
-        <i data-lucide="home"></i> Events
-    </a>
-
-    {% if user.is_authenticated %}
-
-        {% if user.is_staff %}
-        <!-- Admin / Organizer -->
-        <a href="{% url 'eventManagement:organizer_dashboard' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-
-        {% else %}
-        <!-- Student -->
-        <a href="{% url 'dashboard:user_dashboard' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-        {% endif %}
-
-    {% else %}
-        <a href="{% url 'users:login' %}" class="bottom-nav-item active">
-            <i data-lucide="layout-dashboard"></i> Dashboard
-        </a>
-    {% endif %}
-
-</div>
-
-<!-- ==========================================================================
-     STANDARD DASHBOARD CONTENT
-     ========================================================================== -->
-
-<section class="dashboard-layout">
-    <!-- Desktop Sidebar (Hidden on Mobile via .desktop-sidebar class) -->
-    <div class="desktop-sidebar">
-        {% include 'dashboard/_sidebar.html' with current_page='settings' %}
-    </div>
-
-    <!-- Main Content -->
-    <div>
-        <div class="welcome-header reveal">
-            <h1><i data-lucide="settings"></i> Settings</h1>
-            <p>Customize your CampusArena experience.</p>
+        <div class="n-head n-reveal">
+            <div class="n-head-l"><span class="n-num">06</span><span class="n-name">Settings</span></div>
         </div>
 
-        <div class="settings-grid reveal">
+        {% if messages %}{% for message in messages %}
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:.85rem;border:1px solid;{% if 'error' in message.tags %}background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger);{% else %}background:var(--ok-soft);border-color:rgba(0,230,118,.22);color:var(--ok);{% endif %}" class="n-reveal">
+            <i data-lucide="{% if 'error' in message.tags %}alert-circle{% else %}check-circle{% endif %}" style="width:14px;height:14px;flex-shrink:0;"></i>{{ message }}
+        </div>
+        {% endfor %}{% endif %}
+
+        <form method="POST" action="" id="settings-form">
+            {% csrf_token %}
+
             <!-- Account -->
-            <article class="surface">
-                <h2><i data-lucide="user-cog"></i> Account</h2>
-                <form method="POST" action="" id="settings-form">
-                    {% csrf_token %}
-                <div class="settings-group">
-                    <div class="settings-item">
-                        <div>
-                            <strong>Display Name</strong>
-                            <p class="muted">How your name appears to others</p>
-                        </div>
-                        <input type="text" name="display_name" value="{{ user.get_full_name|default:user.username }}" style="max-width:220px;">
-                    </div>
-                    <div class="settings-item">
-                        <div>
-                            <strong>Email Address</strong>
-                            <p class="muted">Used for login and notifications</p>
-                        </div>
-                        <input type="email" name="email" value="{{ user.email }}" style="max-width:220px;">
-                    </div>
-                    <div class="settings-item">
-                        <div>
-                            <strong>Change Password</strong>
-                            <p class="muted">Update your account password</p>
-                        </div>
-                        <a href="{% url 'users:change_password' %}" class="btn-secondary btn-small"><i data-lucide="key"></i> Change</a>
-                    </div>
+            <div class="n-settings-block n-reveal">
+                <div class="n-settings-head"><i data-lucide="user-cog"></i> Account</div>
+                <div class="n-settings-row">
+                    <div class="info"><strong>Display Name</strong><p>How your name appears to others</p></div>
+                    <input class="n-settings-inp" type="text" name="display_name" value="{{ user.get_full_name|default:user.username }}">
                 </div>
-                </form>
-            </article>
-            <article class="surface">
-                <h2><i data-lucide="bell-ring"></i> Notification Preferences</h2>
-                <div class="settings-group">
-                    <div class="settings-item">
-                        <div>
-                            <strong>Email Notifications</strong>
-                            <p class="muted">Receive event updates via email</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <div class="settings-item">
-                        <div>
-                            <strong>Team Invites</strong>
-                            <p class="muted">Get notified when someone invites you</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <div class="settings-item">
-                        <div>
-                            <strong>Event Reminders</strong>
-                            <p class="muted">Deadline and upcoming event alerts</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <div class="settings-item">
-                        <div>
-                            <strong>Marketing Emails</strong>
-                            <p class="muted">Platform news and new features</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
+                <div class="n-settings-row">
+                    <div class="info"><strong>Email Address</strong><p>Used for login and notifications</p></div>
+                    <input class="n-settings-inp" type="email" name="email" value="{{ user.email }}">
                 </div>
-            </article>
+                <div class="n-settings-row">
+                    <div class="info"><strong>Password</strong><p>Update your account password</p></div>
+                    <a href="{% url 'users:change_password' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);text-decoration:none;padding:.45rem .8rem;border:1px solid var(--border);transition:all .15s;" onmouseover="this.style.borderColor='var(--border-hover)'" onmouseout="this.style.borderColor='var(--border)'">
+                        <i data-lucide="key" style="width:12px;height:12px;"></i> Change
+                    </a>
+                </div>
+            </div>
 
-            <!-- Danger Zone -->
-            <article class="surface settings-danger">
-                <h2 style="color:var(--danger);"><i data-lucide="alert-triangle"></i> Danger Zone</h2>
-                <div class="settings-group">
-                    <div class="settings-item">
-                        <div>
-                            <strong>Deactivate Account</strong>
-                            <p class="muted">Temporarily disable your account</p>
-                        </div>
-                        <button class="btn-secondary btn-small" style="border-color:var(--warn);color:var(--warn);"
-                            data-confirm data-confirm-title="Deactivate Account"
-                            data-confirm-msg="Your account will be temporarily disabled. You can reactivate it by logging in again."
-                            data-confirm-label="Deactivate" data-danger="false"
-                            data-toast-msg="Account deactivation requested.">
-                            <i data-lucide="pause-circle"></i> Deactivate</button>
-                    </div>
-                    <div class="settings-item">
-                        <div>
-                            <strong>Delete Account</strong>
-                            <p class="muted">Permanently delete your account and data</p>
-                        </div>
-                        <button class="btn-secondary btn-small" style="border-color:var(--danger);color:var(--danger);"
-                            data-confirm data-confirm-title="Delete Account"
-                            data-confirm-msg="This will permanently delete your account and all associated data. This action cannot be undone."
-                            data-confirm-label="Delete Permanently" data-danger="true"
-                            data-toast-msg="Account deletion requested. Our team will follow up.">
-                            <i data-lucide="trash-2"></i> Delete</button>
-                    </div>
+            <!-- Notifications -->
+            <div class="n-settings-block n-reveal n-d1">
+                <div class="n-settings-head"><i data-lucide="bell-ring"></i> Notifications</div>
+                <div class="n-settings-row">
+                    <div class="info"><strong>Email Notifications</strong><p>Receive event updates via email</p></div>
+                    <label class="n-toggle"><input type="checkbox" checked><span class="n-toggle-sl"></span></label>
                 </div>
-            </article>
+                <div class="n-settings-row">
+                    <div class="info"><strong>Team Invites</strong><p>Notify when someone invites you</p></div>
+                    <label class="n-toggle"><input type="checkbox" checked><span class="n-toggle-sl"></span></label>
+                </div>
+                <div class="n-settings-row">
+                    <div class="info"><strong>Event Reminders</strong><p>Deadline and upcoming event alerts</p></div>
+                    <label class="n-toggle"><input type="checkbox" checked><span class="n-toggle-sl"></span></label>
+                </div>
+            </div>
 
-            <button type="submit" form="settings-form" class="btn-primary full-btn" style="margin-top:.5rem;" id="settings-save-btn"><i data-lucide="save"></i> Save Changes</button>
+            <button type="submit" id="settings-save-btn" style="display:flex;align-items:center;gap:.4rem;padding:.75rem 1.5rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-top:1rem;" class="n-reveal n-d2">
+                <i data-lucide="save" style="width:13px;height:13px;"></i> Save Changes
+            </button>
+        </form>
+
+        <!-- Danger zone -->
+        <div class="n-settings-block n-reveal n-d3" style="margin-top:1.5rem;border-color:rgba(255,82,82,.2);">
+            <div class="n-settings-head" style="color:var(--danger);"><i data-lucide="alert-triangle" style="color:var(--danger);"></i> Danger Zone</div>
+            <div class="n-settings-row">
+                <div class="info"><strong>Delete Account</strong><p>Permanently delete your account and all data</p></div>
+                <button style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--danger);background:transparent;border:1px solid rgba(255,82,82,.3);padding:.45rem .8rem;cursor:pointer;font-family:var(--font);transition:all .15s;"
+                    data-confirm data-confirm-title="Delete Account" data-confirm-msg="This will permanently delete your account. This cannot be undone." data-confirm-label="Delete" data-danger="true" data-toast-msg="Deletion requested.">
+                    <i data-lucide="trash-2" style="width:12px;height:12px;"></i> Delete
+                </button>
+            </div>
         </div>
+
     </div>
-</section>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        /* ==========================================================================
-           REVEAL ANIMATIONS (For Dashboard Elements)
-           ========================================================================== */
-        const revealElements = document.querySelectorAll('.reveal');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { 
-            threshold: 0.08, 
-            rootMargin: '0px 0px -20px 0px' 
-        });
-
-        revealElements.forEach(el => observer.observe(el));
-
-        /* ==========================================================================
-           MOBILE DRAWER LOGIC
-           ========================================================================== */
-        const hamburgerBtn = document.getElementById('hamburger-menu-btn');
-        const drawerOverlay = document.getElementById('drawer-overlay');
-        const mobileDrawer = document.getElementById('mobile-drawer');
-        
-        if (hamburgerBtn && drawerOverlay && mobileDrawer) {
-            function toggleDrawer() {
-                const isOpen = mobileDrawer.classList.contains('open');
-                if (isOpen) {
-                    mobileDrawer.classList.remove('open');
-                    drawerOverlay.classList.remove('open');
-                    document.body.style.overflow = ''; // Restore scroll
-                } else {
-                    mobileDrawer.classList.add('open');
-                    drawerOverlay.classList.add('open');
-                    document.body.style.overflow = 'hidden'; // Prevent body scroll while menu is open
-                }
-            }
-
-            hamburgerBtn.addEventListener('click', toggleDrawer);
-            drawerOverlay.addEventListener('click', toggleDrawer);
-
-            const drawerLinks = mobileDrawer.querySelectorAll('.drawer-link');
-            drawerLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    mobileDrawer.classList.remove('open');
-                    drawerOverlay.classList.remove('open');
-                    document.body.style.overflow = ''; 
-                });
-            });
-        }
-
-        /* ==========================================================================
-           MOBILE THEME TOGGLE LOGIC
-           ========================================================================== */
-        const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
-        if (mobileThemeToggle) {
-            mobileThemeToggle.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                const nextTheme = isDark ? 'light' : 'dark';
-
-                const updateTheme = () => {
-                    document.documentElement.setAttribute('data-theme', nextTheme);
-                    localStorage.setItem('campusarena-theme', nextTheme);
-                    const label = document.getElementById('theme-label');
-                    if(label) label.textContent = nextTheme === 'dark' ? 'Dark' : 'Light';
-                };
-
-                if (!document.startViewTransition) {
-                    updateTheme();
-                    return;
-                }
-
-                const x = e.clientX || (e.touches && e.touches[0].clientX) || window.innerWidth / 2;
-                const y = e.clientY || (e.touches && e.touches[0].clientY) || 30;
-
-                const endRadius = Math.hypot(
-                    Math.max(x, window.innerWidth - x),
-                    Math.max(y, window.innerHeight - y)
-                );
-
-                document.documentElement.classList.add('vt-active');
-                const transition = document.startViewTransition(updateTheme);
-
-                transition.ready.then(() => {
-                    const animation = document.documentElement.animate(
-                        {
-                            clipPath: [
-                                `circle(0px at ${x}px ${y}px)`,
-                                `circle(${endRadius}px at ${x}px ${y}px)`
-                            ]
-                        },
-                        {
-                            duration: 600,
-                            easing: 'cubic-bezier(0.34, 1.2, 0.64, 1)', 
-                            pseudoElement: '::view-transition-new(root)'
-                        }
-                    );
-
-                    animation.onfinish = () => {
-                        document.documentElement.classList.remove('vt-active');
-                    };
-                });
-                
-                transition.finished.finally(() => {
-                    document.documentElement.classList.remove('vt-active');
-                });
-            });
-        }
-    });
-</script>
+</div>
 {% endblock %}

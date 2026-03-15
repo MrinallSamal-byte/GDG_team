@@ -1,114 +1,109 @@
 {% extends 'base.html' %}
-
 {% block title %}CampusArena | Edit Profile{% endblock %}
-
+{% block extra_css %}
+<style>
+.main-content{max-width:680px!important}
+.n-card{background:var(--surface);border:1px solid var(--border);padding:1.25rem;margin-bottom:1px}
+.n-card-head{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;display:flex;align-items:center;gap:.4rem}
+.n-card-head i{width:12px;height:12px;color:var(--primary)}
+.n-f label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.38rem}
+.n-f{margin-bottom:.75rem}
+.n-i{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font);font-size:.88rem;padding:.65rem .9rem;border-radius:0;outline:none;transition:border-color .15s}
+.n-i:focus{border-color:var(--primary)}
+.n-g2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.n-sk{padding:.3rem .7rem;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;letter-spacing:.04em;transition:all .15s;font-family:var(--font)}
+.n-sk.on{border-color:var(--primary);color:var(--primary);background:var(--primary-glow)}
+@media(max-width:600px){.n-g2{grid-template-columns:1fr}}
+</style>
+{% endblock %}
 {% block content %}
-<section class="section" style="max-width:680px;margin:0 auto;">
-    <div class="section-head reveal">
-        <p class="eyebrow"><i data-lucide="edit-3"></i> Profile</p>
-        <h1>Edit Profile</h1>
-        <p class="muted">Update your personal information and skills.</p>
+{% include 'includes/_n_page.html' %}
+
+<div class="n-head n-reveal" style="margin-bottom:1.5rem;">
+    <div style="display:flex;align-items:center;gap:.75rem;">
+        <span style="font-family:var(--font-mono);font-size:.65rem;font-weight:700;color:var(--primary);letter-spacing:.12em;">EDIT</span>
+        <span style="font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;">Edit Profile</span>
+    </div>
+    <a href="{% url 'dashboard:my_profile' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;">
+        <i data-lucide="arrow-left" style="width:12px;height:12px;"></i> Cancel
+    </a>
+</div>
+
+{% if messages %}{% for message in messages %}
+<div style="display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:.85rem;border:1px solid;{% if 'error' in message.tags %}background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger);{% else %}background:var(--ok-soft);border-color:rgba(0,230,118,.22);color:var(--ok);{% endif %}">
+    <i data-lucide="{% if 'error' in message.tags %}alert-circle{% else %}check-circle{% endif %}" style="width:14px;height:14px;"></i>{{ message }}
+</div>
+{% endfor %}{% endif %}
+
+<form method="POST" action="" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Personal info -->
+    <div class="n-card n-reveal">
+        <div class="n-card-head"><i data-lucide="user-circle"></i> Personal Information</div>
+        <div class="n-g2">
+            <div class="n-f"><label>Full Name</label><input class="n-i" type="text" name="full_name" value="{{ user.get_full_name|default:user.username }}" placeholder="Full Name"></div>
+            <div class="n-f"><label>Email</label><input class="n-i" type="email" name="email" value="{{ user.email }}" placeholder="Email"></div>
+            <div class="n-f"><label>Phone</label><input class="n-i" type="tel" name="phone" value="{{ profile.phone|default:'' }}" placeholder="Phone"></div>
+            <div class="n-f"><label>College</label><input class="n-i" type="text" name="college" value="{{ profile.college|default:'' }}" placeholder="College name"></div>
+            <div class="n-f">
+                <label>Branch</label>
+                <select class="n-i" name="branch">
+                    <option value="">Select branch</option>
+                    {% for b in branches %}<option value="{{ b }}" {% if profile.branch == b %}selected{% endif %}>{{ b }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="n-f">
+                <label>Year of Study</label>
+                <select class="n-i" name="year">
+                    <option value="">Select year</option>
+                    {% for y in years %}<option value="{{ y }}" {% if profile.year == y %}selected{% endif %}>Year {{ y }}</option>{% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="n-f">
+            <label>Profile Photo</label>
+            <input class="n-i" type="file" name="profile_photo" accept="image/*" style="padding:.45rem .9rem;">
+        </div>
     </div>
 
-    <form method="POST" action="" class="form-layout">
-        {% csrf_token %}
-
-        <article class="surface reveal">
-            <h2><i data-lucide="user-circle"></i> Personal Information</h2>
-            <div class="field-grid">
-                <div class="form-field">
-                    <i data-lucide="user"></i>
-                    <input type="text" name="full_name" placeholder="Full Name"
-                           value="{{ user.get_full_name|default:user.username }}">
-                </div>
-                <div class="form-field">
-                    <i data-lucide="mail"></i>
-                    <input type="email" name="email" placeholder="Email"
-                           value="{{ user.email }}">
-                </div>
-                <div class="form-field">
-                    <i data-lucide="phone"></i>
-                    <input type="tel" name="phone" placeholder="Phone"
-                           value="{{ profile.phone|default:'' }}">
-                </div>
-                <div class="form-field">
-                    <i data-lucide="building-2"></i>
-                    <input type="text" name="college" placeholder="College"
-                           value="{{ profile.college|default:'' }}">
-                </div>
-                <div class="form-field">
-                    <i data-lucide="graduation-cap"></i>
-                    <select name="branch">
-                        <option value="" disabled>Select branch</option>
-                        {% for b in branches %}
-                        <option value="{{ b }}" {% if profile.branch == b %}selected{% endif %}>{{ b }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-field">
-                    <i data-lucide="calendar"></i>
-                    <select name="year">
-                        <option value="" disabled>Year of study</option>
-                        {% for y in years %}
-                        <option value="{{ y }}" {% if profile.year == y %}selected{% endif %}>Year {{ y }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-        </article>
-
-        <article class="surface reveal">
-            <h2><i data-lucide="link"></i> Links & Bio</h2>
-            <div class="field-grid">
-                <div class="form-field">
-                    <i data-lucide="github"></i>
-                    <input type="url" name="github" placeholder="GitHub URL"
-                           value="{{ profile.github|default:'' }}">
-                </div>
-                <div class="form-field">
-                    <i data-lucide="linkedin"></i>
-                    <input type="url" name="linkedin" placeholder="LinkedIn URL"
-                           value="{{ profile.linkedin|default:'' }}">
-                </div>
-            </div>
-            <textarea name="bio" rows="4" placeholder="Tell others about yourself..."
-                      style="width:100%;margin-top:.5rem;">{{ profile.bio|default:'' }}</textarea>
-        </article>
-
-        <article class="surface reveal">
-            <h2><i data-lucide="cpu"></i> Skills</h2>
-            <p class="muted" style="margin-bottom:.5rem;">Click to toggle skills:</p>
-            <div class="chip-row chip-toggle" id="skills-toggle">
-                {% for skill in skills %}
-                <button type="button" class="chip {% if skill in active_skills %}active{% endif %}"
-                        data-skill="{{ skill }}">{{ skill }}</button>
-                {% endfor %}
-            </div>
-            <input type="hidden" name="skills" id="skills-hidden"
-                   value="{{ profile.skills|default:'' }}">
-        </article>
-
-        <div class="btn-row reveal">
-            <a href="{% url 'dashboard:my_profile' %}" class="btn-secondary">
-                <i data-lucide="arrow-left"></i> Cancel
-            </a>
-            <button type="submit" class="btn-primary">
-                <i data-lucide="save"></i> Save Changes
-            </button>
+    <!-- Links & Bio -->
+    <div class="n-card n-reveal" style="margin-top:1px;">
+        <div class="n-card-head"><i data-lucide="link"></i> Links & Bio</div>
+        <div class="n-g2">
+            <div class="n-f"><label>GitHub</label><input class="n-i" type="url" name="github" value="{{ profile.github|default:'' }}" placeholder="https://github.com/..."></div>
+            <div class="n-f"><label>LinkedIn</label><input class="n-i" type="url" name="linkedin" value="{{ profile.linkedin|default:'' }}" placeholder="https://linkedin.com/in/..."></div>
+            <div class="n-f"><label>Portfolio</label><input class="n-i" type="url" name="portfolio" value="{{ profile.portfolio|default:'' }}" placeholder="https://yoursite.dev"></div>
         </div>
-    </form>
-</section>
+        <div class="n-f" style="margin-bottom:0;"><label>Bio</label><textarea class="n-i" name="bio" rows="3" placeholder="Tell others about yourself...">{{ profile.bio|default:'' }}</textarea></div>
+    </div>
 
+    <!-- Skills -->
+    <div class="n-card n-reveal" style="margin-top:1px;">
+        <div class="n-card-head"><i data-lucide="cpu"></i> Skills</div>
+        <div style="display:flex;flex-wrap:wrap;gap:.35rem;" id="sk-chips">
+            {% for skill in skills %}
+            <button type="button" class="n-sk {% if skill in active_skills %}on{% endif %}" data-s="{{ skill }}">{{ skill }}</button>
+            {% endfor %}
+        </div>
+        <input type="hidden" name="skills" id="sk-hidden" value="{{ profile.skills|default:'' }}">
+    </div>
+
+    <div style="display:flex;gap:.5rem;margin-top:1rem;" class="n-reveal">
+        <a href="{% url 'dashboard:my_profile' %}" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.1rem;background:transparent;color:var(--text);border:1px solid var(--border);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;transition:all .15s;">
+            <i data-lucide="x" style="width:12px;height:12px;"></i> Cancel
+        </a>
+        <button type="submit" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.25rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s;">
+            <i data-lucide="save" style="width:12px;height:12px;"></i> Save Changes
+        </button>
+    </div>
+</form>
 <script>
-(function () {
-    const hidden = document.getElementById('skills-hidden');
-    document.querySelectorAll('#skills-toggle .chip').forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.classList.toggle('active');
-            hidden.value = [...document.querySelectorAll('#skills-toggle .chip.active')]
-                .map(b => b.dataset.skill).join(',');
-        });
+document.querySelectorAll('.n-sk').forEach(b=>{
+    b.addEventListener('click',()=>{
+        b.classList.toggle('on');
+        document.getElementById('sk-hidden').value=[...document.querySelectorAll('.n-sk.on')].map(x=>x.dataset.s).join(',');
     });
-})();
+});
 </script>
 {% endblock %}

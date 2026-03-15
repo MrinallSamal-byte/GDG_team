@@ -402,13 +402,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /* ─── Mark all notifications read ────────────────────────────────────── */
-    document.querySelector('.notif-actions-btn')?.addEventListener('click', (e) => {
-        document.querySelectorAll('.notif-unread').forEach(c => { c.classList.remove('notif-unread'); c.style.borderLeft=''; });
-        document.querySelectorAll('.notif-dot').forEach(d => d.remove());
-        showToast('All notifications marked as read.', 'success');
-        e.currentTarget.disabled = true;
-    });
+    /* ─── Mark all notifications read ─────────────────────────────────────
+       The button is now a real <form method="POST"> submit; no JS needed.
+       The form posts to dashboard:mark_all_read which returns JSON {ok,updated}.
+       We intercept it here to give instant visual feedback without a reload.
+    ── */
+    const markAllReadForm = document.getElementById('mark-all-read-form');
+    if (markAllReadForm) {
+        markAllReadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const resp = await fetch(markAllReadForm.action, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': markAllReadForm.querySelector('[name=csrfmiddlewaretoken]').value },
+                    credentials: 'same-origin',
+                });
+                if (resp.ok) {
+                    document.querySelectorAll('.notif-unread').forEach(c => { c.classList.remove('notif-unread'); });
+                    document.querySelectorAll('.notif-dot').forEach(d => d.remove());
+                    document.querySelectorAll('#header-notif-badge, #sidebar-notif-badge').forEach(b => { b.style.display = 'none'; });
+                    showToast('All notifications marked as read.', 'success');
+                    markAllReadForm.querySelector('button').disabled = true;
+                }
+            } catch (_) {
+                markAllReadForm.submit(); // fallback: let the normal POST happen
+            }
+        });
+    }
 
     /* ─── Settings save ───────────────────────────────────────────────────── */
     const settingsForm = document.getElementById('settings-form');

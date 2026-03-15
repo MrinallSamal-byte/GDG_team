@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Find Your Team — {{ event.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.match-score-ring {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .9rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    border: 3px solid;
+}
+.match-score-high   { border-color: var(--green, #0F6E56);  color: var(--green, #0F6E56);  background: var(--green-subtle,  #E1F5EE); }
+.match-score-mid    { border-color: var(--warn, #854F0B);   color: var(--warn, #854F0B);   background: var(--warn-subtle,   #FAEEDA); }
+.match-score-low    { border-color: var(--text-muted);      color: var(--text-muted);      background: var(--surface-2); }
+.skill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    padding: .2rem .55rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 500;
+}
+.skill-tag-new  { background: var(--green-subtle, #E1F5EE); color: var(--green, #0F6E56); }
+.skill-tag-shared { background: var(--surface-2); color: var(--text-muted); }
+.match-reason {
+    font-size: .82rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: .25rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="section" style="max-width:820px;margin:0 auto;">
+
+    <div class="section-head reveal">
+        <p class="eyebrow"><i data-lucide="sparkles"></i> AI-Powered Matching</p>
+        <h1>Find Your Ideal Team</h1>
+        <p class="muted">
+            Teams ranked by how well your skills and preferred role complement each team's current lineup.
+            Event: <strong>{{ event.title }}</strong>
+        </p>
+    </div>
+
+    {% if matches %}
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+        {% for match in matches %}
+        <article class="surface reveal" style="display:flex;gap:1rem;align-items:flex-start;">
+
+            <!-- Score ring -->
+            <div class="match-score-ring
+                {% if match.score >= 60 %}match-score-high
+                {% elif match.score >= 30 %}match-score-mid
+                {% else %}match-score-low{% endif %}">
+                {{ match.score|floatformat:0 }}
+            </div>
+
+            <div style="flex:1;min-width:0;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;">
+                    <div>
+                        <h3 style="margin:0;font-size:1rem;">{{ match.team_name }}</h3>
+                        <p class="match-reason">{{ match.match_reason }}</p>
+                    </div>
+                    <span class="status {% if match.spots_remaining > 0 %}open{% else %}closed{% endif %}" style="font-size:.78rem;white-space:nowrap;">
+                        {% if match.spots_remaining > 0 %}
+                        <i data-lucide="users"></i> {{ match.spots_remaining }} spot{{ match.spots_remaining|pluralize }} open
+                        {% else %}
+                        <i data-lucide="lock"></i> Full
+                        {% endif %}
+                    </span>
+                </div>
+
+                {% if match.complementary_skills or match.shared_skills %}
+                <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.6rem;">
+                    {% for skill in match.complementary_skills %}
+                    <span class="skill-tag skill-tag-new">
+                        <i data-lucide="plus-circle" style="width:11px;height:11px;"></i>{{ skill }}
+                    </span>
+                    {% endfor %}
+                    {% for skill in match.shared_skills %}
+                    <span class="skill-tag skill-tag-shared">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+                <p class="muted" style="font-size:.75rem;margin:.4rem 0 0;">
+                    <i data-lucide="plus-circle" style="width:11px;height:11px;"></i> skills you'd contribute &nbsp;·&nbsp;
+                    grey = shared tech
+                </p>
+                {% endif %}
+
+                {% if match.missing_roles %}
+                <p class="muted" style="font-size:.78rem;margin-top:.4rem;">
+                    <i data-lucide="briefcase" style="width:11px;height:11px;"></i>
+                    Roles still needed:
+                    {% for role in match.missing_roles|slice:":4" %}{{ role }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                </p>
+                {% endif %}
+
+                <div style="margin-top:.75rem;">
+                    <a href="{% url 'team:request_join' match.team_id %}"
+                       class="btn-primary btn-small"
+                       {% if match.spots_remaining == 0 %}style="pointer-events:none;opacity:.5;"{% endif %}>
+                        <i data-lucide="send"></i> Request to Join
+                    </a>
+                    <a href="{% url 'events:event_detail' event.id %}"
+                       class="btn-secondary btn-small" style="margin-left:.4rem;">
+                        <i data-lucide="eye"></i> View Team on Event Page
+                    </a>
+                </div>
+            </div>
+
+        </article>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <article class="surface reveal">
+        <div class="empty-state">
+            <i data-lucide="users"></i>
+            <p>
+                No open teams found for this event right now.
+                {% if request.user.is_authenticated %}
+                You can <a href="{% url 'registration:register_event' event.id %}">create your own team</a>
+                or register as an individual looking for a team.
+                {% endif %}
+            </p>
+        </div>
+    </article>
+    {% endif %}
+
+    <div class="btn-row reveal" style="margin-top:1.5rem;">
+        <a href="{% url 'events:event_detail' event.id %}" class="btn-secondary">
+            <i data-lucide="arrow-left"></i> Back to Event
+        </a>
+        <a href="{% url 'registration:register_event' event.id %}" class="btn-primary">
+            <i data-lucide="plus-circle"></i> Register &amp; Create Team
+        </a>
+    </div>
+
+    <p class="muted reveal" style="font-size:.75rem;text-align:center;margin-top:1rem;">
+        Scores are based on skill complementarity, role gaps, and team size.
+        Higher = stronger match for your profile.
+    </p>
+
+</section>
+{% endblock %}

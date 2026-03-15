@@ -1,101 +1,234 @@
 {% extends 'base.html' %}
-
 {% block title %}CampusArena | Register{% endblock %}
+{% block extra_css %}
+<style>
+.site-header,.site-footer{display:none!important}
+.main-content{padding:0!important;max-width:100%!important;width:100%!important}
+.n-auth{display:grid;grid-template-columns:320px 1fr;min-height:100vh}
+.n-auth-side{background:var(--surface);border-right:1px solid var(--border);padding:3rem 2.5rem;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.n-auth-side::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,0,0,.06) 1px,transparent 1px);background-size:18px 18px}
+.n-auth-side>*{position:relative;z-index:1}
+.n-auth-main{background:var(--bg);display:flex;align-items:flex-start;justify-content:center;padding:3rem 2rem;overflow-y:auto}
+.n-auth-box{width:100%;max-width:540px}
+.n-ey{font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
+.n-ey::after{content:'';flex:1;height:1px;background:rgba(255,0,0,.18)}
+.n-auth-box h1{font-size:1.5rem;font-weight:800;letter-spacing:-.03em;margin:0 0 .3rem}
+.n-auth-box .sub{color:var(--muted);font-size:.85rem;margin-bottom:1.5rem}
+.n-f label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.38rem}
+.n-f{margin-bottom:.75rem}
+.n-i{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font);font-size:.88rem;padding:.65rem .9rem;border-radius:0;outline:none;transition:border-color .15s}
+.n-i:focus{border-color:var(--primary)}
+.n-g2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.n-sub-btn{width:100%;padding:.8rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-top:1rem}
+.n-sub-btn:hover{background:var(--primary-2);border-color:var(--primary-2)}
+.n-alert{display:flex;align-items:flex-start;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:1rem;border:1px solid}
+.n-alert.err{background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger)}
+.n-chip-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}
+.n-sk{padding:.3rem .7rem;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;letter-spacing:.04em;transition:all .15s;font-family:var(--font)}
+.n-sk.on{border-color:var(--primary);color:var(--primary);background:var(--primary-glow)}
+@media(max-width:720px){.n-auth{grid-template-columns:1fr}.n-auth-side{padding:2rem 1.5rem;border-right:none;border-bottom:1px solid var(--border)}.n-auth-main{padding:2rem 1.25rem}.n-g2{grid-template-columns:1fr}}
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="auth-wrap">
-    <div class="auth-layout reveal">
-        <div class="auth-decor">
-            <div class="auth-decor-icon"><i data-lucide="user-plus"></i></div>
-            <h2>Join CampusArena</h2>
-            <p>Create your profile, showcase your skills, and discover events tailored for you.</p>
+{% include 'includes/_n_page.html' %}
+<div class="n-auth">
+    <div class="n-auth-side">
+        <div>
+            <a href="{% url 'events:home' %}" style="display:flex;align-items:center;gap:.45rem;font-size:1rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text);text-decoration:none;margin-bottom:2.5rem;">
+                <i data-lucide="zap" style="width:16px;height:16px;color:var(--primary);"></i> CampusArena
+            </a>
+            <div style="font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.75rem;">02 / REGISTER</div>
+            <h2 style="font-size:1.6rem;font-weight:800;letter-spacing:-.03em;margin:0 0 .75rem;">Join the Arena.</h2>
+            <p style="color:var(--muted);font-size:.88rem;line-height:1.7;">Create your profile. Showcase your skills. Discover events built for builders like you.</p>
         </div>
-        <div class="auth-form">
-            <h1>Create Account</h1>
-            <p class="muted">Multi-step registration with profile and tech stack preferences.</p>
-
-            <!-- Stepper -->
-            <div class="stepper">
-                <div class="step active"><span class="step-num">1</span> Basics</div>
-                <div class="step-connector"></div>
-                <div class="step"><span class="step-num">2</span> Academic</div>
-                <div class="step-connector"></div>
-                <div class="step"><span class="step-num">3</span> Skills</div>
-            </div>
-
-            <form method="POST" action="" novalidate id="register-form">
-                {% csrf_token %}
-
-                <div class="field-grid">
-                    <div class="form-field">
-                        <i data-lucide="user"></i>
-                        <input type="text" name="full_name" placeholder="Full name" required
-                               value="{{ form_data.full_name|default:'' }}">
-                    </div>
-                    <div class="form-field">
-                        <i data-lucide="mail"></i>
-                        <input type="email" name="email" placeholder="Email" required
-                               value="{{ form_data.email|default:'' }}">
-                    </div>
-                    <div class="form-field">
-                        <i data-lucide="phone"></i>
-                        <input type="tel" name="phone" placeholder="Phone number"
-                               value="{{ form_data.phone|default:'' }}">
-                    </div>
-                    <div class="form-field">
-                        <i data-lucide="building-2"></i>
-                        <input type="text" name="college" placeholder="College name" required
-                               value="{{ form_data.college|default:'' }}">
-                    </div>
-                    <div class="form-field">
-                        <i data-lucide="graduation-cap"></i>
-                        <select name="branch">
-                            <option disabled {% if not form_data.branch %}selected{% endif %}>Branch</option>
-                            {% for branch in branches %}
-                            <option value="{{ branch }}" {% if form_data.branch == branch %}selected{% endif %}>{{ branch }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <i data-lucide="calendar"></i>
-                        <select name="year">
-                            <option disabled {% if not form_data.year %}selected{% endif %}>Year of study</option>
-                            {% for year in years %}
-                            <option value="{{ year }}" {% if form_data.year == year %}selected{% endif %}>{{ year }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <i data-lucide="lock"></i>
-                        <input type="password" name="password" placeholder="Password" required>
-                    </div>
-                    <div class="form-field">
-                        <i data-lucide="shield-check"></i>
-                        <input type="password" name="password_confirm" placeholder="Confirm password" required>
-                    </div>
-                </div>
-
-                <p class="muted" style="margin-top:.6rem;"><i data-lucide="cpu"></i> Choose your primary skills</p>
-                <div class="chip-row chip-toggle">
-                    <button type="button" class="chip" data-skill="React">React</button>
-                    <button type="button" class="chip" data-skill="Python">Python</button>
-                    <button type="button" class="chip" data-skill="Django">Django</button>
-                    <button type="button" class="chip" data-skill="Figma">Figma</button>
-                    <button type="button" class="chip" data-skill="Flutter">Flutter</button>
-                    <button type="button" class="chip" data-skill="AWS">AWS</button>
-                    <button type="button" class="chip" data-skill="Node.js">Node.js</button>
-                    <button type="button" class="chip" data-skill="TensorFlow">TensorFlow</button>
-                </div>
-                <input type="hidden" name="skills" id="reg-skills" value="">
-
-                <button type="submit" class="btn-primary full-btn" style="margin-top:.75rem;"><i
-                        data-lucide="user-plus"></i> Register</button>
-            </form>
-
-            <div class="auth-links">
-                <a href="{% url 'users:login' %}"><i data-lucide="log-in"></i> Already have an account? Sign in</a>
-            </div>
+        <div>
+            <div style="font-size:.65rem;color:var(--muted-soft);font-family:var(--font-mono);">Already have an account?</div>
+            <a href="{% url 'users:login' %}" style="display:inline-flex;align-items:center;gap:.4rem;margin-top:.4rem;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;">
+                Sign In <i data-lucide="arrow-right" style="width:13px;height:13px;"></i>
+            </a>
         </div>
     </div>
-</section>
+
+    <div class="n-auth-main">
+        <div class="n-auth-box">
+            <div class="n-ey">Create Account</div>
+            <h1>Build Your Profile</h1>
+            <p class="sub">Takes less than 2 minutes.</p>
+
+            {% if messages %}{% for message in messages %}
+            <div class="n-alert err"><i data-lucide="alert-circle" style="width:14px;height:14px;flex-shrink:0;margin-top:1px;"></i><span>{{ message }}</span></div>
+            {% endfor %}{% endif %}
+
+            <form method="POST" action="">
+                {% csrf_token %}
+                <div class="n-g2">
+                    <div class="n-f"><label>Full Name</label><input class="n-i" type="text" name="full_name" placeholder="John Doe" required value="{{ form_data.full_name|default:'' }}"></div>
+                    <div class="n-f"><label>Email</label><input class="n-i" type="email" name="email" placeholder="john@college.edu" required value="{{ form_data.email|default:'' }}"></div>
+                    <div class="n-f"><label>Phone</label><input class="n-i" type="tel" name="phone" placeholder="+91 98765 43210" value="{{ form_data.phone|default:'' }}"></div>
+                    <div class="n-f"><label>College</label><input class="n-i" type="text" name="college" placeholder="College name" required value="{{ form_data.college|default:'' }}"></div>
+                    <div class="n-f">
+                        <label>Branch</label>
+                        <select class="n-i" name="branch">
+                            <option disabled {% if not form_data.branch %}selected{% endif %} value="">Select branch</option>
+                            {% for branch in branches %}<option value="{{ branch }}" {% if form_data.branch == branch %}selected{% endif %}>{{ branch }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="n-f">
+                        <label>Year of Study</label>
+                        <select class="n-i" name="year">
+                            <option disabled {% if not form_data.year %}selected{% endif %} value="">Select year</option>
+                            {% for year in years %}<option value="{{ year }}" {% if form_data.year == year|stringformat:"s" %}selected{% endif %}>Year {{ year }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="n-f"><label>Password</label><input class="n-i" type="password" name="password" placeholder="Min. 10 characters" required></div>
+                    <div class="n-f"><label>Confirm Password</label><input class="n-i" type="password" name="password_confirm" placeholder="Repeat password" required></div>
+                </div>
+
+                <div class="n-f">
+                    <label>Primary Skills <span style="font-size:.6rem;color:var(--muted-soft);text-transform:none;letter-spacing:0;">(select presets or type your own)</span></label>
+
+                    <!-- Preset chips -->
+                    <div class="n-chip-row" id="sk-chips" style="margin-bottom:.6rem;">
+                        <button type="button" class="n-sk" data-s="React">React</button>
+                        <button type="button" class="n-sk" data-s="Python">Python</button>
+                        <button type="button" class="n-sk" data-s="Django">Django</button>
+                        <button type="button" class="n-sk" data-s="Figma">Figma</button>
+                        <button type="button" class="n-sk" data-s="Flutter">Flutter</button>
+                        <button type="button" class="n-sk" data-s="AWS">AWS</button>
+                        <button type="button" class="n-sk" data-s="Node.js">Node.js</button>
+                        <button type="button" class="n-sk" data-s="TensorFlow">TensorFlow</button>
+                        <button type="button" class="n-sk" data-s="Docker">Docker</button>
+                        <button type="button" class="n-sk" data-s="MongoDB">MongoDB</button>
+                        <button type="button" class="n-sk" data-s="Vue.js">Vue.js</button>
+                        <button type="button" class="n-sk" data-s="TypeScript">TypeScript</button>
+                        <button type="button" class="n-sk" data-s="Kotlin">Kotlin</button>
+                        <button type="button" class="n-sk" data-s="Swift">Swift</button>
+                        <button type="button" class="n-sk" data-s="C++">C++</button>
+                        <button type="button" class="n-sk" data-s="Java">Java</button>
+                    </div>
+
+                    <!-- Custom skill input -->
+                    <div style="display:flex;gap:0;border:1px solid var(--border);background:var(--surface);transition:border-color .15s;" id="sk-input-wrap">
+                        <input
+                            type="text"
+                            id="sk-custom-inp"
+                            placeholder="Type a skill and press Enter or +"
+                            maxlength="40"
+                            autocomplete="off"
+                            style="flex:1;border:none;background:transparent;color:var(--text);font-family:var(--font);font-size:.85rem;padding:.62rem .9rem;outline:none;"
+                        >
+                        <button
+                            type="button"
+                            id="sk-add-btn"
+                            style="background:var(--primary);color:#fff;border:none;border-left:1px solid var(--border);padding:0 1rem;font-size:.85rem;font-weight:700;cursor:pointer;font-family:var(--font);transition:background .15s;white-space:nowrap;"
+                        >+ Add</button>
+                    </div>
+
+                    <!-- Selected skills display -->
+                    <div id="sk-selected" style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.55rem;min-height:28px;"></div>
+                    <div id="sk-count" style="font-size:.65rem;color:var(--muted-soft);font-family:var(--font-mono);margin-top:.3rem;">0 / 10 selected</div>
+
+                    <input type="hidden" name="skills" id="sk-hidden">
+                </div>
+
+                <button type="submit" class="n-sub-btn">Create Account <i data-lucide="arrow-right" style="width:13px;height:13px;display:inline;"></i></button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    const MAX = 10;
+    const hidden  = document.getElementById('sk-hidden');
+    const counter = document.getElementById('sk-count');
+    const selBox  = document.getElementById('sk-selected');
+    const inp     = document.getElementById('sk-custom-inp');
+    const addBtn  = document.getElementById('sk-add-btn');
+    const wrap    = document.getElementById('sk-input-wrap');
+
+    // Skill set — tracks all selected skills (order-preserving)
+    let skills = [];
+
+    function sync() {
+        hidden.value = skills.join(',');
+        counter.textContent = skills.length + ' / ' + MAX + ' selected';
+        counter.style.color = skills.length >= MAX ? 'var(--danger)' : 'var(--muted-soft)';
+    }
+
+    function renderSelected() {
+        selBox.innerHTML = '';
+        skills.forEach(s => {
+            const tag = document.createElement('span');
+            tag.style.cssText = 'display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .6rem;border:1px solid rgba(255,0,0,.25);background:var(--primary-glow);color:var(--primary);font-size:.72rem;font-weight:700;letter-spacing:.06em;font-family:var(--font-mono);';
+            tag.innerHTML = s + '<button type="button" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:.9rem;line-height:1;padding:0 0 0 .2rem;" aria-label="Remove ' + s + '">&times;</button>';
+            tag.querySelector('button').addEventListener('click', () => removeSkill(s));
+            selBox.appendChild(tag);
+        });
+        // Sync preset chip highlight state
+        document.querySelectorAll('.n-sk').forEach(b => {
+            b.classList.toggle('on', skills.includes(b.dataset.s));
+        });
+        sync();
+    }
+
+    function addSkill(s) {
+        s = s.trim();
+        if (!s) return;
+        // Normalize: capitalize first letter
+        s = s.charAt(0).toUpperCase() + s.slice(1);
+        if (skills.includes(s)) return;   // already added
+        if (skills.length >= MAX) {
+            shakeInput();
+            return;
+        }
+        skills.push(s);
+        renderSelected();
+    }
+
+    function removeSkill(s) {
+        skills = skills.filter(x => x !== s);
+        renderSelected();
+    }
+
+    function shakeInput() {
+        wrap.style.borderColor = 'var(--danger)';
+        counter.textContent = 'Max ' + MAX + ' skills reached';
+        counter.style.color = 'var(--danger)';
+        setTimeout(() => { wrap.style.borderColor = ''; renderSelected(); }, 1200);
+    }
+
+    // Preset chip clicks
+    document.querySelectorAll('.n-sk').forEach(b => {
+        b.addEventListener('click', () => {
+            const s = b.dataset.s;
+            if (skills.includes(s)) removeSkill(s);
+            else addSkill(s);
+        });
+    });
+
+    // + Add button
+    addBtn.addEventListener('click', () => {
+        addSkill(inp.value);
+        inp.value = '';
+        inp.focus();
+    });
+
+    // Enter key in input
+    inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addSkill(inp.value);
+            inp.value = '';
+        }
+    });
+
+    // Focus ring on wrap
+    inp.addEventListener('focus',  () => { wrap.style.borderColor = 'var(--primary)'; });
+    inp.addEventListener('blur',   () => { wrap.style.borderColor = ''; });
+
+    // Init
+    renderSelected();
+})();
+</script>
 {% endblock %}

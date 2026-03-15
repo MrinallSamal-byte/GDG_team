@@ -12,3 +12,5 @@ class NotificationAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "title", "body")
     readonly_fields = ("created_at",)
     raw_id_fields = ("user", "actor")
+    list_select_related = ("user", "actor")
+    date_hierarchy = "created_at"

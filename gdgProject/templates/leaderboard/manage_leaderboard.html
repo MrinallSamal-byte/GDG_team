@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Manage Leaderboard — {{ event.title }}{% endblock %}
+
+{% block content %}
+<section class="section" style="max-width:820px;margin:0 auto;">
+    <div class="section-head reveal" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div>
+            <h1><i data-lucide="trophy"></i> Manage Leaderboard</h1>
+            <p class="muted">{{ event.title }}</p>
+        </div>
+        <form method="POST" action="{% url 'leaderboard:toggle_visibility' event.id %}">
+            {% csrf_token %}
+            <button type="submit" class="{% if leaderboard.is_public %}btn-secondary{% else %}btn-primary{% endif %} btn-small">
+                {% if leaderboard.is_public %}
+                <i data-lucide="eye-off"></i> Hide from Participants
+                {% else %}
+                <i data-lucide="eye"></i> Publish to Participants
+                {% endif %}
+            </button>
+        </form>
+    </div>
+
+    {% if leaderboard.is_public %}
+    <div class="alert alert-success reveal" style="margin-bottom:1rem;">
+        <i data-lucide="check-circle"></i>
+        Leaderboard is currently <strong>public</strong> — participants can see it.
+        <a href="{% url 'leaderboard:event_leaderboard' event.id %}" target="_blank" style="margin-left:.5rem;">Preview <i data-lucide="external-link" style="width:12px;height:12px;"></i></a>
+    </div>
+    {% endif %}
+
+    <article class="surface reveal" style="margin-bottom:1.25rem;">
+        <h2><i data-lucide="plus-circle"></i> Add / Update Entry</h2>
+        <form method="POST" action="{% url 'leaderboard:upsert_entry' event.id %}" style="display:grid;grid-template-columns:1fr 1fr 1fr 2fr;gap:.75rem;align-items:end;">
+            {% csrf_token %}
+            <div>
+                <label class="form-label">Rank *</label>
+                <input type="number" name="rank" min="1" required class="form-input" placeholder="1">
+            </div>
+            <div>
+                <label class="form-label">Score</label>
+                <input type="number" name="score" step="0.01" class="form-input" placeholder="100.00">
+            </div>
+            <div style="grid-column: span 2;">
+                <label class="form-label">Team / Participant Name *</label>
+                <input type="text" name="label" required class="form-input" placeholder="Team Alpha or participant name">
+            </div>
+            <div style="grid-column: span 3;">
+                <label class="form-label">Notes (optional)</label>
+                <input type="text" name="notes" class="form-input" placeholder="e.g. Best UI Award">
+            </div>
+            <div>
+                <button type="submit" class="btn-primary" style="width:100%;">
+                    <i data-lucide="save"></i> Save Entry
+                </button>
+            </div>
+        </form>
+    </article>
+
+    <article class="surface reveal">
+        <h2><i data-lucide="list-ordered"></i> Current Entries ({{ entries|length }})</h2>
+        {% if entries %}
+        <table style="width:100%;border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th style="padding:.5rem .75rem;text-align:left;font-size:.8rem;color:var(--text-muted);border-bottom:1px solid var(--border-color);">Rank</th>
+                    <th style="padding:.5rem .75rem;text-align:left;font-size:.8rem;color:var(--text-muted);border-bottom:1px solid var(--border-color);">Name</th>
+                    <th style="padding:.5rem .75rem;text-align:right;font-size:.8rem;color:var(--text-muted);border-bottom:1px solid var(--border-color);">Score</th>
+                    <th style="padding:.5rem .75rem;font-size:.8rem;color:var(--text-muted);border-bottom:1px solid var(--border-color);">Notes</th>
+                    <th style="padding:.5rem .75rem;border-bottom:1px solid var(--border-color);"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td style="padding:.65rem .75rem;border-bottom:1px solid var(--border-color);">
+                        <strong>#{{ entry.rank }}</strong>
+                    </td>
+                    <td style="padding:.65rem .75rem;border-bottom:1px solid var(--border-color);">{{ entry.label }}</td>
+                    <td style="padding:.65rem .75rem;text-align:right;border-bottom:1px solid var(--border-color);">{{ entry.score }}</td>
+                    <td style="padding:.65rem .75rem;font-size:.85rem;color:var(--text-muted);border-bottom:1px solid var(--border-color);">{{ entry.notes|default:"—" }}</td>
+                    <td style="padding:.65rem .75rem;border-bottom:1px solid var(--border-color);">
+                        <form method="POST" action="{% url 'leaderboard:delete_entry' event.id entry.id %}"
+                              onsubmit="return confirm('Remove rank #{{ entry.rank }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-icon" style="color:var(--danger);" aria-label="Delete">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state"><i data-lucide="list-ordered"></i><p>No entries yet. Add the first one above.</p></div>
+        {% endif %}
+    </article>
+
+    <div class="btn-row reveal">
+        <a href="{% url 'eventManagement:organizer_dashboard' %}" class="btn-secondary">
+            <i data-lucide="arrow-left"></i> Dashboard
+        </a>
+        <a href="{% url 'leaderboard:event_leaderboard' event.id %}" class="btn-primary" target="_blank">
+            <i data-lucide="external-link"></i> Preview Public View
+        </a>
+    </div>
+</section>
+{% endblock %}

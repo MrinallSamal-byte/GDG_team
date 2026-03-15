@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Scan Result{% endblock %}
+
+{% block extra_css %}
+<style>
+.scan-card { max-width: 480px; margin: 0 auto; text-align: center; }
+.scan-icon { font-size: 3.5rem; margin-bottom: .5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="section scan-card">
+
+    {% if not valid %}
+    <div class="section-head reveal">
+        <div class="scan-icon">❌</div>
+        <h1>Invalid QR Code</h1>
+        <p class="muted">This QR code is not recognised. It may be expired, already used from another event, or not a CampusArena code.</p>
+    </div>
+    <div class="btn-row reveal" style="justify-content:center;">
+        <a href="{% url 'eventManagement:organizer_dashboard' %}" class="btn-secondary">
+            <i data-lucide="arrow-left"></i> Dashboard
+        </a>
+    </div>
+
+    {% elif already_checked_in %}
+    <div class="section-head reveal">
+        <div class="scan-icon">ℹ️</div>
+        <h1>Already Checked In</h1>
+        <p class="muted">
+            <strong>{{ checkin.user.get_full_name|default:checkin.user.username }}</strong>
+            was checked in at {{ checkin.checked_in_at|date:"g:i A" }}.
+        </p>
+    </div>
+    <article class="surface reveal" style="margin-bottom:1.25rem;">
+        <dl class="info-grid">
+            <dt>Name</dt><dd>{{ checkin.user.get_full_name|default:checkin.user.username }}</dd>
+            <dt>Registration ID</dt><dd>{{ checkin.registration.registration_id }}</dd>
+            <dt>Event</dt><dd>{{ checkin.event.title }}</dd>
+            <dt>Checked in at</dt><dd>{{ checkin.checked_in_at|date:"N j, Y — g:i A" }}</dd>
+            {% if checkin.checked_in_by %}
+            <dt>By</dt><dd>{{ checkin.checked_in_by.get_full_name|default:checkin.checked_in_by.username }}</dd>
+            {% endif %}
+        </dl>
+    </article>
+    <div class="btn-row reveal" style="justify-content:center;">
+        <a href="{% url 'checkin:dashboard' checkin.event.id %}" class="btn-secondary">
+            <i data-lucide="layout-dashboard"></i> Check-in Dashboard
+        </a>
+    </div>
+
+    {% else %}
+    <div class="section-head reveal">
+        <div class="scan-icon">👤</div>
+        <h1>Confirm Check-in</h1>
+        <p class="muted">Verify the details below before confirming.</p>
+    </div>
+
+    <article class="surface reveal" style="margin-bottom:1.25rem;text-align:left;">
+        <dl class="info-grid">
+            <dt>Name</dt>
+            <dd><strong style="font-size:1.1rem;">{{ checkin.user.get_full_name|default:checkin.user.username }}</strong></dd>
+            <dt>Registration ID</dt><dd>{{ checkin.registration.registration_id }}</dd>
+            <dt>Event</dt><dd>{{ checkin.event.title }}</dd>
+            {% if checkin.user.profile.college %}
+            <dt>College</dt><dd>{{ checkin.user.profile.college }}</dd>
+            {% endif %}
+            <dt>Type</dt><dd>{{ checkin.registration.get_type_display }}</dd>
+            {% if checkin.registration.team %}
+            <dt>Team</dt><dd>{{ checkin.registration.team.name }}</dd>
+            {% endif %}
+        </dl>
+    </article>
+
+    <form method="POST" action="{% url 'checkin:confirm' checkin.token %}" class="reveal">
+        {% csrf_token %}
+        <button type="submit" class="btn-primary" style="width:100%;font-size:1.05rem;padding:.85rem;">
+            <i data-lucide="check-circle"></i> Confirm Check-in
+        </button>
+    </form>
+    <div class="btn-row reveal" style="justify-content:center;margin-top:.75rem;">
+        <a href="{% url 'checkin:dashboard' checkin.event.id %}" class="btn-secondary btn-small">
+            <i data-lucide="x"></i> Cancel
+        </a>
+    </div>
+    {% endif %}
+
+</section>
+{% endblock %}

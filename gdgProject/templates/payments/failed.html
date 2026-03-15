@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}CampusArena | Payment Failed{% endblock %}
+{% block extra_css %}<style>.main-content{max-width:500px!important}</style>{% endblock %}
+{% block content %}
+{% include 'includes/_n_page.html' %}
+<div style="text-align:center;padding:2.5rem 0 1.5rem;" class="n-reveal">
+    <div style="font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--danger);margin-bottom:.75rem;">FAILED</div>
+    <div style="font-size:2.5rem;margin-bottom:.75rem;">❌</div>
+    <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em;margin:0 0 .4rem;">Payment Failed</h1>
+    <p style="color:var(--muted);font-size:.9rem;">Something went wrong processing your payment for <strong style="color:var(--text);">{{ registration.event.title }}</strong>.</p>
+</div>
+<div style="border:1px solid rgba(255,82,82,.2);padding:1.1rem;background:var(--danger-soft);margin-bottom:1rem;" class="n-reveal n-d1">
+    <div style="font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--danger);margin-bottom:.75rem;">What to do</div>
+    <div style="display:flex;flex-direction:column;gap:.5rem;">
+        <div style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;color:var(--muted);"><i data-lucide="refresh-cw" style="width:13px;height:13px;color:var(--danger);flex-shrink:0;"></i>Try paying again with the button below.</div>
+        <div style="display:flex;align-items:center;gap:.5rem;font-size:.83rem;color:var(--muted);"><i data-lucide="credit-card" style="width:13px;height:13px;color:var(--danger);flex-shrink:0;"></i>Try a different card or payment method.</div>
+        <div style="display:flex;align-items:flex-start;gap:.5rem;font-size:.83rem;color:var(--muted);"><i data-lucide="mail" style="width:13px;height:13px;color:var(--danger);flex-shrink:0;margin-top:2px;"></i>If debited, contact the organizer with ID: <strong style="font-family:var(--font-mono);color:var(--text);margin-left:.25rem;">{{ registration.registration_id }}</strong></div>
+    </div>
+</div>
+<div style="display:flex;gap:.5rem;" class="n-reveal n-d2">
+    <a href="{% url 'events:event_detail' registration.event.id %}" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.1rem;background:transparent;color:var(--text);border:1px solid var(--border);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;">
+        <i data-lucide="arrow-left" style="width:12px;height:12px;"></i> Back
+    </a>
+    <a href="{% url 'payments:initiate' registration.id %}" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.25rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;transition:background .15s;">
+        <i data-lucide="refresh-cw" style="width:12px;height:12px;"></i> Try Again
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}CampusArena | Payment Successful{% endblock %}
+{% block extra_css %}<style>.main-content{max-width:500px!important}</style>{% endblock %}
+{% block content %}
+{% include 'includes/_n_page.html' %}
+<div style="text-align:center;padding:2.5rem 0 1.5rem;" class="n-reveal">
+    <div style="font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--ok);margin-bottom:.75rem;">SUCCESS</div>
+    <div style="font-size:2.5rem;margin-bottom:.75rem;">✅</div>
+    <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em;margin:0 0 .4rem;">Payment Confirmed!</h1>
+    <p style="color:var(--muted);font-size:.9rem;">Your registration for <strong style="color:var(--text);">{{ registration.event.title }}</strong> is confirmed.</p>
+</div>
+<div style="border:1px solid var(--border);overflow:hidden;margin-bottom:1rem;" class="n-reveal n-d1">
+    <div style="padding:.65rem 1.1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.75rem;color:var(--muted);">Registration ID</span><span style="font-family:var(--font-mono);font-size:.78rem;font-weight:700;">{{ registration.registration_id }}</span></div>
+    <div style="padding:.65rem 1.1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.75rem;color:var(--muted);">Event</span><span style="font-size:.78rem;font-weight:600;">{{ registration.event.title }}</span></div>
+    <div style="padding:.65rem 1.1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.75rem;color:var(--muted);">Date</span><span style="font-family:var(--font-mono);font-size:.78rem;">{{ registration.event.event_start|date:"d M Y" }}</span></div>
+    <div style="padding:.65rem 1.1rem;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:.75rem;color:var(--muted);">Status</span><span style="font-size:.68rem;font-weight:700;color:var(--ok);background:var(--ok-soft);border:1px solid rgba(0,230,118,.22);padding:.18rem .5rem;font-family:var(--font-mono);">Confirmed & Paid</span></div>
+</div>
+<div style="display:flex;gap:.5rem;" class="n-reveal n-d2">
+    <a href="{% url 'events:event_detail' registration.event.id %}" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.1rem;background:transparent;color:var(--text);border:1px solid var(--border);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;">
+        <i data-lucide="arrow-left" style="width:12px;height:12px;"></i> Event
+    </a>
+    <a href="{% url 'dashboard:my_events' %}" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.25rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;transition:background .15s;">
+        <i data-lucide="layout-dashboard" style="width:12px;height:12px;"></i> My Events
+    </a>
+</div>
+{% endblock %}

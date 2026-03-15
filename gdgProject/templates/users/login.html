@@ -1,492 +1,136 @@
 {% extends 'base.html' %}
-
-{% block title %}CampusArena | Login & Sign Up{% endblock %}
+{% block title %}CampusArena | Sign In{% endblock %}
+{% block extra_css %}
+<style>
+.site-header,.site-footer{display:none!important}
+.main-content{padding:0!important;max-width:100%!important;width:100%!important}
+.n-auth{display:grid;grid-template-columns:360px 1fr;min-height:100vh}
+.n-auth-side{background:var(--surface);border-right:1px solid var(--border);padding:3rem 2.5rem;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.n-auth-side::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,0,0,.06) 1px,transparent 1px);background-size:18px 18px}
+.n-auth-side>*{position:relative;z-index:1}
+.n-auth-main{background:var(--bg);display:flex;align-items:center;justify-content:center;padding:2rem}
+.n-auth-box{width:100%;max-width:400px}
+.n-auth-eyebrow{font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
+.n-auth-eyebrow::after{content:'';flex:1;height:1px;background:rgba(255,0,0,.18)}
+.n-auth-box h1{font-size:1.65rem;font-weight:800;letter-spacing:-.03em;margin:0 0 .3rem}
+.n-auth-box .sub{color:var(--muted);font-size:.88rem;margin-bottom:1.75rem}
+.n-field label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.38rem}
+.n-field{margin-bottom:.85rem}
+.n-inp{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font);font-size:.9rem;padding:.72rem .9rem;border-radius:0;outline:none;transition:border-color .15s}
+.n-inp:focus{border-color:var(--primary)}
+.n-inp-row{display:flex;border:1px solid var(--border);background:var(--surface);transition:border-color .15s}
+.n-inp-row:focus-within{border-color:var(--primary)}
+.n-inp-row input{flex:1;border:none;background:transparent;color:var(--text);font-family:var(--font);font-size:.9rem;padding:.72rem .9rem;outline:none}
+.n-inp-row button{background:none;border:none;border-left:1px solid var(--border);padding:0 .75rem;color:var(--muted);cursor:pointer;transition:color .15s}
+.n-inp-row button:hover{color:var(--text)}
+.n-submit{width:100%;padding:.8rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-top:1.25rem}
+.n-submit:hover{background:var(--primary-2);border-color:var(--primary-2)}
+.n-link-row{display:flex;justify-content:space-between;align-items:center;margin-top:.65rem;font-size:.78rem}
+.n-link-row a{color:var(--primary);font-weight:600;text-decoration:none;transition:opacity .15s}
+.n-link-row a:hover{opacity:.7}
+.n-check-row{display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:var(--muted)}
+.n-check-row input{width:14px;height:14px;accent-color:var(--primary)}
+.n-divider{display:flex;align-items:center;gap:.75rem;color:var(--muted-soft);font-size:.7rem;font-family:var(--font-mono);letter-spacing:.1em;margin:1rem 0}
+.n-divider::before,.n-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.n-social{display:flex;gap:.5rem}
+.n-social-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.62rem;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font)}
+.n-social-btn:hover{border-color:var(--border-hover);color:var(--text)}
+.n-switch{text-align:center;margin-top:1.25rem;font-size:.8rem;color:var(--muted)}
+.n-switch a{color:var(--primary);font-weight:700;text-decoration:none;transition:opacity .15s}
+.n-switch a:hover{opacity:.7}
+.n-alert{display:flex;align-items:flex-start;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:1rem;border:1px solid}
+.n-alert.err{background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger)}
+.n-alert.ok {background:var(--ok-soft);border-color:rgba(0,230,118,.22);color:var(--ok)}
+.n-alert i{width:14px;height:14px;flex-shrink:0;margin-top:1px}
+@media(max-width:720px){
+    .n-auth{grid-template-columns:1fr;min-height:auto}
+    .n-auth-side{padding:2rem 1.5rem;border-right:none;border-bottom:1px solid var(--border)}
+    .n-auth-main{padding:2rem 1.25rem}
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<style>
-    /* ==========================================================================
-       ISOLATE PAGE (Hide base.html Header & Footer)
-       ========================================================================== */
-    .site-header, .site-footer { 
-        display: none !important; 
-    }
-    
-    /* Make main content fill the screen for the auth layout */
-    .main-content {
-        padding: 0 !important;
-        margin: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
+{% include 'includes/_n_page.html' %}
 
-    /* ==========================================================================
-       MINIMAL NAVBAR
-       ========================================================================== */
-    .custom-navbar {
-        padding: 24px 40px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-        z-index: 10;
-    }
-    
-    .back-link {
-        display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 600;
-        transition: all var(--motion-fast) var(--ease-smooth);
-    }
-    .back-link:hover { color: var(--primary); transform: translateX(-4px); }
+<div class="n-auth">
+    <!-- Left panel -->
+    <div class="n-auth-side">
+        <div>
+            <a href="{% url 'events:home' %}" style="display:flex;align-items:center;gap:.45rem;font-size:1rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text);text-decoration:none;margin-bottom:2.5rem;">
+                <i data-lucide="zap" style="width:16px;height:16px;color:var(--primary);"></i> CampusArena
+            </a>
+            <div style="font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.75rem;">01 / AUTH</div>
+            <h2 style="font-size:1.75rem;font-weight:800;letter-spacing:-.03em;margin:0 0 .75rem;">Welcome back.</h2>
+            <p style="color:var(--muted);font-size:.9rem;line-height:1.7;">Sign in to your arena. Discover hackathons, build teams, win competitions.</p>
+        </div>
+        <div>
+            <div style="font-size:.65rem;color:var(--muted-soft);font-family:var(--font-mono);">Don't have an account?</div>
+            <a href="{% url 'users:register' %}" style="display:inline-flex;align-items:center;gap:.4rem;margin-top:.4rem;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;">
+                Create Account <i data-lucide="arrow-right" style="width:13px;height:13px;"></i>
+            </a>
+        </div>
+    </div>
 
-    /* ==========================================================================
-       AUTH CONTAINER & CLEAN 3D FLIP ANIMATION (Matched from Reference)
-       ========================================================================== */
-    .auth-container {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px 20px 60px 20px;
-        perspective: 1200px; /* Gives the 3D depth */
-    }
-
-    .auth-wrapper {
-        width: 100%;
-        max-width: 440px;
-        height: 600px; /* Safely accommodates the role selectors and social buttons */
-        position: relative;
-        transform-style: preserve-3d;
-        transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy smooth flip */
-    }
-
-    .auth-wrapper.flipped {
-        transform: rotateY(180deg);
-    }
-
-    .auth-front, .auth-back {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: var(--surface);
-        border: 1px solid var(--border-soft);
-        border-radius: var(--radius-xl);
-        padding: 24px 32px;
-        box-shadow: var(--shadow-lg);
-        backface-visibility: hidden; /* Natively hides the back of the card */
-        -webkit-backface-visibility: hidden;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .auth-back {
-        transform: rotateY(180deg); /* Puts the signup form on the back side */
-    }
-
-    /* ==========================================================================
-       FORM ELEMENTS (Mapped to global tokens)
-       ========================================================================== */
-    .auth-header { text-align: center; margin-bottom: 16px; }
-    .auth-header h2 { font-size: 1.6rem; font-weight: 800; color: var(--text); margin-bottom: 2px; }
-    .auth-header p { color: var(--muted); font-size: 0.85rem; }
-
-    /* Fix width for forms */
-    form { width: 100%; display: flex; flex-direction: column; }
-
-    .input-group { margin-bottom: 12px; width: 100%; }
-    .input-group label { display: block; margin-bottom: 4px; color: var(--text); font-size: 0.8rem; font-weight: 700; }
-    
-    .input-box {
-        display: flex; align-items: center; background: color-mix(in srgb, var(--surface), transparent 5%);
-        border: 2px solid var(--border); border-radius: var(--radius-md);
-        padding: 0 12px; transition: all var(--motion-fast) var(--ease-smooth);
-        width: 100%;
-    }
-    .input-box:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
-    .input-box i { color: var(--muted); width: 18px; }
-    .input-box input {
-        width: 100%; background: transparent; padding: 10px 8px; border: none; outline: none;
-        color: var(--text); font-weight: 600; font-size: 0.9rem;
-    }
-    .input-box input::placeholder { color: var(--muted-soft); font-weight: 500; }
-    
-    /* Fix for WebKit Autofill turning input backgrounds white */
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover, 
-    input:-webkit-autofill:focus, 
-    input:-webkit-autofill:active {
-        transition: background-color 5000s ease-in-out 0s !important;
-        -webkit-text-fill-color: var(--text) !important;
-    }
-    
-    .toggle-password { cursor: pointer; color: var(--muted); transition: color var(--motion-fast) var(--ease-smooth); }
-    .toggle-password:hover { color: var(--primary); }
-
-    .auth-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 0.85rem; font-weight: 600; width: 100%; }
-    .remember-me { display: flex; align-items: center; gap: 8px; color: var(--muted); cursor: pointer; }
-    .remember-me input { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
-    .forgot-pass { color: var(--primary); transition: color var(--motion-fast) var(--ease-smooth); }
-    .forgot-pass:hover { color: var(--primary-2); text-decoration: underline; }
-
-    .btn-submit {
-        width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: white;
-        padding: 12px; border-radius: var(--radius-md); font-weight: 800; font-size: 1rem; border: none;
-        cursor: pointer; transition: all var(--motion-fast) var(--ease-smooth); margin-bottom: 16px;
-        box-shadow: 0 6px 20px color-mix(in srgb, var(--primary), transparent 62%);
-    }
-    .btn-submit:hover { box-shadow: 0 10px 28px color-mix(in srgb, var(--primary), transparent 52%); transform: translateY(-3px); }
-
-    .auth-divider {
-        display: flex; align-items: center; gap: 12px; color: var(--muted-soft);
-        font-size: 0.8rem; font-weight: 700; margin: 4px 0 16px 0; text-transform: uppercase; letter-spacing: 0.05em;
-    }
-    .auth-divider::before, .auth-divider::after {
-        content: ''; flex: 1; height: 1px; background: var(--border);
-    }
-
-    .social-icon-row {
-        display: flex; justify-content: center; gap: 16px; margin-bottom: 16px; width: 100%;
-    }
-    .social-icon-btn {
-        width: 48px; height: 48px; border-radius: 50%;
-        background: color-mix(in srgb, var(--surface), transparent 5%);
-        border: 2px solid var(--border);
-        display: flex; align-items: center; justify-content: center;
-        color: var(--muted); cursor: pointer;
-        transition: all var(--motion-fast) var(--ease-smooth);
-    }
-    .social-icon-btn:hover {
-        transform: translateY(-4px);
-        color: var(--primary);
-        border-color: var(--primary);
-        background: var(--primary-glow);
-        box-shadow: 0 8px 20px var(--primary-glow);
-    }
-
-    .auth-footer { text-align: center; color: var(--muted); font-size: 0.85rem; font-weight: 600; margin-top: auto; }
-    .auth-footer span { color: var(--text); cursor: pointer; font-weight: 800; transition: all var(--motion-fast) var(--ease-smooth); border-bottom: 1px dashed var(--muted); }
-    .auth-footer span:hover { color: var(--primary); border-bottom-color: var(--primary); }
-
-    .need-help { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 12px; font-size: 0.8rem; color: var(--muted-soft); font-weight: 600; cursor: pointer; transition: color var(--motion-fast) var(--ease-smooth); }
-    .need-help:hover { color: var(--text); }
-
-    /* ==========================================================================
-       ROLE SELECTOR (Mapped to global tokens)
-       ========================================================================== */
-    .role-selector {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; width: 100%;
-    }
-    .role-btn {
-        background: color-mix(in srgb, var(--surface), transparent 5%); border: 2px solid var(--border);
-        border-radius: var(--radius-md); padding: 8px; text-align: center;
-        cursor: pointer; transition: all var(--motion-fast) var(--ease-smooth); color: var(--muted);
-        display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 8px; font-weight: 700; font-size: 0.85rem;
-    }
-    .role-btn:hover { border-color: color-mix(in srgb, var(--primary), var(--border) 55%); transform: translateY(-2px); }
-    .role-btn.active {
-        border-color: var(--primary); color: var(--primary);
-        background: var(--primary-glow);
-    }
-    .role-btn i { width: 16px; height: 16px; }
-    .role-btn input { display: none; }
-
-    /* ==========================================================================
-       AUTH ALERT — error / success messages
-       ========================================================================== */
-    .auth-alert {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 10px 14px;
-        border-radius: var(--radius-md, 10px);
-        font-size: 0.84rem;
-        font-weight: 600;
-        line-height: 1.45;
-        margin-bottom: 12px;
-        width: 100%;
-        animation: alertSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-    @keyframes alertSlideIn {
-        from { opacity: 0; transform: translateY(-6px); }
-        to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .auth-alert.error {
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        color: #f87171;
-    }
-    .auth-alert.success {
-        background: rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        color: #34d399;
-    }
-    .auth-alert.warning {
-        background: rgba(245, 158, 11, 0.1);
-        border: 1px solid rgba(245, 158, 11, 0.3);
-        color: #fbbf24;
-    }
-    .auth-alert i {
-        width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px;
-    }
-
-    @media (max-width: 768px) {
-        .custom-navbar { padding: 20px; }
-        .auth-front, .auth-back { padding: 24px 20px; }
-        .auth-wrapper { height: 620px; } 
-    }
-</style>
-
-<!-- Simple Navbar -->
-<nav class="custom-navbar">
-    <a class="brand" href="{% url 'events:home' %}">
-        <i data-lucide="trophy"></i> CampusArena
-    </a>
-    <a href="{% url 'events:home' %}" class="back-link">
-        <i data-lucide="arrow-left" style="width: 16px;"></i> Back to Home
-    </a>
-</nav>
-
-<div class="auth-container">
-    <div class="auth-wrapper {% if show_signup %}flipped{% endif %}" id="authWrapper">
-        
-        <!-- FRONT: LOGIN FORM -->
-        <div class="auth-front">
-            <div class="auth-header">
-                <h2>Sign In</h2>
-                <p>Enter your details to access your arena.</p>
-            </div>
+    <!-- Right form -->
+    <div class="n-auth-main">
+        <div class="n-auth-box">
+            <div class="n-auth-eyebrow">Sign In</div>
+            <h1>Your Arena Awaits</h1>
+            <p class="sub">Enter your credentials to continue.</p>
 
             {% if messages %}
                 {% for message in messages %}
-                {% if 'error' in message.tags %}
-                <div class="auth-alert error">
-                    <i data-lucide="alert-circle"></i>
+                <div class="n-alert {% if 'error' in message.tags %}err{% else %}ok{% endif %}">
+                    <i data-lucide="{% if 'error' in message.tags %}alert-circle{% else %}check-circle{% endif %}"></i>
                     <span>{{ message }}</span>
                 </div>
-                {% endif %}
                 {% endfor %}
-            {% endif %}
-
-            {% if login_error %}
-            <div class="auth-alert error">
-                <i data-lucide="alert-circle"></i>
-                <span>{{ login_error }}</span>
-            </div>
-            {% endif %}
-
-            {% if form.errors and not show_signup %}
-            <div class="auth-alert error">
-                <i data-lucide="alert-circle"></i>
-                <span>
-                    {% for field in form %}
-                        {% for error in field.errors %}{{ error }} {% endfor %}
-                    {% endfor %}
-                    {% for error in form.non_field_errors %}{{ error }} {% endfor %}
-                </span>
-            </div>
             {% endif %}
 
             <form method="POST" action="">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="login">
 
-                <label style="display: block; margin-bottom: 6px; color: var(--text); font-size: 0.8rem; font-weight: 700;">Login as a...</label>
-                <div class="role-selector">
-                    <label class="role-btn active" id="roleStudentLogin">
-                        <input type="radio" name="roleLogin" value="student" checked>
-                        <i data-lucide="graduation-cap"></i>
-                        Student
-                    </label>
-                    <label class="role-btn" id="roleAdminLogin">
-                        <input type="radio" name="roleLogin" value="admin">
-                        <i data-lucide="briefcase"></i>
-                        Admin
-                    </label>
-                </div>
-
-                <div class="input-group">
+                <div class="n-field">
                     <label>Email Address</label>
-                    <div class="input-box">
-                        <i data-lucide="mail"></i>
-                        <input type="email" name="email" placeholder="student@college.edu" value="{{ email|default:'' }}" required>
-                    </div>
+                    <input class="n-inp" type="email" name="email" placeholder="student@college.edu" value="{{ email|default:'' }}" required autocomplete="email">
                 </div>
 
-                <div class="input-group">
+                <div class="n-field">
                     <label>Password</label>
-                    <div class="input-box">
-                        <i data-lucide="lock"></i>
-                        <input type="password" name="password" placeholder="••••••••" required>
-                        <button type="button" class="toggle-password" style="background:transparent; border:none; padding:0; display:flex; align-items:center; outline:none; cursor:pointer;">
-                            <i data-lucide="eye"></i>
-                        </button>
+                    <div class="n-inp-row">
+                        <input type="password" name="password" placeholder="••••••••••" required autocomplete="current-password" id="pwd-inp">
+                        <button type="button" onclick="togglePwd('pwd-inp',this)"><i data-lucide="eye" style="width:16px;height:16px;"></i></button>
                     </div>
                 </div>
 
-                <div class="auth-options">
-                    <label class="remember-me">
-                        <input type="checkbox" name="remember"> Remember me
-                    </label>
-                    <a href="{% url 'users:forgot_password' %}" class="forgot-pass">Forgot Password?</a>
+                <div class="n-link-row">
+                    <label class="n-check-row"><input type="checkbox" name="remember"> Remember me</label>
+                    <a href="{% url 'users:forgot_password' %}">Forgot password?</a>
                 </div>
 
-                <button type="submit" class="btn-submit">Log In</button>
+                <button type="submit" class="n-submit">Sign In <i data-lucide="arrow-right" style="width:13px;height:13px;display:inline;"></i></button>
             </form>
 
-            <div class="auth-footer">
-                New to CampusArena? <span id="toSignupBtn">Create an account</span>
+            <div class="n-divider"><span>or continue with</span></div>
+            <div class="n-social">
+                <a href="{% url 'socialaccount_signup' %}" class="n-social-btn"><i data-lucide="globe" style="width:15px;height:15px;"></i> Google</a>
+                <a href="#" class="n-social-btn"><i data-lucide="github" style="width:15px;height:15px;"></i> GitHub</a>
             </div>
-            
-            <div class="need-help">
-                <i data-lucide="help-circle" style="width: 16px;"></i> Need help logging in?
-            </div>
+
+            <div class="n-switch">No account? <a href="{% url 'users:register' %}">Create one free</a></div>
         </div>
-
-        <!-- BACK: SIGN UP FORM -->
-        <div class="auth-back">
-            <div class="auth-header">
-                <h2>Join CampusArena</h2>
-                <p>Create your profile and start competing.</p>
-            </div>
-
-            {% if signup_error %}
-            <div class="auth-alert error">
-                <i data-lucide="alert-circle"></i>
-                <span>{{ signup_error }}</span>
-            </div>
-            {% endif %}
-
-            {% if form.errors and show_signup %}
-            <div class="auth-alert error">
-                <i data-lucide="alert-circle"></i>
-                <span>
-                    {% for field in form %}
-                        {% for error in field.errors %}{{ error }} {% endfor %}
-                    {% endfor %}
-                    {% for error in form.non_field_errors %}{{ error }} {% endfor %}
-                </span>
-            </div>
-            {% endif %}
-
-            <form method="POST" action="">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="signup">
-
-                <label style="display: block; margin-bottom: 6px; color: var(--text); font-size: 0.8rem; font-weight: 700;">I am a...</label>
-                <div class="role-selector">
-                    <label class="role-btn active" id="roleStudentSignup">
-                        <input type="radio" name="roleSignup" value="student" checked>
-                        <i data-lucide="graduation-cap"></i>
-                        Student
-                    </label>
-                    <label class="role-btn" id="roleAdminSignup">
-                        <input type="radio" name="roleSignup" value="admin">
-                        <i data-lucide="briefcase"></i>
-                        Admin
-                    </label>
-                </div>
-
-                <div class="input-group">
-                    <label>College Email</label>
-                    <div class="input-box">
-                        <i data-lucide="mail"></i>
-                        <input type="email" name="email" placeholder="john@college.edu" required>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label>Create Password</label>
-                    <div class="input-box">
-                        <i data-lucide="lock"></i>
-                        <input type="password" name="password" placeholder="••••••••" required>
-                        <button type="button" class="toggle-password" style="background:transparent; border:none; padding:0; display:flex; align-items:center; outline:none; cursor:pointer;">
-                            <i data-lucide="eye"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-submit" style="margin-top: 10px;">Sign Up</button>
-                
-                <div class="auth-divider"><span>or</span></div>
-                
-                <div class="social-icon-row">
-                    <button type="button" class="social-icon-btn" aria-label="Sign up with Google">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17.788 5.108a9 9 0 1 0 3.212 6.892h-8" />
-                        </svg>
-                    </button>
-                    <button type="button" class="social-icon-btn" aria-label="Sign up with GitHub">
-                        <i data-lucide="github"></i>
-                    </button>
-                    <button type="button" class="social-icon-btn" aria-label="Sign up with LinkedIn">
-                        <i data-lucide="linkedin"></i>
-                    </button>
-                </div>
-            </form>
-
-            <div class="auth-footer">
-                Already have an account? <span id="toLoginBtn">Log In</span>
-            </div>
-        </div>
-
     </div>
 </div>
 
 <script>
-    // 1. Smooth Fade/Flip Logic (Matched directly from Reference)
-    const authWrapper = document.getElementById('authWrapper');
-    const toSignupBtn = document.getElementById('toSignupBtn');
-    const toLoginBtn = document.getElementById('toLoginBtn');
-
-    toSignupBtn.addEventListener('click', () => {
-        authWrapper.classList.add('flipped');
-    });
-
-    toLoginBtn.addEventListener('click', () => {
-        authWrapper.classList.remove('flipped');
-    });
-
-    // 2. Universal Role Selection Logic
-    function setupRoleSelection(studentBtnId, adminBtnId) {
-        const studentBtn = document.getElementById(studentBtnId);
-        const adminBtn = document.getElementById(adminBtnId);
-
-        studentBtn.addEventListener('click', () => {
-            studentBtn.classList.add('active');
-            adminBtn.classList.remove('active');
-        });
-
-        adminBtn.addEventListener('click', () => {
-            adminBtn.classList.add('active');
-            studentBtn.classList.remove('active');
-        });
-    }
-
-    // Initialize for both sides
-    setupRoleSelection('roleStudentLogin', 'roleAdminLogin');
-    setupRoleSelection('roleStudentSignup', 'roleAdminSignup');
-
-    // 3. Password Visibility Toggle
-    document.querySelectorAll('.toggle-password').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const input = this.previousElementSibling;
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                this.innerHTML = '<i data-lucide="eye-off"></i>';
-            } else {
-                input.type = 'password';
-                this.innerHTML = '<i data-lucide="eye"></i>';
-            }
-            
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons(); 
-            }
-        });
-    });
+function togglePwd(id,btn){
+    const inp=document.getElementById(id);
+    const isText=inp.type==='text';
+    inp.type=isText?'password':'text';
+    btn.innerHTML=isText?'<i data-lucide="eye" style="width:16px;height:16px;"></i>':'<i data-lucide="eye-off" style="width:16px;height:16px;"></i>';
+    if(window.lucide)lucide.createIcons({nodes:[btn]});
+}
 </script>
 {% endblock %}

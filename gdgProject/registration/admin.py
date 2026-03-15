@@ -39,6 +39,7 @@ class RegistrationAdmin(admin.ModelAdmin):
     search_fields = ("registration_id", "user__username", "user__email", "event__title")
     readonly_fields = ("registration_id", "registered_at", "updated_at")
     raw_id_fields = ("user", "event", "team")
+    list_select_related = ("user", "event", "team")
     inlines = [RegistrationResponseInline, RegistrationTechStackInline]
 
 

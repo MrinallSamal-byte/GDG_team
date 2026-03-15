@@ -1,0 +1,42 @@
+{
+  "name": "CampusArena",
+  "short_name": "CampusArena",
+  "description": "Discover, compete and build — your campus, your arena.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#534AB7",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/pwa/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/pwa/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Browse Events",
+      "short_name": "Events",
+      "description": "See all upcoming events",
+      "url": "/",
+      "icons": [{ "src": "/static/pwa/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your registered events and teams",
+      "url": "/dashboard/",
+      "icons": [{ "src": "/static/pwa/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

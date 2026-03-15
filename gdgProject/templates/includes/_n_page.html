@@ -1,0 +1,51 @@
+{% comment %}Nothing OS — shared styles, dot-grid, reveal JS{% endcomment %}
+<style>
+.n-page-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:radial-gradient(circle,rgba(255,255,255,.032) 1px,transparent 1px);background-size:20px 20px}
+.n-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:.85rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:.6rem}
+.n-head-l{display:flex;align-items:center;gap:.75rem}
+.n-num{font-family:var(--font-mono);font-size:.65rem;font-weight:700;color:var(--primary);letter-spacing:.12em}
+.n-name{font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.n-list{border:1px solid var(--border);overflow:hidden}
+.n-row{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 1.15rem;transition:background .15s;position:relative;overflow:hidden}
+.n-row:last-child{border-bottom:none}
+.n-row:hover{background:var(--surface-2)}
+.n-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--primary);transform:scaleY(0);transform-origin:bottom;transition:transform .22s var(--ease-smooth)}
+.n-row:hover::before{transform:scaleY(1)}
+.n-tag{display:inline-flex;align-items:center;gap:.25rem;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .55rem;border:1px solid var(--border);color:var(--muted);font-family:var(--font-mono)}
+.n-tag.red{color:var(--primary);border-color:rgba(255,0,0,.25);background:var(--primary-glow)}
+.n-tag.green{color:var(--ok);border-color:rgba(0,230,118,.22);background:var(--ok-soft)}
+.n-tag.amber{color:var(--warn);border-color:rgba(255,179,0,.22);background:var(--warn-soft)}
+.n-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--border);overflow:hidden}
+.n-stat-cell{padding:1rem;border-right:1px solid var(--border);text-align:center;background:var(--surface);transition:background .15s}
+.n-stat-cell:last-child{border-right:none}
+.n-stat-cell:hover{background:var(--surface-2)}
+.n-stat-cell strong{display:block;font-family:var(--font-mono);font-size:1.4rem;font-weight:700}
+.n-stat-cell span{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.n-field{margin-bottom:.85rem}
+.n-field label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.38rem}
+.n-field input,.n-field select,.n-field textarea{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font);font-size:.9rem;padding:.72rem .9rem;border-radius:0;outline:none;transition:border-color .15s}
+.n-field input:focus,.n-field select:focus,.n-field textarea:focus{border-color:var(--primary)}
+.n-field textarea{resize:vertical}
+.n-field-2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.n-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.72rem 1.25rem;border:1px solid;font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s;text-decoration:none;white-space:nowrap}
+.n-btn i{width:13px;height:13px}
+.n-btn-red{background:var(--primary);color:#fff;border-color:var(--primary)}
+.n-btn-red:hover{background:var(--primary-2);border-color:var(--primary-2)}
+.n-btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+.n-btn-ghost:hover{border-color:var(--border-hover);background:var(--surface-2)}
+.n-btn-danger{background:transparent;color:var(--danger);border-color:rgba(255,82,82,.3)}
+.n-btn-danger:hover{background:var(--danger-soft)}
+.n-btn-full{width:100%;justify-content:center}
+.n-btn-sm{padding:.38rem .7rem;font-size:.68rem}
+.n-reveal{opacity:0;transform:translateY(14px);transition:opacity .5s var(--ease-smooth),transform .5s var(--motion-spring)}
+.n-reveal.n-vis{opacity:1;transform:translateY(0)}
+.n-d1{transition-delay:.08s}.n-d2{transition-delay:.16s}.n-d3{transition-delay:.24s}.n-d4{transition-delay:.32s}
+.n-divider{height:1px;background:var(--border);margin:1rem 0}
+</style>
+<div class="n-page-bg" aria-hidden="true"></div>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+    const o=new IntersectionObserver((en)=>{en.forEach(e=>{if(e.isIntersecting){e.target.classList.add('n-vis');o.unobserve(e.target);}});},{threshold:.05,rootMargin:'0px 0px -20px 0px'});
+    document.querySelectorAll('.n-reveal').forEach(el=>o.observe(el));
+});
+</script>

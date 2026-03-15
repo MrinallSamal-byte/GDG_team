@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Submit Project — {{ event.title }}{% endblock %}
+
+{% block content %}
+<section class="section" style="max-width:680px;margin:0 auto;">
+    <div class="section-head reveal">
+        <h1><i data-lucide="upload-cloud"></i>
+            {% if existing %}Update Submission{% else %}Submit Project{% endif %}
+        </h1>
+        <p class="muted">{{ event.title }}{% if team %} · Team: <strong>{{ team.name }}</strong>{% endif %}</p>
+    </div>
+
+    {% if event.submission_deadline %}
+    <div class="alert alert-info reveal" style="margin-bottom:1rem;">
+        <i data-lucide="clock"></i>
+        Submission deadline: <strong>{{ event.submission_deadline|date:"N j, Y — g:i A" }}</strong>
+    </div>
+    {% endif %}
+
+    <article class="surface reveal">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label" for="title">Project Title *</label>
+                <input id="title" name="title" type="text" class="form-input" required
+                       value="{{ existing.title|default:form_data.title|default:'' }}"
+                       placeholder="Give your project a clear, memorable name">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="description">Description</label>
+                <textarea id="description" name="description" class="form-input" rows="5"
+                          placeholder="Describe what you built, the problem it solves, and your tech stack">{{ existing.description|default:form_data.description|default:'' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="project_url">
+                    <i data-lucide="github" style="width:14px;height:14px;"></i>
+                    Project URL (GitHub / live demo)
+                </label>
+                <input id="project_url" name="project_url" type="url" class="form-input"
+                       value="{{ existing.project_url|default:form_data.project_url|default:'' }}"
+                       placeholder="https://github.com/yourname/project">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="presentation_url">
+                    <i data-lucide="presentation" style="width:14px;height:14px;"></i>
+                    Presentation / Slides URL
+                </label>
+                <input id="presentation_url" name="presentation_url" type="url" class="form-input"
+                       value="{{ existing.presentation_url|default:form_data.presentation_url|default:'' }}"
+                       placeholder="https://docs.google.com/presentation/... or Figma link">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="file_upload">
+                    <i data-lucide="paperclip" style="width:14px;height:14px;"></i>
+                    Attach File (optional — ZIP, PDF, etc.)
+                </label>
+                <input id="file_upload" name="file_upload" type="file" class="form-input"
+                       accept=".zip,.pdf,.tar.gz,.docx,.pptx">
+                {% if existing.file_upload %}
+                <p class="muted" style="font-size:.82rem;margin-top:.3rem;">
+                    Current: <a href="{{ existing.file_upload.url }}" target="_blank">{{ existing.file_upload.name }}</a>
+                    — uploading a new file will replace it.
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="btn-row" style="margin-top:1.5rem;">
+                <button type="submit" name="submit_final" value="0" class="btn-secondary">
+                    <i data-lucide="save"></i> Save Draft
+                </button>
+                <button type="submit" name="submit_final" value="1" class="btn-primary">
+                    <i data-lucide="send"></i> Submit Final
+                </button>
+            </div>
+            <p class="muted" style="font-size:.8rem;text-align:center;margin-top:.5rem;">
+                You can update your submission until the deadline.
+                Clicking <em>Submit Final</em> marks it as ready for judging — you can still edit it.
+            </p>
+        </form>
+    </article>
+</section>
+{% endblock %}

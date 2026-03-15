@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}CampusArena | Leaderboard — {{ event.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.lb-podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0 2rem;
+}
+.lb-podium-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+}
+.lb-podium-bar {
+    width: 90px;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0.6rem 0.4rem;
+    font-weight: 700;
+}
+.lb-rank-1 .lb-podium-bar { height: 130px; background: linear-gradient(180deg, #FFD700 0%, #FFA500 100%); color: #4a2c00; }
+.lb-rank-2 .lb-podium-bar { height: 100px; background: linear-gradient(180deg, #e0e0e0 0%, #b0b0b0 100%); color: #333; }
+.lb-rank-3 .lb-podium-bar { height: 80px;  background: linear-gradient(180deg, #cd7f32 0%, #a0522d 100%); color: #fff; }
+.lb-medal { font-size: 1.6rem; }
+.lb-name { font-size: 0.82rem; font-weight: 600; text-align: center; max-width: 100px; word-break: break-word; }
+.lb-score-small { font-size: 0.75rem; color: var(--text-muted); }
+
+.lb-table { width: 100%; border-collapse: collapse; }
+.lb-table th { padding: 0.6rem 0.75rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border-color); text-align: left; }
+.lb-table td { padding: 0.75rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+.lb-table tr:last-child td { border-bottom: none; }
+.lb-table tr:hover td { background: var(--surface-2); }
+.rank-badge { font-size: 1rem; font-weight: 800; min-width: 2rem; display: inline-block; text-align: center; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="section" style="max-width:760px;margin:0 auto;">
+    <div class="section-head reveal">
+        <h1><i data-lucide="trophy"></i> Leaderboard</h1>
+        <p class="muted">{{ event.title }}</p>
+    </div>
+
+    {% if not leaderboard or not entries %}
+    <article class="surface reveal">
+        <div class="empty-state">
+            <i data-lucide="trophy"></i>
+            <p>The leaderboard for this event hasn't been published yet. Check back after the event.</p>
+        </div>
+    </article>
+
+    {% else %}
+
+    {% if entries|length >= 3 %}
+    <div class="reveal">
+        <div class="lb-podium">
+            {% for entry in entries %}{% if entry.rank == 2 %}
+            <div class="lb-podium-item lb-rank-2">
+                <span class="lb-medal">🥈</span>
+                <div class="lb-podium-bar">
+                    <span style="font-size:0.9rem;">#2</span>
+                </div>
+                <span class="lb-name">{{ entry.label }}</span>
+                <span class="lb-score-small">{{ entry.score }} pts</span>
+            </div>
+            {% endif %}{% endfor %}
+
+            {% for entry in entries %}{% if entry.rank == 1 %}
+            <div class="lb-podium-item lb-rank-1">
+                <span class="lb-medal">🏆</span>
+                <div class="lb-podium-bar">
+                    <span style="font-size:0.95rem;">#1</span>
+                </div>
+                <span class="lb-name">{{ entry.label }}</span>
+                <span class="lb-score-small">{{ entry.score }} pts</span>
+            </div>
+            {% endif %}{% endfor %}
+
+            {% for entry in entries %}{% if entry.rank == 3 %}
+            <div class="lb-podium-item lb-rank-3">
+                <span class="lb-medal">🥉</span>
+                <div class="lb-podium-bar">
+                    <span style="font-size:0.85rem;">#3</span>
+                </div>
+                <span class="lb-name">{{ entry.label }}</span>
+                <span class="lb-score-small">{{ entry.score }} pts</span>
+            </div>
+            {% endif %}{% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <article class="surface reveal">
+        <table class="lb-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Team / Participant</th>
+                    <th style="text-align:right;">Score</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td>
+                        {% if entry.rank == 1 %}<span class="rank-badge" style="color:#FFA500;">🥇</span>
+                        {% elif entry.rank == 2 %}<span class="rank-badge" style="color:#999;">🥈</span>
+                        {% elif entry.rank == 3 %}<span class="rank-badge" style="color:#cd7f32;">🥉</span>
+                        {% else %}<span class="rank-badge muted">#{{ entry.rank }}</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ entry.label }}</strong></td>
+                    <td style="text-align:right;font-weight:700;">{{ entry.score }}</td>
+                    <td class="muted" style="font-size:0.85rem;">{{ entry.notes|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </article>
+
+    {% endif %}
+
+    <div class="btn-row reveal">
+        <a href="{% url 'events:event_detail' event.id %}" class="btn-secondary">
+            <i data-lucide="arrow-left"></i> Back to Event
+        </a>
+        {% if request.user.is_staff and request.user == event.created_by %}
+        <a href="{% url 'leaderboard:manage' event.id %}" class="btn-primary">
+            <i data-lucide="settings-2"></i> Manage Leaderboard
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

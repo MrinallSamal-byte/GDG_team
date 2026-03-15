@@ -45,9 +45,11 @@ class EventAdmin(admin.ModelAdmin):
     date_hierarchy = "event_start"
     inlines = [EventRoundInline, EventJudgeInline, EventSponsorInline]
 
+    list_select_related = ("created_by",)
+
     def get_queryset(self, request):
         """Show all events including soft-deleted in admin."""
-        return Event.all_objects.all()
+        return Event.all_objects.select_related("created_by")
 
 
 @admin.register(EventRound)

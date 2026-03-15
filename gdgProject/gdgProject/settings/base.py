@@ -1,21 +1,42 @@
 """
 Base settings — shared across all environments.
 
-All secrets and environment-specific values are loaded from env vars.
-In dev, load them from a .env file via python-decouple or similar.
+Secrets and environment-specific values are loaded via python-decouple (reads
+from a .env file in the project root). If decouple is not installed yet, falls
+back to os.environ so Django can at least import settings without crashing
+during the initial `pip install` phase.
 """
 
+import os
 from pathlib import Path
 
-from decouple import Csv, config
+try:
+    from decouple import Csv, config
+except ModuleNotFoundError:
+    # Minimal fallback used only before `pip install -r requirements.txt`
+    def config(key, default=None, cast=None):
+        val = os.environ.get(key, default)
+        if cast is not None and val is not None:
+            try:
+                return cast(val)
+            except (ValueError, TypeError):
+                return default
+        return val
+
+    def Csv():
+        def _cast(val):
+            if not val:
+                return []
+            return [v.strip() for v in val.split(",") if v.strip()]
+        return _cast
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # gdgProject/
 
 # ─── Security ─────────────────────────────────────────────────────────────────
 SECRET_KEY = config("SECRET_KEY", default="dev-only-insecure-secret-key-change-me")
-DEBUG = config("DEBUG", default=False, cast=bool)
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="", cast=Csv())
+DEBUG = config("DEBUG", default=True, cast=bool)
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
 
 # ─── Application Definition ──────────────────────────────────────────────────
 DJANGO_APPS = [
@@ -28,8 +49,13 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    # "django_extensions",
-    # "rest_framework",
+    "channels",
+    "django_filters",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.github",
 ]
 
 LOCAL_APPS = [
@@ -41,6 +67,11 @@ LOCAL_APPS = [
     "registration",
     "team",
     "users",
+    "payments",
+    "certificates",
+    "leaderboard",
+    "submissions",
+    "checkin",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -52,10 +83,10 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # Custom middleware
-    # "core.middleware.ErrorHandlerMiddleware",
+    "core.middleware.ErrorHandlerMiddleware",
 ]
 
 ROOT_URLCONF = "gdgProject.urls"
@@ -76,9 +107,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "gdgProject.wsgi.application"
+ASGI_APPLICATION = "gdgProject.asgi.application"
 
 # ─── Database ─────────────────────────────────────────────────────────────────
-# Overridden in dev.py / prod.py
 DATABASES = {
     "default": {
         "ENGINE": config("DB_ENGINE", default="django.db.backends.mysql"),
@@ -97,11 +128,16 @@ if DATABASES["default"]["ENGINE"] == "django.db.backends.mysql":
         "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
     }
 
+# ─── Django Channels ─────────────────────────────────────────────────────────
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
+}
+
 # ─── Auth & Password Validation ──────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
         "OPTIONS": {"min_length": 10},
@@ -110,11 +146,41 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
 LOGIN_URL = "/auth/login/"
 LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/"
 
-# ─── Internationalization ────────────────────────────────────────────────────
+# ─── django-allauth ───────────────────────────────────────────────────────────
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+        "APP": {
+            "client_id": config("GOOGLE_CLIENT_ID", default=""),
+            "secret": config("GOOGLE_CLIENT_SECRET", default=""),
+            "key": "",
+        },
+    },
+    "github": {
+        "SCOPE": ["user:email"],
+        "APP": {
+            "client_id": config("GITHUB_CLIENT_ID", default=""),
+            "secret": config("GITHUB_CLIENT_SECRET", default=""),
+            "key": "",
+        },
+    },
+}
+
+# ─── Internationalization ─────────────────────────────────────────────────────
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
@@ -141,7 +207,7 @@ MESSAGE_TAGS = {
     messages.ERROR: "error",
 }
 
-# ─── Logging (structured JSON) ──────────────────────────────────────────────
+# ─── Logging ─────────────────────────────────────────────────────────────────
 LOG_LEVEL = config("LOG_LEVEL", default="INFO")
 
 LOGGING = {
@@ -159,29 +225,15 @@ LOGGING = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "json" if not DEBUG else "verbose",
+            # Always use verbose in base; dev.py keeps it verbose, prod.py overrides to json
+            "formatter": "verbose",
         },
     },
-    "root": {
-        "handlers": ["console"],
-        "level": LOG_LEVEL,
-    },
+    "root": {"handlers": ["console"], "level": LOG_LEVEL},
     "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-        "django.request": {
-            "handlers": ["console"],
-            "level": "ERROR",
-            "propagate": False,
-        },
-        "campusarena": {
-            "handlers": ["console"],
-            "level": LOG_LEVEL,
-            "propagate": False,
-        },
+        "django": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
+        "campusarena": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
     },
 }
 
@@ -208,3 +260,13 @@ SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 1 week
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
+
+# ─── Payment (Razorpay) ───────────────────────────────────────────────────────
+RAZORPAY_KEY_ID = config("RAZORPAY_KEY_ID", default="")
+RAZORPAY_KEY_SECRET = config("RAZORPAY_KEY_SECRET", default="")
+
+# ─── Site URL (used in certificate QR codes) ─────────────────────────────────
+SITE_URL = config("SITE_URL", default="http://localhost:8000")
+
+# ─── OTP ─────────────────────────────────────────────────────────────────────
+OTP_EXPIRY_SECONDS = 600  # 10 minutes

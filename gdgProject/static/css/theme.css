@@ -1,0 +1,117 @@
+/*
+ * CampusArena — Nothing OS Theme Tokens
+ * Mirrors style.css variables for legacy compatibility.
+ * The single source of truth for colors is style.css :root.
+ */
+
+/* Re-export for any template using ca-* variables */
+:root,
+[data-theme="dark"],
+[data-theme="light"] {
+    --ca-transition: 200ms ease;
+    --ca-font-sans:  'Inter', system-ui, sans-serif;
+    --ca-font-mono:  'Space Mono', monospace;
+    --ca-radius-sm:  4px;
+    --ca-radius-md:  6px;
+    --ca-radius-lg:  8px;
+    --ca-radius-xl:  12px;
+    --ca-radius-pill:999px;
+}
+
+/* Map ca-* to Nothing palette */
+:root,
+[data-theme="light"] {
+    --ca-bg-page:         #f5f5f5;
+    --ca-bg-surface:      #ffffff;
+    --ca-bg-raised:       #eeeeee;
+    --ca-text-primary:    #0a0a0a;
+    --ca-text-secondary:  #444444;
+    --ca-text-muted:      #888888;
+    --ca-text-inverse:    #ffffff;
+    --ca-brand:           #FF0000;
+    --ca-brand-hover:     #CC0000;
+    --ca-brand-light:     rgba(255,0,0,0.06);
+    --ca-brand-text:      #CC0000;
+    --ca-success:         #00C853;
+    --ca-success-bg:      rgba(0,200,83,.08);
+    --ca-danger:          #FF5252;
+    --ca-danger-bg:       rgba(255,82,82,.08);
+    --ca-warning:         #FFB300;
+    --ca-warning-bg:      rgba(255,179,0,.08);
+    --ca-info:            #CCCCCC;
+    --ca-info-bg:         rgba(200,200,200,.08);
+    --ca-border:          rgba(0,0,0,0.08);
+    --ca-border-strong:   rgba(0,0,0,0.16);
+    --ca-shadow-sm:       0 1px 4px rgba(0,0,0,0.06);
+    --ca-shadow-md:       0 4px 16px rgba(0,0,0,0.08);
+    --ca-shadow-lg:       0 8px 32px rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] {
+    --ca-bg-page:         #000000;
+    --ca-bg-surface:      #0d0d0d;
+    --ca-bg-raised:       #1a1a1a;
+    --ca-text-primary:    #ffffff;
+    --ca-text-secondary:  #cccccc;
+    --ca-text-muted:      #888888;
+    --ca-text-inverse:    #000000;
+    --ca-brand:           #FF0000;
+    --ca-brand-hover:     #CC0000;
+    --ca-brand-light:     rgba(255,0,0,0.08);
+    --ca-brand-text:      #FF4444;
+    --ca-success:         #00E676;
+    --ca-success-bg:      rgba(0,230,118,.08);
+    --ca-danger:          #FF5252;
+    --ca-danger-bg:       rgba(255,82,82,.08);
+    --ca-warning:         #FFB300;
+    --ca-warning-bg:      rgba(255,179,0,.08);
+    --ca-info:            #E0E0E0;
+    --ca-info-bg:         rgba(224,224,224,.06);
+    --ca-border:          rgba(255,255,255,0.08);
+    --ca-border-strong:   rgba(255,255,255,0.16);
+    --ca-shadow-sm:       0 1px 4px rgba(0,0,0,0.5);
+    --ca-shadow-md:       0 4px 16px rgba(0,0,0,0.6);
+    --ca-shadow-lg:       0 8px 32px rgba(0,0,0,0.7);
+}
+
+/* ── Utility classes (legacy support) ─────────────────────── */
+.ca-card {
+    background: var(--ca-bg-surface);
+    border: 1px solid var(--ca-border);
+    border-radius: var(--ca-radius-lg);
+}
+.ca-btn {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .5rem 1.1rem; border: none; border-radius: var(--ca-radius-md);
+    font-family: var(--ca-font-sans); font-size: .88rem; font-weight: 600;
+    cursor: pointer; text-decoration: none; transition: background var(--ca-transition);
+    letter-spacing: .02em; white-space: nowrap;
+}
+.ca-btn-primary  { background: var(--ca-brand);   color: #fff; }
+.ca-btn-primary:hover { background: var(--ca-brand-hover); }
+.ca-btn-outline  { background: transparent; color: var(--ca-brand); border: 1px solid var(--ca-brand); }
+.ca-btn-outline:hover { background: var(--ca-brand-light); }
+.ca-btn-danger   { background: var(--ca-danger);  color: #fff; }
+.ca-badge {
+    display: inline-block; padding: .18rem .55rem;
+    border-radius: var(--ca-radius-sm); font-size: .68rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; line-height: 1;
+}
+.ca-badge-success { background: var(--ca-success-bg); color: var(--ca-success); }
+.ca-badge-danger  { background: var(--ca-danger-bg);  color: var(--ca-danger); }
+.ca-badge-warning { background: var(--ca-warning-bg); color: var(--ca-warning); }
+.ca-badge-info    { background: var(--ca-info-bg);    color: var(--ca-info); }
+.ca-badge-brand   { background: var(--ca-brand-light);color: var(--ca-brand); }
+.ca-text-muted    { color: var(--ca-text-muted); }
+.ca-text-secondary{ color: var(--ca-text-secondary); }
+.ca-divider { border: none; border-top: 1px solid var(--ca-border); margin: 1.25rem 0; }
+
+/* ── Theme toggle ────────────────────────────────────────── */
+[data-theme-toggle] {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 2rem; height: 2rem;
+    border: 1px solid var(--ca-border-strong); border-radius: var(--ca-radius-pill);
+    background: var(--ca-bg-raised); color: var(--ca-text-secondary);
+    cursor: pointer; transition: all var(--ca-transition);
+}
+[data-theme-toggle]:hover { background: var(--ca-brand-light); color: var(--ca-brand); border-color: var(--ca-brand); }

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You're offline — CampusArena</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Mono:wght@700&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+    body{
+      background:#000; color:#fff;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      min-height:100vh; padding:2rem; text-align:center;
+      background-image:radial-gradient(circle,rgba(255,255,255,.032) 1px,transparent 1px);
+      background-size:20px 20px;
+    }
+    .n-logo{font-size:.85rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:3rem;display:flex;align-items:center;gap:.4rem;}
+    .n-logo span{color:#FF0000}
+    .n-code{font-family:'Space Mono',monospace;font-size:5rem;font-weight:700;color:#FF0000;line-height:1;margin-bottom:1rem;}
+    h1{font-size:1.25rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.5rem;}
+    p{color:#666;font-size:.88rem;line-height:1.65;max-width:320px;margin-bottom:2rem;}
+    .n-btn{
+      display:inline-flex;align-items:center;gap:.4rem;
+      padding:.72rem 1.4rem;background:#FF0000;color:#fff;
+      border:1px solid #FF0000;font-family:'Inter',sans-serif;
+      font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+      cursor:pointer;text-decoration:none;transition:background .15s;
+    }
+    .n-btn:hover{background:#CC0000;border-color:#CC0000;}
+    .n-sep{width:28px;height:1px;background:#FF0000;margin:0 auto 1.5rem;}
+  </style>
+</head>
+<body>
+  <div class="n-logo"><span>●</span> CampusArena</div>
+  <div class="n-sep"></div>
+  <div class="n-code">N/W</div>
+  <h1>You're Offline</h1>
+  <p>No internet connection detected. Check your network and try again.</p>
+  <a class="n-btn" href="/" onclick="location.reload();return false;">Try Again</a>
+</body>
+</html>
