@@ -232,9 +232,15 @@ def notifications_view(request):
 @login_required
 @require_POST
 def mark_all_read(request):
-    """Mark all of the current user's notifications as read."""
+    """Mark all of the current user's notifications as read.
+
+    Returns JSON for AJAX callers (X-Requested-With: XMLHttpRequest) and
+    a plain redirect for the synchronous <form> POST on notifications.html.
+    """
     updated = Notification.objects.filter(user=request.user, read=False).update(read=True)
-    return JsonResponse({"ok": True, "updated": updated})
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"ok": True, "updated": updated})
+    return redirect("dashboard:notifications")
 
 
 @login_required

@@ -1,3 +1,4 @@
+{% load socialaccount %}
 {% extends 'base.html' %}
 {% block title %}CampusArena | Sign In{% endblock %}
 {% block extra_css %}
@@ -115,8 +116,7 @@
 
             <div class="n-divider"><span>or continue with</span></div>
             <div class="n-social">
-                <a href="{% url 'socialaccount_signup' %}" class="n-social-btn"><i data-lucide="globe" style="width:15px;height:15px;"></i> Google</a>
-                <a href="#" class="n-social-btn"><i data-lucide="github" style="width:15px;height:15px;"></i> GitHub</a>
+                <a href="{% provider_login_url 'google' %}" class="n-social-btn"><i data-lucide="globe" style="width:15px;height:15px;"></i> Google</a>
             </div>
 
             <div class="n-switch">No account? <a href="{% url 'users:register' %}">Create one free</a></div>

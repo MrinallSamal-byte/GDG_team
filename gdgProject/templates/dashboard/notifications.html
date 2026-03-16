@@ -22,7 +22,7 @@
                     <span class="n-name">Notifications</span>
                 </div>
             </div>
-            <form method="POST" action="{% url 'dashboard:mark_all_read' %}">
+            <form id="mark-all-read-form" method="POST" action="{% url 'dashboard:mark_all_read' %}">
                 {% csrf_token %}
                 <button type="submit"
                     style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:none;border:1px solid var(--border);padding:.35rem .7rem;cursor:pointer;font-family:var(--font);transition:all .15s;"
