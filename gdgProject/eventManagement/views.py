@@ -54,6 +54,42 @@ def organizer_dashboard(request):
         is_deleted=False,
     ).count()
 
+    # Compute team-vs-solo breakdown across all organiser events
+    from registration.models import Registration
+    event_ids = list(my_events.values_list("pk", flat=True))
+    confirmed_statuses = ["confirmed", "submitted"]
+    team_count = Registration.objects.filter(
+        event_id__in=event_ids,
+        status__in=confirmed_statuses,
+        team__isnull=False,
+    ).count()
+    solo_count = Registration.objects.filter(
+        event_id__in=event_ids,
+        status__in=confirmed_statuses,
+        team__isnull=True,
+    ).count()
+    team_vs_solo = f"{team_count}T / {solo_count}S" if (team_count + solo_count) > 0 else None
+
+    # Compute top skill/stack from participant profiles
+    from django.db.models import Value
+    from users.models import UserProfile
+    reg_user_ids = list(
+        Registration.objects.filter(
+            event_id__in=event_ids,
+            status__in=confirmed_statuses,
+        ).values_list("user_id", flat=True)
+    )
+    skill_counts: dict = {}
+    for skills_str in UserProfile.objects.filter(
+        user_id__in=reg_user_ids
+    ).values_list("skills", flat=True):
+        if skills_str:
+            for skill in skills_str.split(","):
+                skill = skill.strip()
+                if skill:
+                    skill_counts[skill] = skill_counts.get(skill, 0) + 1
+    top_stack = max(skill_counts, key=skill_counts.get) if skill_counts else None
+
     return render(
         request,
         "eventManagement/organizer_dashboard.html",
@@ -61,6 +97,8 @@ def organizer_dashboard(request):
             "analytics": {
                 "total_registrations": total_registrations,
                 "active_events": active_events,
+                "team_vs_solo": team_vs_solo,
+                "top_stack": top_stack,
             },
             "my_events": my_events,
         },
@@ -291,6 +329,7 @@ def edit_event(request, event_id):
                 "categories": EventCategory.choices,
                 "modes": EventMode.choices,
                 "participation_types": ParticipationType.choices,
+                "statuses": EventStatus.choices,
             },
         )
 
@@ -343,6 +382,7 @@ def edit_event(request, event_id):
                 "categories": EventCategory.choices,
                 "modes": EventMode.choices,
                 "participation_types": ParticipationType.choices,
+                "statuses": EventStatus.choices,
             },
         )
 

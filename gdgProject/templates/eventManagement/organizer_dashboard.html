@@ -4,6 +4,9 @@
 
 {% block extra_css %}
 <style>
+    /* CSS variable aliases — bridge template vars to design-system tokens */
+    :root { --border-color: var(--border); --text-main: var(--text); --text-muted: var(--muted); }
+
     .reveal { opacity:0; transform:translateY(40px); transition:opacity .8s ease,transform .8s cubic-bezier(.16,1,.3,1); }
     .reveal.active { opacity:1; transform:translateY(0); }
     .mobile-only { display:none !important; }
@@ -279,10 +282,10 @@
         <article class="surface reveal">
             <h2><i data-lucide="megaphone"></i> Broadcast Announcement</h2>
             <p class="text-soft" style="margin-bottom:1.2rem;">Push a notification to all registrants of an event.</p>
-            <form method="POST" action="">
+            <form id="announce-form" method="POST" action="">
                 {% csrf_token %}
                 <div class="form-group">
-                    <select name="event_id" required class="form-input">
+                    <select id="announce-event-id" name="event_id" required class="form-input">
                         <option value="">Select event…</option>
                         {% for event in my_events %}
                         <option value="{{ event.pk }}">{{ event.title }}</option>
@@ -359,6 +362,22 @@ document.addEventListener('DOMContentLoaded', function () {
         hamburgerBtn.addEventListener('click', toggleDrawer);
         drawerOverlay.addEventListener('click', toggleDrawer);
         mobileDrawer.querySelectorAll('.drawer-link').forEach(function (l) { l.addEventListener('click', function () { mobileDrawer.classList.remove('open'); drawerOverlay.classList.remove('open'); document.body.style.overflow = ''; }); });
+    }
+
+    /* Announce form: set action dynamically based on selected event */
+    var announceForm = document.getElementById('announce-form');
+    var announceSelect = document.getElementById('announce-event-id');
+    if (announceForm && announceSelect) {
+        var announcerBase = "{% url 'eventManagement:organizer_dashboard' %}"; // e.g. /organizer/
+        announceForm.addEventListener('submit', function (e) {
+            var eid = announceSelect.value;
+            if (!eid) {
+                e.preventDefault();
+                alert('Please select an event before sending an announcement.');
+                return;
+            }
+            announceForm.action = announcerBase + eid + '/announce/';
+        });
     }
 
     var mobileTheme = document.getElementById('mobile-theme-toggle');
