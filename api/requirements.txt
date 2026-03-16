@@ -48,3 +48,6 @@ qrcode[pil]>=7.4
 
 # ── OAuth ─────────────────────────────────────────────────────────────────────
 django-allauth>=0.61
+
+# ── JWT (required by django-allauth for token-based auth) ─────────────────────
+PyJWT>=2.8
