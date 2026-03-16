@@ -3,6 +3,12 @@
 
 {% block extra_css %}
 {% include 'includes/_dash_layout.html' %}
+<style>
+@media(max-width:600px){
+    .n-row > div:first-child { flex-direction: column; align-items: flex-start; gap: .5rem; }
+    .n-tag { font-size: .65rem; }
+}
+</style>
 {% endblock %}
 
 {% block content %}

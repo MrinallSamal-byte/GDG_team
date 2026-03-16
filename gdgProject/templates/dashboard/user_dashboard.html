@@ -2,10 +2,8 @@
 {% block title %}CampusArena | Dashboard{% endblock %}
 
 {% block extra_css %}
+{% include 'includes/_dash_layout.html' %}
 <style>
-.main-content{padding:0!important;max-width:100%!important;width:100%!important}
-.n-dash{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
-.n-dash-content{padding:2rem 2.5rem 4rem;overflow-x:hidden}
 .n-metric-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--border);overflow:hidden;margin-bottom:1.5rem}
 .n-metric{padding:1.1rem 1.25rem;background:var(--surface);border-right:1px solid var(--border);transition:background .15s}
 .n-metric:last-child{border-right:none}
@@ -16,41 +14,22 @@
 .n-card-head{padding:.85rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem}
 .n-card-head .lbl{font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:.5rem}
 .n-card-head .lbl i{width:13px;height:13px;color:var(--primary)}
-.n-row{padding:.75rem 1.1rem;border-bottom:1px solid var(--border-soft);transition:background .15s}
-.n-row:last-child{border-bottom:none}
-.n-row:hover{background:var(--surface-2)}
-/* Mobile sidebar toggle — hidden on desktop, shown on tablet/mobile via global CSS */
-.n-dash-sidebar-btn{
-    display:none;align-items:center;gap:.4rem;padding:.3rem .65rem;
-    border:1px solid var(--border);background:var(--surface);color:var(--muted);
-    font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-    cursor:pointer;border-radius:var(--radius-md);transition:all .15s;
-}
-.n-dash-sidebar-btn:hover{border-color:var(--border-hover);color:var(--text)}
-/* Dashboard page header */
-.n-head{display:flex;align-items:center;justify-content:space-between;
-    margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--border);
-    flex-wrap:wrap;gap:.5rem}
-.n-head-l{display:flex;align-items:center;gap:.5rem}
-.n-num{font-family:var(--font-mono);font-size:.65rem;font-weight:700;color:var(--primary);letter-spacing:.1em;opacity:.7}
-.n-name{font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text)}
-/* Inner two-col grid for cards — stacks on tablet */
 .n-dash-inner-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-bottom:1px}
-/* Responsive overrides */
-@media(max-width:1024px){
-    .n-dash{grid-template-columns:1fr}
-    .n-dash-content{padding:1.5rem 1.25rem 4rem}
-    .n-dash-sidebar-btn{display:inline-flex}
+@media(max-width:900px){
+    .n-dash-inner-grid{grid-template-columns:1fr}
 }
 @media(max-width:768px){
-    .n-dash-inner-grid{grid-template-columns:1fr}
-    .n-metric-grid{grid-template-columns:repeat(2,1fr)}
-    .n-dash-content{padding:1.25rem .9rem 5rem}
+    .n-metric-grid{grid-template-columns:repeat(3,1fr)} /* keep horizontal strip */
+    .n-metric{padding:.75rem .65rem}
+    .n-metric .lbl{font-size:.58rem;letter-spacing:.06em}
+    .n-metric .val{font-size:1.25rem}
 }
 @media(max-width:480px){
-    .n-metric-grid{grid-template-columns:1fr}
-    .n-metric{border-right:none;border-bottom:1px solid var(--border)}
-    .n-dash-content{padding:1rem .75rem 5rem}
+    .n-metric-grid{grid-template-columns:repeat(3,1fr)} /* always 3-col strip */
+    .n-metric{padding:.6rem .5rem;border-right:1px solid var(--border)}
+    .n-metric:last-child{border-right:none}
+    .n-metric .lbl{font-size:.55rem;letter-spacing:.04em;margin-bottom:.2rem}
+    .n-metric .val{font-size:1.1rem}
 }
 </style>
 {% endblock %}
@@ -63,7 +42,6 @@
 
     <div class="n-dash-content">
 
-        <!-- Page header -->
         <div class="n-head n-reveal">
             <div style="display:flex;align-items:center;gap:.5rem;">
                 <button class="n-dash-sidebar-btn" onclick="openDashSidebar()" aria-label="Open sidebar menu">
@@ -79,7 +57,6 @@
             </a>
         </div>
 
-        <!-- Welcome -->
         <div class="n-reveal" style="margin-bottom:1.5rem;">
             <div style="font-size:clamp(1rem,3vw,1.2rem);font-weight:700;letter-spacing:-.02em;">
                 Welcome back, <span style="color:var(--primary);">{{ request.user.first_name|default:request.user.username }}</span>
@@ -87,7 +64,6 @@
             <div style="font-size:.85rem;color:var(--muted);margin-top:.2rem;">Here's a snapshot of your recent activity.</div>
         </div>
 
-        <!-- Stats -->
         <div class="n-metric-grid n-reveal n-d1">
             <div class="n-metric">
                 <div class="lbl">Events Joined</div>
@@ -103,10 +79,8 @@
             </div>
         </div>
 
-        <!-- Recent events + teams grid -->
         <div class="n-dash-inner-grid n-reveal n-d2">
 
-            <!-- Recent Events -->
             <div class="n-card">
                 <div class="n-card-head">
                     <span class="lbl"><i data-lucide="calendar"></i> Recent Events</span>
@@ -124,7 +98,6 @@
                 {% endfor %}
             </div>
 
-            <!-- Recent Teams -->
             <div class="n-card" style="border-left:1px solid var(--border);">
                 <div class="n-card-head">
                     <span class="lbl"><i data-lucide="users"></i> My Teams</span>
@@ -142,7 +115,6 @@
 
         </div>
 
-        <!-- Recent notifications -->
         <div class="n-card n-reveal n-d3">
             <div class="n-card-head">
                 <span class="lbl"><i data-lucide="bell"></i> Recent Notifications</span>
@@ -165,33 +137,4 @@
 
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-function openDashSidebar() {
-    const s = document.getElementById('n-sidebar');
-    const o = document.getElementById('n-sidebar-overlay');
-    if (s) s.classList.add('open');
-    if (o) o.classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-function closeDashSidebar() {
-    const s = document.getElementById('n-sidebar');
-    const o = document.getElementById('n-sidebar-overlay');
-    if (s) s.classList.remove('open');
-    if (o) o.classList.remove('open');
-    document.body.style.overflow = '';
-}
-document.addEventListener('DOMContentLoaded', () => {
-    const sidebar = document.getElementById('n-sidebar');
-    if (sidebar) {
-        sidebar.querySelectorAll('a').forEach(a =>
-            a.addEventListener('click', () => {
-                if (window.innerWidth <= 1024) closeDashSidebar();
-            })
-        );
-    }
-});
-</script>
 {% endblock %}

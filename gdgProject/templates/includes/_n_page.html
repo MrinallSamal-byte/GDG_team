@@ -37,15 +37,66 @@
 .n-btn-danger:hover{background:var(--danger-soft)}
 .n-btn-full{width:100%;justify-content:center}
 .n-btn-sm{padding:.38rem .7rem;font-size:.68rem}
-.n-reveal{opacity:0;transform:translateY(14px);transition:opacity .5s var(--ease-smooth),transform .5s var(--motion-spring)}
-.n-reveal.n-vis{opacity:1;transform:translateY(0)}
+
+/* Reveal: visible by default, JS will optionally animate */
+.n-reveal{transition:opacity .5s var(--ease-smooth),transform .5s var(--motion-spring)}
+/* JS adds .n-anim-ready which hides element pending reveal */
+.n-anim-ready.n-reveal{opacity:0;transform:translateY(14px)}
+.n-anim-ready.n-reveal.n-vis{opacity:1;transform:translateY(0)}
+
 .n-d1{transition-delay:.08s}.n-d2{transition-delay:.16s}.n-d3{transition-delay:.24s}.n-d4{transition-delay:.32s}
 .n-divider{height:1px;background:var(--border);margin:1rem 0}
 </style>
 <div class="n-page-bg" aria-hidden="true"></div>
 <script>
-document.addEventListener('DOMContentLoaded',()=>{
-    const o=new IntersectionObserver((en)=>{en.forEach(e=>{if(e.isIntersecting){e.target.classList.add('n-vis');o.unobserve(e.target);}});},{threshold:.05,rootMargin:'0px 0px -20px 0px'});
-    document.querySelectorAll('.n-reveal').forEach(el=>o.observe(el));
-});
+(function(){
+    function init(){
+        var els = Array.from(document.querySelectorAll('.n-reveal'));
+        if(!els.length) return;
+
+        /* --- 1. Synchronously reveal every element already in the viewport --- */
+        var vh = window.innerHeight;
+        var toAnimate = [];
+        els.forEach(function(el){
+            var r = el.getBoundingClientRect();
+            if(r.top < vh && r.bottom > 0){
+                /* Already visible — just ensure it shows with no delay */
+                el.classList.add('n-vis');
+            } else {
+                /* Below the fold — set up animation */
+                el.classList.add('n-anim-ready');
+                toAnimate.push(el);
+            }
+        });
+
+        if(!toAnimate.length) return;
+
+        /* --- 2. Watch below-fold elements with IntersectionObserver --- */
+        var revealAll = function(){
+            toAnimate.forEach(function(el){ el.classList.add('n-vis'); });
+        };
+
+        if('IntersectionObserver' in window){
+            var o = new IntersectionObserver(function(entries){
+                entries.forEach(function(e){
+                    if(e.isIntersecting){
+                        e.target.classList.add('n-vis');
+                        o.unobserve(e.target);
+                    }
+                });
+            },{threshold:.05});
+            toAnimate.forEach(function(el){ o.observe(el); });
+            /* Safety net: reveal everything after 800ms regardless */
+            setTimeout(revealAll, 800);
+        } else {
+            revealAll();
+        }
+    }
+
+    if(document.readyState === 'loading'){
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
 </script>

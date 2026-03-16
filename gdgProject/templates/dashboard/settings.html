@@ -26,13 +26,14 @@
     border: 1px solid var(--border); background: var(--surface-2);
     color: var(--text); font-family: var(--font); font-size: .88rem;
     padding: .5rem .8rem; border-radius: 0; outline: none;
-    width: clamp(160px, 30vw, 220px); max-width: 100%;
+    width: clamp(140px, 28vw, 220px); max-width: 100%;
     transition: border-color .15s;
 }
 .n-settings-inp:focus { border-color: var(--primary); }
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .n-settings-inp { width: 100%; }
-    .n-settings-row { flex-direction: column; align-items: flex-start; }
+    .n-settings-row { flex-direction: column; align-items: flex-start; gap: .5rem; }
+    .n-settings-row .info strong { font-size: .85rem; }
 }
 /* Toggle switch */
 .n-toggle { position: relative; display: inline-block; width: 38px; height: 20px; flex-shrink: 0; }

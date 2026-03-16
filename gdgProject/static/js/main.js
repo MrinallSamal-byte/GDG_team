@@ -166,13 +166,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ─── Scroll reveal ───────────────────────────────────────────────────── */
     const revealEls = document.querySelectorAll('.reveal');
-    if ('IntersectionObserver' in window) {
-        const obs = new IntersectionObserver((entries) => {
-            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); } });
-        }, { threshold: 0.06, rootMargin: '0px 0px -30px 0px' });
-        revealEls.forEach(el => obs.observe(el));
-    } else {
-        revealEls.forEach(el => el.classList.add('revealed'));
+    if (revealEls.length) {
+        const vH = window.innerHeight;
+        const belowFold = [];
+        revealEls.forEach(el => {
+            const r = el.getBoundingClientRect();
+            if (r.top < vH && r.bottom > 0) {
+                /* Already visible — reveal immediately, no animation delay */
+                el.classList.add('revealed');
+            } else {
+                belowFold.push(el);
+            }
+        });
+        if (belowFold.length) {
+            const revealAll = () => belowFold.forEach(el => el.classList.add('revealed'));
+            if ('IntersectionObserver' in window) {
+                const obs = new IntersectionObserver((entries) => {
+                    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); } });
+                }, { threshold: 0.06 });
+                belowFold.forEach(el => obs.observe(el));
+                /* Safety fallback: reveal everything after 800ms regardless */
+                setTimeout(revealAll, 800);
+            } else {
+                revealAll();
+            }
+        }
     }
 
     /* ─── Tabs ────────────────────────────────────────────────────────────── */
