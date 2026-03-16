@@ -424,20 +424,31 @@
         /* ==========================================================================
            REVEAL ANIMATIONS
            ========================================================================== */
-        const revealElements = document.querySelectorAll('.reveal');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { 
-            threshold: 0.08, 
-            rootMargin: '0px 0px -20px 0px' 
+        /* Reveal: immediately show in-viewport elements, animate the rest */
+        const vh = window.innerHeight;
+        const toAnimate = [];
+        document.querySelectorAll('.reveal').forEach(el => {
+            const r = el.getBoundingClientRect();
+            if (r.top < vh && r.bottom > 0) {
+                el.classList.add('active');
+            } else {
+                toAnimate.push(el);
+            }
         });
-
-        revealElements.forEach(el => observer.observe(el));
+        if (toAnimate.length) {
+            const revealAll = () => toAnimate.forEach(el => el.classList.add('active'));
+            if ('IntersectionObserver' in window) {
+                const obs = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) { entry.target.classList.add('active'); obs.unobserve(entry.target); }                        
+                    });
+                }, { threshold: 0.08 });
+                toAnimate.forEach(el => obs.observe(el));
+                setTimeout(revealAll, 800);
+            } else {
+                revealAll();
+            }
+        }
 
         /* ==========================================================================
            MOBILE DRAWER LOGIC

@@ -1,14 +1,29 @@
 {# ── Shared dashboard layout CSS — include inside {% block extra_css %} #}
 <style>
 /* ── Layout ───────────────────────────────────────────────────────── */
-.main-content { padding: 0 !important; max-width: 100% !important; width: 100% !important; }
-.n-dash       { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 64px); }
-.n-dash-content { padding: 2rem 2.5rem 4rem; overflow-x: hidden; }
+/* Kill ALL main-content base styles — dashboard manages its own layout */
+.main-content {
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    min-height: 0 !important;  /* stops the 60vh void on short pages */
+}
+.n-dash {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    /* align-items:start stops the content column stretching to match sidebar height */
+    align-items: start;
+    /* min-height only on desktop — mobile must NOT inherit this or short pages get a void */
+    min-height: calc(100vh - 64px);
+}
+.n-dash-content { padding: 2rem 2.5rem 4rem; overflow-x: hidden; min-width: 0; }
 
 /* ── Page header ──────────────────────────────────────────────────── */
-.n-head { display: flex; align-items: center; justify-content: space-between;
+.n-head {
+    display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
-    flex-wrap: wrap; gap: .5rem; }
+    flex-wrap: wrap; gap: .5rem;
+}
 .n-head-l  { display: flex; align-items: center; gap: .5rem; }
 .n-num     { font-family: var(--font-mono); font-size: .65rem; font-weight: 700;
     color: var(--primary); letter-spacing: .1em; opacity: .7; }
@@ -29,26 +44,33 @@
 .n-tag.red   { border-color: rgba(255,82,82,.25); background: var(--danger-soft); color: var(--danger); }
 .n-tag.amber { border-color: rgba(255,179,0,.25); background: var(--warn-soft); color: var(--warn); }
 
-/* ── Mobile sidebar button ────────────────────────────────────────── */
+/* ── Mobile Menu button (hidden on desktop) ───────────────────────── */
 .n-dash-sidebar-btn {
-    display: none; align-items: center; gap: .4rem; padding: .3rem .65rem;
+    display: none; align-items: center; gap: .4rem; padding: .38rem .75rem;
     border: 1px solid var(--border); background: var(--surface); color: var(--muted);
     font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
     cursor: pointer; border-radius: var(--radius-md); transition: all .15s;
-    font-family: var(--font);
+    font-family: var(--font); flex-shrink: 0;
 }
-.n-dash-sidebar-btn:hover { border-color: var(--border-hover); color: var(--text); }
+.n-dash-sidebar-btn:hover { border-color: var(--primary); color: var(--primary); }
 
 /* ── Responsive ───────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
-    .n-dash             { grid-template-columns: 1fr; }
-    .n-dash-content     { padding: 1.5rem 1.25rem 4rem; }
+    .n-dash {
+        grid-template-columns: 1fr;
+        /* Kill the full-viewport min-height on mobile — let content dictate height */
+        min-height: auto;
+        align-items: start;
+    }
+    .n-dash-content     { padding: 1.5rem 1.25rem 3rem; }
     .n-dash-sidebar-btn { display: inline-flex; }
 }
 @media (max-width: 768px) {
-    .n-dash-content     { padding: 1.25rem .9rem 5rem; }
+    .n-dash-content     { padding: 1.25rem 1rem 3rem; }
 }
 @media (max-width: 480px) {
-    .n-dash-content     { padding: 1rem .75rem 5rem; }
+    .n-dash-content     { padding: 1rem .85rem 2.5rem; }
+    .n-head             { gap: .4rem; }
+    .n-name             { font-size: .7rem; }
 }
 </style>

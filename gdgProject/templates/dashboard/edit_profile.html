@@ -14,7 +14,8 @@
 .n-g2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
 .n-sk{padding:.3rem .7rem;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;letter-spacing:.04em;transition:all .15s;font-family:var(--font)}
 .n-sk.on{border-color:var(--primary);color:var(--primary);background:var(--primary-glow)}
-@media(max-width:600px){.n-g2{grid-template-columns:1fr}}
+@media(max-width:768px){.n-g2{grid-template-columns:1fr}}
+@media(max-width:480px){.n-dash-content{max-width:100%!important}}
 </style>
 {% endblock %}
 {% block content %}

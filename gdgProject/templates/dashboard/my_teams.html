@@ -6,9 +6,14 @@
 <style>
 .n-team-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
     gap: 1px; background: var(--border);
     border: 1px solid var(--border); margin-top: .25rem;
+}
+@media (max-width: 600px) {
+    .n-team-grid { grid-template-columns: 1fr; }
+    .n-team-card { padding: 1rem; }
+    .n-team-btn  { padding: .45rem; font-size: .7rem; }
 }
 .n-team-card {
     background: var(--surface); padding: 1.25rem;

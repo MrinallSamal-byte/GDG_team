@@ -1,69 +1,127 @@
 {% load static %}
-<!-- Sidebar overlay for mobile -->
-<div id="n-sidebar-overlay" onclick="closeDashSidebar()"></div>
+<style>
+/* ── Sidebar desktop styles (overridden in global CSS at ≤1024px) ─── */
+#n-sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 1rem;
+    position: sticky;
+    /* Use dvh with fallback so the sidebar fills the viewport properly on mobile browsers */
+    top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+    /* Don't allow sidebar to stretch the grid row taller than content */
+    align-self: start;
+}
+/* Mobile: sidebar becomes a slide-in panel */
+@media (max-width: 1024px) {
+    #n-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: -280px;
+        width: 260px;
+        height: 100vh !important;
+        height: 100dvh !important;
+        z-index: 300;
+        padding: 1.5rem 1rem;
+        transition: left var(--motion-base, 340ms) var(--motion-spring, cubic-bezier(.34,1.1,.64,1));
+        box-shadow: var(--shadow-lg, 0 20px 60px rgba(0,0,0,.4));
+        overflow-y: auto;
+        display: none !important;
+    }
+    #n-sidebar.open {
+        display: flex !important;
+        left: 0;
+    }
+}
+</style>
 
-<aside id="n-sidebar" style="background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;display:flex;flex-direction:column;gap:.1rem;">
+<!-- Sidebar overlay (always fixed+hidden — never participates in grid layout) -->
+<div id="n-sidebar-overlay"
+     onclick="closeDashSidebar()"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:299;backdrop-filter:blur(2px);"></div>
 
-    <!-- Profile -->
-    <div style="padding-bottom:1rem;margin-bottom:.75rem;border-bottom:1px solid var(--border);">
-        <div style="width:40px;height:40px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;font-family:var(--font-mono);color:var(--text);margin-bottom:.5rem;">
+<aside id="n-sidebar">
+
+    <!-- Profile mini-card -->
+    <div style="padding-bottom:1rem;margin-bottom:.5rem;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;font-family:var(--font-mono);color:var(--text);margin-bottom:.4rem;">
             {{ user.first_name|first|default:"U"|upper }}
         </div>
-        <div style="font-size:.88rem;font-weight:700;">{{ user.get_full_name|default:user.username }}</div>
+        <div style="font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ user.get_full_name|default:user.username }}</div>
         <div style="font-size:.7rem;color:var(--muted);font-family:var(--font-mono);">
-            {% if user.profile.branch %}{{ user.profile.branch }}{% endif %}
-            {% if user.profile.year_display %} · {{ user.profile.year_display }}{% endif %}
-            {% if not user.profile.branch and not user.profile.year_display %}Member{% endif %}
+            {% if user.profile.branch %}{{ user.profile.branch }}{% endif %}{% if user.profile.year_display %} · {{ user.profile.year_display }}{% endif %}{% if not user.profile.branch and not user.profile.year_display %}Member{% endif %}
         </div>
     </div>
 
-    {% with links="\n" %}
-    {% endwith %}
-
     <!-- Nav links -->
-    <a href="{% url 'dashboard:user_dashboard' %}" style="display:flex;align-items:center;gap:.55rem;padding:.55rem .65rem;font-size:.82rem;font-weight:500;text-decoration:none;border:1px solid transparent;transition:all .15s;margin-bottom:.1rem;{% if current_page == 'overview' %}color:var(--primary);background:var(--primary-glow);border-color:rgba(255,0,0,.15);{% else %}color:var(--muted);{% endif %}">
-        <i data-lucide="layout-dashboard" style="width:15px;height:15px;flex-shrink:0;"></i> Overview
-    </a>
-    <a href="{% url 'dashboard:my_profile' %}" style="display:flex;align-items:center;gap:.55rem;padding:.55rem .65rem;font-size:.82rem;font-weight:500;text-decoration:none;border:1px solid transparent;transition:all .15s;margin-bottom:.1rem;{% if current_page == 'profile' %}color:var(--primary);background:var(--primary-glow);border-color:rgba(255,0,0,.15);{% else %}color:var(--muted);{% endif %}">
-        <i data-lucide="user" style="width:15px;height:15px;flex-shrink:0;"></i> My Profile
-    </a>
-    <a href="{% url 'dashboard:my_events' %}" style="display:flex;align-items:center;gap:.55rem;padding:.55rem .65rem;font-size:.82rem;font-weight:500;text-decoration:none;border:1px solid transparent;transition:all .15s;margin-bottom:.1rem;{% if current_page == 'events' %}color:var(--primary);background:var(--primary-glow);border-color:rgba(255,0,0,.15);{% else %}color:var(--muted);{% endif %}">
-        <i data-lucide="calendar" style="width:15px;height:15px;flex-shrink:0;"></i> My Events
-    </a>
-    <a href="{% url 'dashboard:my_teams' %}" style="display:flex;align-items:center;gap:.55rem;padding:.55rem .65rem;font-size:.82rem;font-weight:500;text-decoration:none;border:1px solid transparent;transition:all .15s;margin-bottom:.1rem;{% if current_page == 'teams' %}color:var(--primary);background:var(--primary-glow);border-color:rgba(255,0,0,.15);{% else %}color:var(--muted);{% endif %}">
-        <i data-lucide="users" style="width:15px;height:15px;flex-shrink:0;"></i> My Teams
-    </a>
-    <a href="{% url 'dashboard:find_teammates' %}" style="display:flex;align-items:center;gap:.55rem;padding:.55rem .65rem;font-size:.82rem;font-weight:500;text-decoration:none;border:1px solid transparent;transition:all .15s;margin-bottom:.1rem;{% if current_page == 'find_teammates' %}color:var(--primary);background:var(--primary-glow);border-color:rgba(255,0,0,.15);{% else %}color:var(--muted);{% endif %}">
-        <i data-lucide="user-plus" style="width:15px;height:15px;flex-shrink:0;"></i> Find Teammates
-    </a>
-    <a href="{% url 'dashboard:pending_requests' %}" style="display:flex;align-items:center;gap:.55rem;padding:.55rem .65rem;font-size:.82rem;font-weight:500;text-decoration:none;border:1px solid transparent;transition:all .15s;margin-bottom:.1rem;{% if current_page == 'requests' %}color:var(--primary);background:var(--primary-glow);border-color:rgba(255,0,0,.15);{% else %}color:var(--muted);{% endif %}">
-        <i data-lucide="inbox" style="width:15px;height:15px;flex-shrink:0;"></i> Requests
-        <span class="nav-badge" id="sidebar-notif-badge" style="display:none;margin-left:auto;"></span>
-    </a>
-    <a href="{% url 'dashboard:notifications' %}" style="display:flex;align-items:center;gap:.55rem;padding:.55rem .65rem;font-size:.82rem;font-weight:500;text-decoration:none;border:1px solid transparent;transition:all .15s;margin-bottom:.1rem;{% if current_page == 'notifications' %}color:var(--primary);background:var(--primary-glow);border-color:rgba(255,0,0,.15);{% else %}color:var(--muted);{% endif %}">
-        <i data-lucide="bell" style="width:15px;height:15px;flex-shrink:0;"></i> Notifications
-    </a>
+    <nav style="display:flex;flex-direction:column;gap:0;flex:1;overflow-y:auto;">
+        <a href="{% url 'dashboard:user_dashboard' %}" class="n-sidebar-link {% if current_page == 'overview' %}n-sidebar-link--active{% endif %}">
+            <i data-lucide="layout-dashboard" style="width:15px;height:15px;flex-shrink:0;"></i> Overview
+        </a>
+        <a href="{% url 'dashboard:my_profile' %}" class="n-sidebar-link {% if current_page == 'profile' %}n-sidebar-link--active{% endif %}">
+            <i data-lucide="user" style="width:15px;height:15px;flex-shrink:0;"></i> My Profile
+        </a>
+        <a href="{% url 'dashboard:my_events' %}" class="n-sidebar-link {% if current_page == 'events' %}n-sidebar-link--active{% endif %}">
+            <i data-lucide="calendar" style="width:15px;height:15px;flex-shrink:0;"></i> My Events
+        </a>
+        <a href="{% url 'dashboard:my_teams' %}" class="n-sidebar-link {% if current_page == 'teams' %}n-sidebar-link--active{% endif %}">
+            <i data-lucide="users" style="width:15px;height:15px;flex-shrink:0;"></i> My Teams
+        </a>
+        <a href="{% url 'dashboard:find_teammates' %}" class="n-sidebar-link {% if current_page == 'find_teammates' %}n-sidebar-link--active{% endif %}">
+            <i data-lucide="user-plus" style="width:15px;height:15px;flex-shrink:0;"></i> Find Teammates
+        </a>
+        <a href="{% url 'dashboard:pending_requests' %}" class="n-sidebar-link {% if current_page == 'requests' %}n-sidebar-link--active{% endif %}">
+            <i data-lucide="inbox" style="width:15px;height:15px;flex-shrink:0;"></i> Requests
+            <span class="nav-badge" id="sidebar-notif-badge" style="display:none;margin-left:auto;font-size:.65rem;"></span>
+        </a>
+        <a href="{% url 'dashboard:notifications' %}" class="n-sidebar-link {% if current_page == 'notifications' %}n-sidebar-link--active{% endif %}">
+            <i data-lucide="bell" style="width:15px;height:15px;flex-shrink:0;"></i> Notifications
+        </a>
 
-    <div style="height:1px;background:var(--border);margin:.5rem 0;"></div>
+        <div style="height:1px;background:var(--border);margin:.5rem 0;flex-shrink:0;"></div>
 
-    <a href="{% url 'certificates:my_certificates' %}" style="display:flex;align-items:center;gap:.55rem;padding:.55rem .65rem;font-size:.82rem;font-weight:500;text-decoration:none;border:1px solid transparent;transition:all .15s;margin-bottom:.1rem;{% if current_page == 'certificates' %}color:var(--primary);background:var(--primary-glow);border-color:rgba(255,0,0,.15);{% else %}color:var(--muted);{% endif %}">
-        <i data-lucide="award" style="width:15px;height:15px;flex-shrink:0;"></i> Certificates
-    </a>
-    <a href="{% url 'dashboard:settings' %}" style="display:flex;align-items:center;gap:.55rem;padding:.55rem .65rem;font-size:.82rem;font-weight:500;text-decoration:none;border:1px solid transparent;transition:all .15s;{% if current_page == 'settings' %}color:var(--primary);background:var(--primary-glow);border-color:rgba(255,0,0,.15);{% else %}color:var(--muted);{% endif %}">
-        <i data-lucide="settings" style="width:15px;height:15px;flex-shrink:0;"></i> Settings
-    </a>
+        <a href="{% url 'certificates:my_certificates' %}" class="n-sidebar-link {% if current_page == 'certificates' %}n-sidebar-link--active{% endif %}">
+            <i data-lucide="award" style="width:15px;height:15px;flex-shrink:0;"></i> Certificates
+        </a>
+        <a href="{% url 'dashboard:settings' %}" class="n-sidebar-link {% if current_page == 'settings' %}n-sidebar-link--active{% endif %}">
+            <i data-lucide="settings" style="width:15px;height:15px;flex-shrink:0;"></i> Settings
+        </a>
+    </nav>
 </aside>
 
-<!-- Sidebar JS — auto-injected on every dashboard page -->
+<style>
+.n-sidebar-link {
+    display: flex; align-items: center; gap: .55rem;
+    padding: .55rem .65rem; font-size: .82rem; font-weight: 500;
+    text-decoration: none; border: 1px solid transparent;
+    transition: all .15s; margin-bottom: .1rem; color: var(--muted);
+    border-radius: 2px;
+}
+.n-sidebar-link:hover { color: var(--text); background: var(--surface-2); }
+.n-sidebar-link--active {
+    color: var(--primary) !important;
+    background: var(--primary-glow);
+    border-color: rgba(255,0,0,.15) !important;
+}
+/* Bigger touch targets on mobile */
+@media (max-width: 1024px) {
+    .n-sidebar-link { padding: .7rem .75rem; font-size: .88rem; }
+}
+</style>
+
 <script>
 function openDashSidebar() {
     document.getElementById('n-sidebar')?.classList.add('open');
-    document.getElementById('n-sidebar-overlay')?.classList.add('open');
+    document.getElementById('n-sidebar-overlay').style.display = 'block';
     document.body.style.overflow = 'hidden';
 }
 function closeDashSidebar() {
     document.getElementById('n-sidebar')?.classList.remove('open');
-    document.getElementById('n-sidebar-overlay')?.classList.remove('open');
+    document.getElementById('n-sidebar-overlay').style.display = 'none';
     document.body.style.overflow = '';
 }
 document.addEventListener('DOMContentLoaded', () => {

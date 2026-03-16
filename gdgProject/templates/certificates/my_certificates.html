@@ -1,62 +1,150 @@
 {% extends 'base.html' %}
-
 {% block title %}CampusArena | My Certificates{% endblock %}
 
-{% block content %}
-<section class="section" style="max-width:860px;margin:0 auto;">
-    <div class="section-head reveal">
-        <h1><i data-lucide="award"></i> My Certificates</h1>
-        <p class="muted">Download and share your certificates from events you've participated in.</p>
-    </div>
+{% block extra_css %}
+{% include 'includes/_dash_layout.html' %}
+<style>
+.n-cert-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+}
+.n-cert-card {
+    background: var(--surface);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    transition: background .15s;
+    position: relative;
+    overflow: hidden;
+}
+.n-cert-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--primary);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform .22s var(--ease-smooth);
+}
+.n-cert-card:hover { background: var(--surface-2); }
+.n-cert-card:hover::before { transform: scaleY(1); }
 
-    {% if certificates %}
-    <div class="grid-auto reveal">
-        {% for cert in certificates %}
-        <article class="surface" style="display:flex;flex-direction:column;gap:0.75rem;">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;">
-                <div>
-                    <span class="chip {% if cert.cert_type == 'participation' %}chip-blue{% elif cert.cert_type == 'merit' %}chip-green{% else %}chip-gold{% endif %}"
-                          style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;">
-                        {% if cert.cert_type == 'participation' %}<i data-lucide="check-circle"></i>
-                        {% elif cert.cert_type == 'merit' %}<i data-lucide="star"></i>
-                        {% else %}<i data-lucide="trophy"></i>
+.n-cert-badge {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .2rem .55rem;
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+    font-family: var(--font-mono);
+    border: 1px solid;
+}
+.n-cert-badge.participation {
+    color: var(--primary); border-color: rgba(255,0,0,.25); background: var(--primary-glow);
+}
+.n-cert-badge.merit {
+    color: var(--ok); border-color: rgba(0,230,118,.25); background: var(--ok-soft);
+}
+.n-cert-badge.winner {
+    color: var(--warn); border-color: rgba(255,179,0,.25); background: var(--warn-soft);
+}
+.n-cert-actions { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: auto; }
+
+@media (max-width: 600px) {
+    .n-cert-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% include 'includes/_n_page.html' %}
+
+<div class="n-dash">
+    {% include 'dashboard/_sidebar.html' with current_page='certificates' %}
+
+    <div class="n-dash-content">
+
+        <div class="n-head n-reveal">
+            <div style="display:flex;align-items:center;gap:.5rem;">
+                <button class="n-dash-sidebar-btn" onclick="openDashSidebar()" aria-label="Open menu">
+                    <i data-lucide="menu" style="width:14px;height:14px;"></i> Menu
+                </button>
+                <div class="n-head-l">
+                    <span class="n-num">08</span>
+                    <span class="n-name">Certificates</span>
+                </div>
+            </div>
+            <span style="font-size:.72rem;color:var(--muted);font-family:var(--font-mono);">
+                {{ certificates|length }} certificate{{ certificates|length|pluralize }}
+            </span>
+        </div>
+
+        {% if certificates %}
+        <div class="n-cert-grid n-reveal n-d1">
+            {% for cert in certificates %}
+            <div class="n-cert-card">
+
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;flex-wrap:wrap;">
+                    <span class="n-cert-badge {% if cert.cert_type == 'participation' %}participation{% elif cert.cert_type == 'merit' %}merit{% else %}winner{% endif %}">
+                        {% if cert.cert_type == 'participation' %}
+                            <i data-lucide="check-circle" style="width:11px;height:11px;"></i>
+                        {% elif cert.cert_type == 'merit' %}
+                            <i data-lucide="star" style="width:11px;height:11px;"></i>
+                        {% else %}
+                            <i data-lucide="trophy" style="width:11px;height:11px;"></i>
                         {% endif %}
                         {{ cert.get_cert_type_display }}
                     </span>
+                    <time style="font-size:.68rem;color:var(--muted);font-family:var(--font-mono);white-space:nowrap;">
+                        {{ cert.issued_at|date:"d M Y" }}
+                    </time>
                 </div>
-                <time class="muted" style="font-size:0.78rem;white-space:nowrap;">
-                    {{ cert.issued_at|date:"M d, Y" }}
-                </time>
-            </div>
 
-            <h3 style="margin:0;font-size:1rem;">{{ cert.event.title }}</h3>
-            <p class="muted" style="font-size:0.85rem;margin:0;">
-                <i data-lucide="calendar-days" style="width:13px;height:13px;"></i>
-                {{ cert.event.event_start|date:"N j, Y" }}
-            </p>
+                <div>
+                    <div style="font-size:.95rem;font-weight:700;margin-bottom:.2rem;line-height:1.3;">
+                        {{ cert.event.title }}
+                    </div>
+                    <div style="font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:.3rem;">
+                        <i data-lucide="calendar" style="width:11px;height:11px;flex-shrink:0;"></i>
+                        {{ cert.event.event_start|date:"N j, Y" }}
+                    </div>
+                </div>
 
-            <div style="display:flex;gap:0.5rem;margin-top:auto;flex-wrap:wrap;">
-                <a href="{% url 'certificates:download' cert.id %}" class="btn-primary btn-small">
-                    <i data-lucide="download"></i> Download PDF
-                </a>
-                <a href="{% url 'certificates:verify' cert.verification_token %}"
-                   class="btn-secondary btn-small" target="_blank" rel="noopener">
-                    <i data-lucide="shield-check"></i> Verify
-                </a>
+                <div class="n-cert-actions">
+                    <a href="{% url 'certificates:download' cert.id %}"
+                       style="display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .85rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;transition:background .15s;font-family:var(--font);">
+                        <i data-lucide="download" style="width:12px;height:12px;"></i> Download
+                    </a>
+                    <a href="{% url 'certificates:verify' cert.verification_token %}"
+                       target="_blank" rel="noopener"
+                       style="display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .85rem;background:transparent;color:var(--muted);border:1px solid var(--border);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;transition:all .15s;font-family:var(--font);"
+                       onmouseover="this.style.borderColor='var(--border-hover)';this.style.color='var(--text)'"
+                       onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+                        <i data-lucide="shield-check" style="width:12px;height:12px;"></i> Verify
+                    </a>
+                </div>
+
             </div>
-        </article>
-        {% endfor %}
-    </div>
-    {% else %}
-    <article class="surface reveal">
-        <div class="empty-state">
-            <i data-lucide="award"></i>
-            <p>No certificates yet. Participate in events that offer certificates to earn them.</p>
-            <a href="{% url 'events:home' %}" class="btn-primary btn-small">
-                <i data-lucide="compass"></i> Browse Events
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <div style="border:1px solid var(--border);padding:3.5rem 2rem;text-align:center;color:var(--muted);" class="n-reveal n-d1">
+            <i data-lucide="award" style="width:36px;height:36px;opacity:.3;display:block;margin:0 auto .75rem;"></i>
+            <div style="font-size:.95rem;font-weight:600;margin-bottom:.4rem;color:var(--text);">No certificates yet</div>
+            <div style="font-size:.85rem;margin-bottom:1.25rem;">
+                Participate in events that offer certificates to earn them.
+            </div>
+            <a href="{% url 'events:home' %}"
+               style="display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.25rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;font-family:var(--font);">
+                <i data-lucide="compass" style="width:13px;height:13px;"></i> Browse Events
             </a>
         </div>
-    </article>
-    {% endif %}
-</section>
+        {% endif %}
+
+    </div>
+</div>
 {% endblock %}
