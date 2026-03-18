@@ -30,10 +30,7 @@ urlpatterns = [
     path("checkin/", include("checkin.urls")),
 
     # ── [E6] OAuth (Google / GitHub) via django-allauth ───────────────────────
-    # Only the social-account URLs are included here so allauth's own login/logout
-    # pages don't conflict with our custom auth views at /auth/*.
-    # Social callback URLs will be at /auth/social/<provider>/login/callback/.
-    path("auth/social/", include("allauth.socialaccount.urls")),
+    path("accounts/", include("allauth.urls")),
 
     # ── [E7] PWA ──────────────────────────────────────────────────────────────
     path(

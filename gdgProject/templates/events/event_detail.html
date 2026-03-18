@@ -164,6 +164,12 @@
         <a href="{% url 'registration:register_event' event.id %}" style="width:100%;padding:.8rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:.4rem;">
             <i data-lucide="pen-line" style="width:13px;height:13px;"></i> Register Now
         </a>
+        {% if event.participation_type != 'individual' %}
+        <div style="font-size:.68rem;color:var(--muted);text-align:center;margin-top:.5rem;font-family:var(--font-mono);">
+            Team size: {{ event.min_team_size }}–{{ event.max_team_size }} members
+        </div>
+        {% endif %}
+
         {% else %}
         <button disabled style="width:100%;padding:.8rem;background:var(--surface-3);color:var(--muted);border:1px solid var(--border);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:not-allowed;">
             {{ event.get_status_display }}
@@ -175,7 +181,8 @@
             <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);font-family:var(--font-mono);margin-bottom:.4rem;">
                 <span>{{ event.registered_count }} registered</span><span>{{ event.capacity }} max</span>
             </div>
-            <div class="n-pb"><div class="n-pb-fill" style="width:{% widthratio event.registered_count event.capacity 100 %}%;"></div></div>
+            {% widthratio event.registered_count event.capacity 100 as fill_pct %}
+            <div class="n-pb"><div class="n-pb-fill" style="width: 0%;" data-progress="{{ fill_pct }}"></div></div>
         </div>
 
         <!-- Countdown -->
@@ -231,6 +238,8 @@ document.querySelectorAll('[data-deadline]').forEach(el=>{
     };
     t();setInterval(t,1000);
 });
+// Progress
+document.querySelectorAll('[data-progress]').forEach(el=>el.style.width=el.dataset.progress+'%');
 if(window.lucide)lucide.createIcons();
 </script>
 {% endblock %}

@@ -22,7 +22,7 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 CACHES["default"]["BACKEND"] = "django.core.cache.backends.locmem.LocMemCache"  # noqa: F405
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
+CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:5600", "http://127.0.0.1:5600"]
 
 # ─── Database — MySQL with automatic SQLite fallback ─────────────────────────
 def _mysql_reachable(host: str, port: int, timeout: float = 1.0) -> bool:

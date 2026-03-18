@@ -183,6 +183,7 @@
 .n-filters { display: flex; flex-wrap: wrap; gap: .3rem; }
 .n-chip {
     padding: .3rem .75rem; border: 1px solid var(--border);
+    background: transparent;
     color: var(--muted); font-size: .75rem; font-weight: 600;
     cursor: pointer; transition: all .15s; text-decoration: none;
     display: inline-block; letter-spacing: .03em;
@@ -556,7 +557,8 @@
                     </div>
                     <div class="n-progress">
                         <div class="n-progress-bar">
-                            <div class="n-progress-fill" style="width:{% widthratio ev.registered_count ev.capacity 100 %}%;"></div>
+                            {% widthratio ev.registered_count ev.capacity 100 as f_pct %}
+                            <div class="n-progress-fill" style="width: 0%;" data-progress="{{ f_pct }}"></div>
                         </div>
                         <div class="n-progress-label">
                             <span>{{ ev.registered_count }} registered</span>
@@ -591,26 +593,24 @@
                 <span class="n-section-number">01</span>
                 <span class="n-section-name">All Events</span>
             </div>
-            <form method="GET" action="" id="filter-form" style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
-                {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
-                <div class="n-filters">
-                    <a href="?{% if q %}q={{ q }}&{% endif %}sort={{ active_sort }}" class="n-chip {% if not active_category %}active{% endif %}">All</a>
+            <div id="filter-controls" style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                <div class="n-filters" id="category-filters">
+                    <button type="button" class="n-chip active" data-category="">All</button>
                     {% for val, label in categories %}
-                    <a href="?{% if q %}q={{ q }}&{% endif %}category={{ val }}&sort={{ active_sort }}" class="n-chip {% if active_category == val %}active{% endif %}">{{ label }}</a>
+                    <button type="button" class="n-chip" data-category="{{ val }}">{{ label }}</button>
                     {% endfor %}
                 </div>
                 <div class="n-sort">
-                    {% if active_category %}<input type="hidden" name="category" value="{{ active_category }}">{% endif %}
-                    <select name="sort" onchange="this.form.submit()">
-                        <option value="newest"   {% if active_sort == 'newest'   %}selected{% endif %}>Newest</option>
-                        <option value="deadline" {% if active_sort == 'deadline' %}selected{% endif %}>Deadline</option>
-                        <option value="popular"  {% if active_sort == 'popular'  %}selected{% endif %}>Popular</option>
+                    <select id="sort-select">
+                        <option value="newest">Newest</option>
+                        <option value="deadline">Deadline</option>
+                        <option value="popular">Popular</option>
                     </select>
                 </div>
-            </form>
+            </div>
         </div>
 
-        <div class="n-card-grid">
+        <div class="n-card-grid" id="events-grid">
             {% for event in event_grid %}
             <article class="n-ev-card">
                 <div class="n-ev-cat">{{ event.get_category_display }}</div>
@@ -621,8 +621,9 @@
                     <span class="n-ev-tag"><i data-lucide="users"></i>{{ event.get_participation_type_display }}</span>
                 </div>
                 <div class="n-ev-progress">
-                    <div class="n-ev-bar"><div class="n-ev-bar-fill" style="width:{% widthratio event.registered_count event.capacity 100 %}%;"></div></div>
-                    <div class="n-ev-bar-label"><span>{{ event.registered_count }}/{{ event.capacity }}</span><span>{% widthratio event.registered_count event.capacity 100 %}%</span></div>
+                    {% widthratio event.registered_count event.capacity 100 as g_pct %}
+                    <div class="n-ev-bar"><div class="n-ev-bar-fill" style="width: 0%;" data-progress="{{ g_pct }}"></div></div>
+                    <div class="n-ev-bar-label"><span>{{ event.registered_count }}/{{ event.capacity }}</span><span>{{ g_pct }}%</span></div>
                 </div>
                 <div class="n-ev-footer">
                     <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
@@ -793,18 +794,135 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    /* ── Live search ───────────────────────────────────────────── */
-    const searchInput = document.getElementById('event-search');
-    const cards = document.querySelectorAll('.n-ev-card');
-    if (searchInput && cards.length) {
+    /* ══════════════════════════════════════════════════════════════
+       AJAX FILTERING — no page reload
+       ══════════════════════════════════════════════════════════════ */
+    const grid         = document.getElementById('events-grid');
+    const catBtns      = document.querySelectorAll('#category-filters .n-chip');
+    const sortSelect   = document.getElementById('sort-select');
+    const searchInput  = document.getElementById('event-search');
+
+    let activeCategory = '';
+    let activeSort     = 'newest';
+    let searchTimer    = null;
+
+    function statusClass(status) {
+        if (status === 'registration_open')  return 'open';
+        if (status === 'completed' || status === 'registration_closed') return 'closed';
+        return 'other';
+    }
+
+    function renderCards(events) {
+        if (!events.length) {
+            grid.innerHTML = '<div style="grid-column:1/-1;padding:3rem;text-align:center;color:var(--muted);font-size:.88rem;border-bottom:1px solid var(--border);">No events found. Try adjusting your filters.</div>';
+            return;
+        }
+        grid.innerHTML = events.map(ev => {
+            const dateRange = ev.event_end ? `${ev.event_start}→${ev.event_end}` : ev.event_start;
+            const isClosed = ev.status === 'completed' || ev.status === 'registration_closed';
+            const ctaHtml = isClosed
+                ? `<span class="n-ev-cta-closed">Closed</span>`
+                : `<a href="/events/${ev.id}/" class="n-ev-cta">Register <i data-lucide="arrow-right" style="width:11px;height:11px;"></i></a>`;
+            const prizeHtml = ev.prize_pool ? `<span class="n-ev-prize">₹${ev.prize_pool}</span>` : '';
+            return `<article class="n-ev-card">
+                <div class="n-ev-cat">${ev.category_display}</div>
+                <h3 class="n-ev-title">${ev.title}</h3>
+                <div class="n-ev-meta">
+                    <span class="n-ev-tag"><i data-lucide="calendar"></i>${dateRange}</span>
+                    <span class="n-ev-tag"><i data-lucide="radio"></i>${ev.mode_display}</span>
+                    <span class="n-ev-tag"><i data-lucide="users"></i>${ev.participation_type_display}</span>
+                </div>
+                <div class="n-ev-progress">
+                    <div class="n-ev-bar"><div class="n-ev-bar-fill" style="width:${ev.fill_pct}%;"></div></div>
+                    <div class="n-ev-bar-label"><span>${ev.registered_count}/${ev.capacity}</span><span>${ev.fill_pct}%</span></div>
+                </div>
+                <div class="n-ev-footer">
+                    <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
+                        <span class="n-ev-status ${statusClass(ev.status)}">${ev.status_display}</span>
+                        ${prizeHtml}
+                    </div>
+                    ${ctaHtml}
+                </div>
+            </article>`;
+        }).join('');
+
+        // Re-initialize Lucide icons for dynamically added elements
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function showLoadingSkeleton() {
+        const skeletons = Array.from({length: 6}, () =>
+            `<article class="n-ev-card" style="opacity:.4;animation:pulse 1.2s ease-in-out infinite;">
+                <div class="n-ev-cat" style="width:60%;height:10px;background:var(--border);"></div>
+                <h3 class="n-ev-title" style="width:80%;height:14px;background:var(--border);margin:.4rem 0;"></h3>
+                <div style="width:100%;height:8px;background:var(--border);margin:.3rem 0;"></div>
+                <div style="width:45%;height:8px;background:var(--border);"></div>
+            </article>`
+        ).join('');
+        grid.innerHTML = skeletons;
+    }
+
+    async function fetchEvents() {
+        const params = new URLSearchParams();
+        if (activeCategory) params.set('category', activeCategory);
+        if (activeSort && activeSort !== 'newest') params.set('sort', activeSort);
+        const q = searchInput ? searchInput.value.trim() : '';
+        if (q) params.set('q', q);
+
+        showLoadingSkeleton();
+
+        try {
+            const res = await fetch(`/api/events/?${params.toString()}`);
+            const data = await res.json();
+            renderCards(data.events);
+        } catch (err) {
+            console.error('Failed to fetch events:', err);
+            grid.innerHTML = '<div style="grid-column:1/-1;padding:3rem;text-align:center;color:var(--danger);font-size:.88rem;">Failed to load events. Please try again.</div>';
+        }
+    }
+
+    /* ── Category chip clicks ─────────────────────────────────── */
+    catBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            catBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeCategory = btn.dataset.category;
+            fetchEvents();
+        });
+    });
+
+    /* ── Sort dropdown ─────────────────────────────────────────── */
+    sortSelect.addEventListener('change', () => {
+        activeSort = sortSelect.value;
+        fetchEvents();
+    });
+
+    /* ── Live search (debounced) ───────────────────────────────── */
+    if (searchInput) {
         searchInput.addEventListener('input', () => {
-            const q = searchInput.value.trim().toLowerCase();
-            cards.forEach(c => { c.style.display = (!q || c.textContent.toLowerCase().includes(q)) ? '' : 'none'; });
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(fetchEvents, 300);
+        });
+
+        // Prevent form submission (page reload) on Enter
+        searchInput.closest('form')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            fetchEvents();
         });
     }
+
+    /* ── Data-progress initialization ──────────────────────────── */
+    document.querySelectorAll('[data-progress]').forEach(el => el.style.width = el.dataset.progress + '%');
 
     /* ── Lucide icons ──────────────────────────────────────────── */
     if (window.lucide) lucide.createIcons();
 });
 </script>
+
+<style>
+@keyframes pulse {
+    0%, 100% { opacity: .4; }
+    50% { opacity: .15; }
+}
+</style>
 {% endblock %}

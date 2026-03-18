@@ -2,23 +2,127 @@
 {% block title %}CampusArena | Register — {{ event.title }}{% endblock %}
 {% block extra_css %}
 <style>
-.main-content{max-width:680px!important}
-.n-card{background:var(--surface);border:1px solid var(--border);padding:1.25rem;margin-bottom:1px}
-.n-card-head{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;display:flex;align-items:center;gap:.4rem}
-.n-card-head i{width:12px;height:12px;color:var(--primary)}
-.n-f label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.38rem}
-.n-f{margin-bottom:.75rem}
-.n-i{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font);font-size:.88rem;padding:.65rem .9rem;border-radius:0;outline:none;transition:border-color .15s}
-.n-i:focus{border-color:var(--primary)}
-.n-g2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
-.n-radio{display:flex;flex-direction:column;gap:.4rem}
-.n-radio label{display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem;border:1px solid var(--border);cursor:pointer;font-size:.85rem;font-weight:500;transition:all .15s}
-.n-radio label:hover{border-color:var(--border-hover)}
-.n-radio input[type=radio]:checked+span{color:var(--primary)}
-.n-radio label:has(input:checked){border-color:var(--primary);background:var(--primary-glow)}
-.n-sk{padding:.3rem .7rem;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;letter-spacing:.04em;transition:all .15s;font-family:var(--font)}
-.n-sk.on{border-color:var(--primary);color:var(--primary);background:var(--primary-glow)}
-@media(max-width:600px){.n-g2{grid-template-columns:1fr}}
+    .main-content {
+        max-width: 680px !important
+    }
+
+    .n-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 1.25rem;
+        margin-bottom: 1px
+    }
+
+    .n-card-head {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: .4rem
+    }
+
+    .n-card-head i {
+        width: 12px;
+        height: 12px;
+        color: var(--primary)
+    }
+
+    .n-f label {
+        display: block;
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: .38rem
+    }
+
+    .n-f {
+        margin-bottom: .75rem
+    }
+
+    .n-i {
+        width: 100%;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--font);
+        font-size: .88rem;
+        padding: .65rem .9rem;
+        border-radius: 0;
+        outline: none;
+        transition: border-color .15s
+    }
+
+    .n-i:focus {
+        border-color: var(--primary)
+    }
+
+    .n-g2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem
+    }
+
+    .n-radio {
+        display: flex;
+        flex-direction: column;
+        gap: .4rem
+    }
+
+    .n-radio label {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding: .55rem .75rem;
+        border: 1px solid var(--border);
+        cursor: pointer;
+        font-size: .85rem;
+        font-weight: 500;
+        transition: all .15s
+    }
+
+    .n-radio label:hover {
+        border-color: var(--border-hover)
+    }
+
+    .n-radio input[type=radio]:checked+span {
+        color: var(--primary)
+    }
+
+    .n-radio label:has(input:checked) {
+        border-color: var(--primary);
+        background: var(--primary-glow)
+    }
+
+    .n-sk {
+        padding: .3rem .7rem;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--muted);
+        font-size: .72rem;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: .04em;
+        transition: all .15s;
+        font-family: var(--font)
+    }
+
+    .n-sk.on {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-glow)
+    }
+
+    @media(max-width:600px) {
+        .n-g2 {
+            grid-template-columns: 1fr
+        }
+    }
 </style>
 {% endblock %}
 {% block content %}
@@ -26,16 +130,20 @@
 
 <div class="n-head n-reveal" style="margin-bottom:1.5rem;">
     <div>
-        <div style="font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.3rem;">REGISTRATION</div>
+        <div
+            style="font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.3rem;">
+            REGISTRATION</div>
         <div style="font-size:1.1rem;font-weight:800;letter-spacing:-.02em;">{{ event.title }}</div>
     </div>
-    <a href="{% url 'events:event_detail' event.id %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;">
+    <a href="{% url 'events:event_detail' event.id %}"
+        style="display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;">
         <i data-lucide="arrow-left" style="width:12px;height:12px;"></i> Back
     </a>
 </div>
 
 {% if messages %}{% for message in messages %}
-<div style="display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:.85rem;border:1px solid;background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger);" class="n-reveal">
+<div style="display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:.85rem;border:1px solid;background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger);"
+    class="n-reveal">
     <i data-lucide="alert-circle" style="width:14px;height:14px;"></i>{{ message }}
 </div>
 {% endfor %}{% endif %}
@@ -48,7 +156,9 @@
     <div class="n-card n-reveal">
         <div class="n-card-head"><i data-lucide="list-checks"></i> 01 — Participation Type</div>
         <div class="n-radio">
-            <label><input type="radio" name="type" value="individual" {% if form_data.type != 'create_team' and form_data.type != 'join_team' %}checked{% endif %}><span>Register as Individual</span></label>
+            {% if event.participation_type != 'team' %}
+            <label><input type="radio" name="type" value="individual" {% if form_data.type == 'individual' %}checked{% endif %}><span>Register as Individual</span></label>
+            {% endif %}
             {% if event.participation_type != 'individual' %}
             <label><input type="radio" name="type" value="create_team" {% if form_data.type == 'create_team' %}checked{% endif %}><span>Create a New Team</span></label>
             <label><input type="radio" name="type" value="join_team" {% if form_data.type == 'join_team' %}checked{% endif %}><span>Join an Existing Team</span></label>
@@ -56,25 +166,33 @@
         </div>
     </div>
 
-    <!-- Step 2: Personal -->
+    <!-- Step 1: Personal -->
     <div class="n-card n-reveal" style="margin-top:1px;">
         <div class="n-card-head"><i data-lucide="user-circle"></i> 02 — Personal Information</div>
         <div class="n-g2">
-            <div class="n-f"><label>Full Name</label><input class="n-i" type="text" name="full_name" placeholder="Full Name" value="{{ form_data.full_name|default:request.user.get_full_name }}" required></div>
-            <div class="n-f"><label>Email</label><input class="n-i" type="email" name="email" placeholder="Email" value="{{ form_data.email|default:request.user.email }}" required></div>
-            <div class="n-f"><label>Phone</label><input class="n-i" type="tel" name="phone" placeholder="Phone" value="{{ form_data.phone|default:'' }}"></div>
-            <div class="n-f"><label>College</label><input class="n-i" type="text" name="college" placeholder="College" value="{{ form_data.college|default:'' }}"></div>
-            <div class="n-f"><label>Branch</label><input class="n-i" type="text" name="branch" placeholder="Branch" value="{{ form_data.branch|default:'' }}"></div>
-            <div class="n-f"><label>Year</label><input class="n-i" type="text" name="year" placeholder="Year of study" value="{{ form_data.year|default:'' }}"></div>
+            <div class="n-f"><label>Full Name</label><input class="n-i" type="text" name="full_name"
+                    placeholder="Full Name" value="{{ form_data.full_name|default:request.user.get_full_name }}"
+                    required></div>
+            <div class="n-f"><label>Email</label><input class="n-i" type="email" name="email" placeholder="Email"
+                    value="{{ form_data.email|default:request.user.email }}" required></div>
+            <div class="n-f"><label>Phone</label><input class="n-i" type="tel" name="phone" placeholder="Phone"
+                    value="{{ form_data.phone|default:'' }}"></div>
+            <div class="n-f"><label>College</label><input class="n-i" type="text" name="college" placeholder="College"
+                    value="{{ form_data.college|default:'' }}"></div>
+            <div class="n-f"><label>Branch</label><input class="n-i" type="text" name="branch" placeholder="Branch"
+                    value="{{ form_data.branch|default:'' }}"></div>
+            <div class="n-f"><label>Year</label><input class="n-i" type="text" name="year" placeholder="Year of study"
+                    value="{{ form_data.year|default:'' }}"></div>
         </div>
     </div>
 
-    <!-- Step 3: Skills -->
+    <!-- Step 2: Skills -->
     <div class="n-card n-reveal" style="margin-top:1px;">
         <div class="n-card-head"><i data-lucide="cpu"></i> 03 — Skills & Role</div>
         <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.85rem;" id="sk-chips">
             {% for skill in skills %}
-            <button type="button" class="n-sk {% if skill in form_data.skills|default:'' %}on{% endif %}" data-s="{{ skill }}">{{ skill }}</button>
+            <button type="button" class="n-sk {% if skill in form_data.skills|default:'' %}on{% endif %}"
+                data-s="{{ skill }}">{{ skill }}</button>
             {% endfor %}
         </div>
         <div class="n-f">
@@ -85,12 +203,13 @@
             </select>
         </div>
         <label style="display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:var(--muted);cursor:pointer;">
-            <input type="checkbox" name="looking_for_team" {% if form_data.looking_for_team %}checked{% endif %} style="accent-color:var(--primary);">
+            <input type="checkbox" name="looking_for_team" {% if form_data.looking_for_team %}checked{% endif %}
+                style="accent-color:var(--primary);">
             Show my registration in the "Looking for Team" list
         </label>
     </div>
 
-    <!-- Step 4: Custom fields -->
+    <!-- Step 3: Custom fields -->
     {% if custom_fields %}
     <div class="n-card n-reveal" style="margin-top:1px;">
         <div class="n-card-head"><i data-lucide="file-text"></i> 04 — Additional Details</div>
@@ -99,11 +218,16 @@
             <div class="n-f">
                 <label>{{ field.field_label }}{% if field.is_required %} *{% endif %}</label>
                 {% if field.field_type == 'textarea' %}
-                <textarea class="n-i" name="custom_{{ field.pk }}" rows="3" placeholder="{{ field.placeholder }}"></textarea>
+                <textarea class="n-i" name="custom_{{ field.pk }}" rows="3"
+                    placeholder="{{ field.placeholder }}"></textarea>
                 {% elif field.field_type == 'dropdown' or field.field_type == 'radio' %}
-                <select class="n-i" name="custom_{{ field.pk }}"><option value="">Select {{ field.field_label }}</option>{% for opt in field.field_options %}<option>{{ opt }}</option>{% endfor %}</select>
+                <select class="n-i" name="custom_{{ field.pk }}">
+                    <option value="">Select {{ field.field_label }}</option>{% for opt in field.field_options %}<option>
+                        {{ opt }}</option>{% endfor %}
+                </select>
                 {% else %}
-                <input class="n-i" type="text" name="custom_{{ field.pk }}" placeholder="{{ field.placeholder|default:field.field_label }}">
+                <input class="n-i" type="text" name="custom_{{ field.pk }}"
+                    placeholder="{{ field.placeholder|default:field.field_label }}">
                 {% endif %}
             </div>
             {% endfor %}
@@ -111,33 +235,60 @@
     </div>
     {% endif %}
 
-    <!-- Step 5: Team -->
+    <!-- Team specific fields (Toggled via JS) -->
     {% if event.participation_type != 'individual' %}
-    <div class="n-card n-reveal" style="margin-top:1px;">
-        <div class="n-card-head"><i data-lucide="users"></i> 05 — Team Details</div>
-        <div class="n-g2">
-            <div class="n-f"><label>New Team Name</label><input class="n-i" type="text" name="team_name" placeholder="Team name" value="{{ form_data.team_name|default:'' }}"></div>
-            <div class="n-f">
-                <label>Join Existing Team</label>
-                <select class="n-i" name="team_id">
-                    <option value="">Choose an open team</option>
-                    {% for team in open_teams %}<option value="{{ team.pk }}" {% if form_data.team_id == team.pk|stringformat:'s' %}selected{% endif %}>{{ team.name }} ({{ team.current_members }}/{{ event.max_team_size }})</option>{% endfor %}
-                </select>
-            </div>
+    <div id="create-team-fields" class="n-card n-reveal" style="margin-top:1px; display:none;">
+        <div class="n-card-head"><i data-lucide="users"></i> {% if custom_fields %}05{% else %}04{% endif %} — Create Team</div>
+        <div class="n-f" style="max-width:320px;">
+            <label>New Team Name</label>
+            <input class="n-i" type="text" name="team_name" id="input-create-team" placeholder="Team name" value="{{ form_data.team_name|default:'' }}">
+        </div>
+    </div>
+    <div id="join-team-fields" class="n-card n-reveal" style="margin-top:1px; display:none;">
+        <div class="n-card-head"><i data-lucide="users"></i> {% if custom_fields %}05{% else %}04{% endif %} — Join Team</div>
+        <div class="n-f" style="max-width:320px;">
+            <label>Select Team</label>
+            <select class="n-i" name="team_id" id="input-join-team">
+                <option value="" disabled {% if not form_data.team_id %}selected{% endif %}>Choose an open team</option>
+                {% for team in open_teams %}<option value="{{ team.pk }}" {% if form_data.team_id == team.pk|stringformat:'s' %}selected{% endif %}>{{ team.name }} ({{ team.current_members }}/{{ event.max_team_size }})</option>{% endfor %}
+            </select>
         </div>
     </div>
     {% endif %}
 
-    <button type="submit" style="display:flex;align-items:center;justify-content:center;gap:.4rem;width:100%;margin-top:1rem;padding:.85rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;" class="n-reveal">
+    <button type="submit"
+        style="display:flex;align-items:center;justify-content:center;gap:.4rem;width:100%;margin-top:1rem;padding:.85rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;"
+        class="n-reveal">
         <i data-lucide="check-circle" style="width:14px;height:14px;"></i> Submit Registration
     </button>
 </form>
 <script>
-document.querySelectorAll('.n-sk').forEach(b=>{
-    b.addEventListener('click',()=>{
-        b.classList.toggle('on');
-        document.getElementById('sk-hidden').value=[...document.querySelectorAll('.n-sk.on')].map(x=>x.dataset.s).join(',');
+    function updateTeamFields() {
+        const typeInput = document.querySelector('input[name="type"]:checked');
+        if(!typeInput) return;
+        const type = typeInput.value;
+        const createCard = document.getElementById('create-team-fields');
+        const joinCard = document.getElementById('join-team-fields');
+        const createInput = document.getElementById('input-create-team');
+        const joinInput = document.getElementById('input-join-team');
+        
+        if(createCard) {
+            createCard.style.display = (type === 'create_team') ? 'block' : 'none';
+            if(createInput) createInput.required = (type === 'create_team');
+        }
+        if(joinCard) {
+            joinCard.style.display = (type === 'join_team') ? 'block' : 'none';
+            if(joinInput) joinInput.required = (type === 'join_team');
+        }
+    }
+    document.querySelectorAll('input[name="type"]').forEach(e => e.addEventListener('change', updateTeamFields));
+    updateTeamFields();
+
+    document.querySelectorAll('.n-sk').forEach(b => {
+        b.addEventListener('click', () => {
+            b.classList.toggle('on');
+            document.getElementById('sk-hidden').value = [...document.querySelectorAll('.n-sk.on')].map(x => x.dataset.s).join(',');
+        });
     });
-});
 </script>
 {% endblock %}

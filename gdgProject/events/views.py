@@ -3,25 +3,24 @@ import logging
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from .models import Event, EventCategory, EventStatus
+from .models import Event, EventCategory, EventMode, EventStatus
 
 logger = logging.getLogger(__name__)
 
 
-def home(request):
-    """Event listing page with filtering and featured carousel."""
+def _build_event_queryset(params):
+    """Build a filtered/sorted queryset from request params (shared by page & API)."""
     now = timezone.now()
-
-    category = request.GET.get("category", "")
-    mode = request.GET.get("mode", "")
-    status_filter = request.GET.get("status", "")
-    search = request.GET.get("q", "")
-
-    sort = request.GET.get("sort", "newest")
+    category = params.get("category", "")
+    mode = params.get("mode", "")
+    status_filter = params.get("status", "")
+    search = params.get("q", "")
+    sort = params.get("sort", "newest")
 
     base_qs = Event.objects.filter(
         status__in=[
@@ -59,13 +58,51 @@ def home(request):
             Q(title__icontains=search) | Q(description__icontains=search)
         )
 
-    # Apply sort
     if sort == "deadline":
-        event_grid = grid_qs.order_by("registration_end")[:24]
+        grid_qs = grid_qs.order_by("registration_end")
     elif sort == "popular":
-        event_grid = grid_qs.order_by("-registered_count")[:24]
-    else:  # newest (default)
-        event_grid = grid_qs.order_by("-event_start")[:24]
+        grid_qs = grid_qs.order_by("-registered_count")
+    else:
+        grid_qs = grid_qs.order_by("-event_start")
+
+    return grid_qs, base_qs
+
+
+def events_api(request):
+    """Return filtered events as JSON for AJAX requests."""
+    grid_qs, _ = _build_event_queryset(request.GET)
+    events = grid_qs[:50]
+
+    data = []
+    for ev in events:
+        data.append({
+            "id": ev.id,
+            "title": ev.title,
+            "category": ev.category,
+            "category_display": ev.get_category_display(),
+            "mode_display": ev.get_mode_display(),
+            "participation_type_display": ev.get_participation_type_display(),
+            "status": ev.status,
+            "status_display": ev.get_status_display(),
+            "event_start": ev.event_start.strftime("%d %b"),
+            "event_end": ev.event_end.strftime("%d %b") if ev.event_end and ev.event_end.date() != ev.event_start.date() else "",
+            "registered_count": ev.registered_count,
+            "capacity": ev.capacity,
+            "fill_pct": round(ev.registered_count / ev.capacity * 100) if ev.capacity else 0,
+            "prize_pool": str(int(ev.prize_pool)) if ev.prize_pool else "",
+        })
+
+    return JsonResponse({"events": data})
+
+
+def home(request):
+    """Event listing page with filtering and featured carousel."""
+    search = request.GET.get("q", "")
+    category = request.GET.get("category", "")
+    sort = request.GET.get("sort", "newest")
+
+    grid_qs, base_qs = _build_event_queryset(request.GET)
+    event_grid = grid_qs[:24]
 
     featured_events = base_qs.filter(is_featured=True).order_by("-event_start")[:6]
     if not featured_events.exists():
@@ -77,7 +114,6 @@ def home(request):
         {
             "featured_events": featured_events,
             "event_grid": event_grid,
-            # Keys that match the template
             "q": search,
             "active_category": category,
             "active_sort": sort,

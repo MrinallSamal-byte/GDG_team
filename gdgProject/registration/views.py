@@ -231,6 +231,24 @@ def register_event(request, event_id):
         )
 
     if request.method == "GET":
+        initial_type = request.GET.get("type", "")
+        # Validate initial_type to prevent mismatch
+        if event.participation_type == "individual":
+            initial_type = "individual"
+        elif event.participation_type == "team" and initial_type not in ("create_team", "join_team"):
+            initial_type = "create_team" # Default for team events
+        elif not initial_type:
+            initial_type = "individual"
+
+        profile = _get_or_create_profile(request.user)
+        form_data = {
+            "type": initial_type,
+            "phone": profile.phone or "",
+            "college": profile.college or "",
+            "branch": profile.branch or "",
+            "year": str(profile.year) if profile.year else "",
+        }
+
         return render(
             request,
             "registration/register_event.html",
@@ -240,7 +258,7 @@ def register_event(request, event_id):
                 "skills": _SKILLS,
                 "custom_fields": custom_fields,
                 "open_teams": open_teams,
-                "form_data": {},
+                "form_data": form_data,
             },
         )
 

@@ -80,7 +80,7 @@ def login_view(request):
                 password=password,
             )
             UserProfile.objects.create(user=user)
-            login(request, user)
+            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             logger.info("Quick signup completed for user %d (%s)", user.pk, email)
             messages.success(
                 request,
@@ -104,7 +104,7 @@ def login_view(request):
             pass
 
         if user is not None:
-            login(request, user)
+            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             if request.POST.get("remember"):
                 request.session.set_expiry(60 * 60 * 24 * 30)
             else:
@@ -201,7 +201,7 @@ def register_view(request):
             skills=skills,
         )
 
-        login(request, user)
+        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
         messages.success(
             request,
             f"Welcome to CampusArena, {user.first_name}! "
