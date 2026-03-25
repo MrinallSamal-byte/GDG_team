@@ -1,6 +1,7 @@
 import logging
 import random
 import time
+from urllib import request
 
 from django.conf import settings
 from django.contrib import messages
@@ -18,7 +19,9 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.shortcuts import redirect, render
 from django.utils.encoding import force_bytes, force_str
+# from django.utils.http import urlsafe_base64_decode, urlsafe
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+# from urllib3 import requestbase64_encode
 from django.views.decorators.http import require_http_methods
 
 from .models import UserProfile
@@ -80,7 +83,8 @@ def login_view(request):
                 password=password,
             )
             UserProfile.objects.create(user=user)
-            login(request, user)
+            # login(request, user)
+            login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             logger.info("Quick signup completed for user %d (%s)", user.pk, email)
             messages.success(
                 request,
@@ -192,16 +196,29 @@ def register_view(request):
         except (ValueError, TypeError):
             pass
 
-        UserProfile.objects.create(
-            user=user,
-            phone=phone,
-            college=college,
-            branch=branch,
-            year=year_int,
-            skills=skills,
-        )
+        # UserProfile.objects.create(
+        #     user=user,
+        #     phone=phone,
+        #     college=college,
+        #     branch=branch,
+        #     year=year_int,
+        #     skills=skills,
+        # )
 
-        login(request, user)
+        # login(request, user)
+
+        UserProfile.objects.create(
+        user=user,
+        phone=phone,
+        college=college,
+        branch=branch,
+        year=year_int,
+        skills=skills,
+        
+    )
+
+        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+
         messages.success(
             request,
             f"Welcome to CampusArena, {user.first_name}! "
