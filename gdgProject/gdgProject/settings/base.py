@@ -86,7 +86,7 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "core.middleware.ErrorHandlerMiddleware",
+    # "core.middleware.ErrorHandlerMiddleware",
 ]
 
 ROOT_URLCONF = "gdgProject.urls"

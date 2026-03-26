@@ -17,6 +17,10 @@ gunicorn>=22.0
 Pillow>=10.0
 
 # ── Database ──────────────────────────────────────────────────────────────────
+<<<<<<< HEAD
+# PostgreSQL only on Vercel (Neon / Supabase)
+=======
+>>>>>>> 9705e68b213dcf9391b04f5dc7681dc78ab058d8
 psycopg2-binary>=2.9
 dj-database-url>=2.1
 
@@ -47,8 +51,11 @@ qrcode[pil]>=7.4
 
 # ── OAuth ─────────────────────────────────────────────────────────────────────
 django-allauth>=0.61
+<<<<<<< HEAD
+=======
 
 # ── Cryptographic dependencies (required by allauth token/PKCE flows + psycopg2 SSL) ──
 PyJWT>=2.8
 cryptography>=41.0
 cffi>=1.16
+>>>>>>> 9705e68b213dcf9391b04f5dc7681dc78ab058d8
