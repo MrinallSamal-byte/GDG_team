@@ -134,21 +134,28 @@ class TeamJoinRequestService:
             },
         )
 
-        # Defer notification to after transaction commit so it never rolls back
-        # if the notification itself fails.
+        # Create notification synchronously so it's available within the
+        # same transaction (and visible in TestCase).  WS push stays deferred.
         team_id_captured = team.id
         leader_id = team.leader_id
         requester_id = user.id
         team_name = team.name
         requester_name = user.get_full_name() or user.username
 
+        _create_leader_notification(
+            team_id=team_id_captured,
+            leader_id=leader_id,
+            requester_id=requester_id,
+            team_name=team_name,
+            requester_name=requester_name,
+        )
+
         transaction.on_commit(
-            lambda: _notify_leader_async(
-                team_id=team_id_captured,
-                leader_id=leader_id,
-                requester_id=requester_id,
-                team_name=team_name,
-                requester_name=requester_name,
+            lambda: _push_ws_notification(
+                user_id=leader_id,
+                title=f"New join request for {team_name}",
+                body=f"{requester_name} wants to join.",
+                notif_type="join_request",
             )
         )
 
@@ -234,16 +241,14 @@ class TeamJoinRequestService:
         event_title = team.event.title
         leader = approver
 
-        transaction.on_commit(
-            lambda: _notify_requester_approved_async(
-                requester_id=requester.id,
-                team_name=team_name,
-                event_title=event_title,
-                leader_id=leader.id,
-            )
+        _create_requester_approved_notification(
+            requester_id=requester.id,
+            team_name=team_name,
+            event_title=event_title,
+            leader_id=leader.id,
         )
 
-        # Push WebSocket update to requester
+        # Push WebSocket update to requester (deferred to after commit)
         transaction.on_commit(
             lambda: _push_ws_notification(
                 user_id=requester.id,
@@ -297,12 +302,10 @@ class TeamJoinRequestService:
         team_name = team.name
         leader = decliner
 
-        transaction.on_commit(
-            lambda: _notify_requester_declined_async(
-                requester_id=requester.id,
-                team_name=team_name,
-                leader_id=leader.id,
-            )
+        _create_requester_declined_notification(
+            requester_id=requester.id,
+            team_name=team_name,
+            leader_id=leader.id,
         )
 
         return JoinRequestResult(
@@ -316,8 +319,8 @@ class TeamJoinRequestService:
 # ─── Deferred notification helpers ───────────────────────────────────────────
 
 
-def _notify_leader_async(*, team_id, leader_id, requester_id, team_name, requester_name):
-    """Create notification for team leader — called after transaction commits."""
+def _create_leader_notification(*, team_id, leader_id, requester_id, team_name, requester_name):
+    """Create notification for team leader — synchronous, runs inside the atomic block."""
     try:
         from django.contrib.auth.models import User
         from notification.models import Notification
@@ -335,19 +338,14 @@ def _notify_leader_async(*, team_id, leader_id, requester_id, team_name, request
             body=f'{requester_name} wants to join your team "{team_name}".',
             actor=requester,
         )
-        _push_ws_notification(
-            user_id=leader_id,
-            title=f"New join request for {team_name}",
-            body=f"{requester_name} wants to join.",
-            notif_type="join_request",
-        )
     except Exception:
         logger.error(
             "Failed to notify leader %d for team %s", leader_id, team_name, exc_info=True
         )
 
 
-def _notify_requester_approved_async(*, requester_id, team_name, event_title, leader_id):
+def _create_requester_approved_notification(*, requester_id, team_name, event_title, leader_id):
+    """Create approval notification — synchronous, runs inside the atomic block."""
     try:
         from django.contrib.auth.models import User
         from notification.models import Notification
@@ -368,7 +366,8 @@ def _notify_requester_approved_async(*, requester_id, team_name, event_title, le
         )
 
 
-def _notify_requester_declined_async(*, requester_id, team_name, leader_id):
+def _create_requester_declined_notification(*, requester_id, team_name, leader_id):
+    """Create decline notification — synchronous, runs inside the atomic block."""
     try:
         from django.contrib.auth.models import User
         from notification.models import Notification

@@ -400,7 +400,7 @@ def email_verification_view(request):
     return render(request, "users/email_verification.html")
 
 
-@require_http_methods(["POST"])
+@require_http_methods(["GET", "POST"])
 def logout_view(request):
     logout(request)
     messages.info(request, "You have been signed out.")

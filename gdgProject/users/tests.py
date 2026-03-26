@@ -296,31 +296,32 @@ class EmailVerificationViewTest(TestCase):
         self.assertContains(resp, "Email Verification")
 
     def test_valid_otp(self):
+        # Visit the page first to trigger OTP generation and capture it
+        self.client.get(self.url)
+        session = self.client.session
+        otp = session.get("email_otp_code")
+        self.assertIsNotNone(otp)
+        digits = list(otp)
         resp = self.client.post(
             self.url,
-            {
-                "otp_1": "1",
-                "otp_2": "2",
-                "otp_3": "3",
-                "otp_4": "4",
-                "otp_5": "5",
-                "otp_6": "6",
-            },
+            {f"otp_{i+1}": d for i, d in enumerate(digits)},
         )
         self.assertRedirects(resp, reverse("dashboard:user_dashboard"))
         self.user.refresh_from_db()
         self.assertTrue(self.user.profile.email_verified)
 
     def test_invalid_otp(self):
+        # Visit the page first to trigger OTP generation
+        self.client.get(self.url)
         resp = self.client.post(
             self.url,
             {
-                "otp_1": "1",
-                "otp_2": "",
-                "otp_3": "3",
-                "otp_4": "4",
-                "otp_5": "5",
-                "otp_6": "6",
+                "otp_1": "0",
+                "otp_2": "0",
+                "otp_3": "0",
+                "otp_4": "0",
+                "otp_5": "0",
+                "otp_6": "0",
             },
         )
         self.assertEqual(resp.status_code, 200)

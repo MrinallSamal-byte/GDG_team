@@ -109,6 +109,9 @@ class DashboardViewsTest(TestCase):
         Notification.objects.create(
             user=self.user, title="Ping", body="Unread notification"
         )
-        resp = self.client.post(reverse("dashboard:mark_all_read"))
+        resp = self.client.post(
+            reverse("dashboard:mark_all_read"),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
         self.assertEqual(resp.status_code, 200)
         self.assertJSONEqual(resp.content, {"ok": True, "updated": 1})

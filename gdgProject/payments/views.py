@@ -116,7 +116,7 @@ def payment_callback(request):
 
     # HMAC-SHA256 signature verification
     msg = f"{razorpay_order_id}|{razorpay_payment_id}".encode()
-    expected_sig = hmac.new(
+    expected_sig = hmac.HMAC(
         settings.RAZORPAY_KEY_SECRET.encode(),
         msg,
         hashlib.sha256,
