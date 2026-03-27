@@ -9,8 +9,8 @@ import os
 from decouple import config
 from django.core.exceptions import ImproperlyConfigured
 
-from .base import *  # noqa: F401,F403
 from ._prod_db import resolve_production_database
+from .base import *  # noqa: F401,F403
 
 # ─── Security Hardening ─────────────────────────────────────────────────────
 DEBUG = False
@@ -93,8 +93,11 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = config("EMAIL_HOST", default="smtp.gmail.com")
 EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
-EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="").strip()
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="").strip()
+DEFAULT_FROM_EMAIL = (
+    config("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER).strip() or EMAIL_HOST_USER
+)
 
 # ─── Static files (WhiteNoise) ────────────────────────────────────────────────
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")  # noqa: F405

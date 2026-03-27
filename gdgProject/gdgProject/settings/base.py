@@ -255,6 +255,7 @@ EMAIL_BACKEND = config(
     default="django.core.mail.backends.console.EmailBackend",
 )
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@campusarena.dev")
+EMAIL_TIMEOUT = config("EMAIL_TIMEOUT", default=10, cast=int)
 
 # ─── Cache ───────────────────────────────────────────────────────────────────
 CACHES = {

@@ -1,5 +1,6 @@
 import logging
 import secrets
+import threading
 import time
 from contextlib import suppress
 
@@ -336,13 +337,23 @@ def _send_otp_email(user, otp: str) -> None:
         logger.error("Failed to send OTP email to user %d", user.pk, exc_info=True)
 
 
+def _send_otp_email_async(user, otp: str) -> None:
+    # Email delivery should not block the verification page render.
+    threading.Thread(
+        target=_send_otp_email,
+        args=(user, otp),
+        name=f"send-otp-email-{user.pk}",
+        daemon=True,
+    ).start()
+
+
 def _issue_otp(request):
     """Generate a fresh OTP, store it in session with a creation timestamp, and email it."""
     otp = f"{secrets.randbelow(1_000_000):06d}"
     request.session[_OTP_SESSION_KEY] = otp
     request.session[_OTP_UID_KEY] = request.user.pk
     request.session[_OTP_CREATED_KEY] = time.time()
-    _send_otp_email(request.user, otp)
+    _send_otp_email_async(request.user, otp)
 
 
 def _otp_is_expired(request) -> bool:

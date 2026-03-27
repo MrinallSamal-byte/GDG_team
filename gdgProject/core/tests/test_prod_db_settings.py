@@ -2,9 +2,8 @@
 Regression tests for production database resolution.
 """
 
-from gdgProject.settings._prod_db import resolve_production_database
 from django.core.exceptions import ImproperlyConfigured
-
+from gdgProject.settings._prod_db import resolve_production_database
 
 PLACEHOLDER_MYSQL = {
     "ENGINE": "django.db.backends.mysql",
