@@ -114,10 +114,14 @@
                 <button type="submit" class="n-submit">Sign In <i data-lucide="arrow-right" style="width:13px;height:13px;display:inline;"></i></button>
             </form>
 
+            {% if google_oauth_enabled %}
             <div class="n-divider"><span>or continue with</span></div>
             <div class="n-social">
-                <a href="{% provider_login_url 'google' %}" class="n-social-btn"><i data-lucide="globe" style="width:15px;height:15px;"></i> Google</a>
+                <a href="{% provider_login_url 'google' process='login' %}" class="n-social-btn"><i data-lucide="globe" style="width:15px;height:15px;"></i> Google</a>
             </div>
+            {% else %}
+            <div class="n-switch" style="margin-top:1rem;">Google sign-in is currently unavailable.</div>
+            {% endif %}
 
             <div class="n-switch">No account? <a href="{% url 'users:register' %}">Create one free</a></div>
         </div>

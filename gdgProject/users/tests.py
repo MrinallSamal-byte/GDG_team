@@ -1,7 +1,11 @@
+from types import SimpleNamespace
+from unittest import mock
+
 from django.contrib.auth.models import User
-from django.test import Client, TestCase
+from django.test import Client, RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
+from .adapters import CampusArenaSocialAccountAdapter
 from .models import UserProfile
 
 
@@ -107,6 +111,131 @@ class LoginViewTest(TestCase):
             self.url, {"email": "test@example.com", "password": "wrong"}
         )
         self.assertContains(resp, 'value="test@example.com"')
+
+    def test_login_hides_google_button_when_unconfigured(self):
+        resp = self.client.get(self.url)
+        self.assertNotContains(resp, "/accounts/google/login/")
+        self.assertContains(resp, "Google sign-in is currently unavailable.")
+
+    @override_settings(
+        SOCIALACCOUNT_PROVIDERS={
+            "google": {
+                "SCOPE": ["profile", "email"],
+                "AUTH_PARAMS": {"access_type": "online"},
+                "APP": {
+                    "client_id": "google-test-client",
+                    "secret": "google-test-secret",
+                    "key": "",
+                },
+            },
+            "github": {
+                "SCOPE": ["user:email"],
+                "APP": {"client_id": "", "secret": "", "key": ""},
+            },
+        }
+    )
+    def test_login_shows_google_button_when_configured(self):
+        resp = self.client.get(self.url)
+        self.assertContains(resp, "/accounts/google/login/")
+        self.assertNotContains(resp, "Google sign-in is currently unavailable.")
+
+
+class SocialAccountFlowTest(TestCase):
+    @override_settings(
+        SOCIALACCOUNT_LOGIN_ON_GET=True,
+        SOCIALACCOUNT_PROVIDERS={
+            "google": {
+                "SCOPE": ["profile", "email"],
+                "AUTH_PARAMS": {"access_type": "online"},
+                "APP": {
+                    "client_id": "google-test-client",
+                    "secret": "google-test-secret",
+                    "key": "",
+                },
+            },
+            "github": {
+                "SCOPE": ["user:email"],
+                "APP": {"client_id": "", "secret": "", "key": ""},
+            },
+        },
+    )
+    def test_google_login_redirects_directly_when_enabled(self):
+        resp = self.client.get("/accounts/google/login/")
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("google-test-client", resp["Location"])
+
+    @override_settings(
+        SOCIALACCOUNT_LOGIN_ON_GET=False,
+        SOCIALACCOUNT_PROVIDERS={
+            "google": {
+                "SCOPE": ["profile", "email"],
+                "AUTH_PARAMS": {"access_type": "online"},
+                "APP": {
+                    "client_id": "google-test-client",
+                    "secret": "google-test-secret",
+                    "key": "",
+                },
+            },
+            "github": {
+                "SCOPE": ["user:email"],
+                "APP": {"client_id": "", "secret": "", "key": ""},
+            },
+        },
+    )
+    def test_google_login_confirmation_uses_branded_template(self):
+        resp = self.client.get("/accounts/google/login/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Continue with Google")
+        self.assertContains(resp, "CampusArena")
+
+
+class SocialAccountAdapterTest(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.adapter = CampusArenaSocialAccountAdapter()
+
+    def test_pre_social_login_creates_profile_for_existing_user(self):
+        user = User.objects.create_user(
+            username="socialexisting",
+            email="socialexisting@example.com",
+            password="testpass123",
+        )
+        sociallogin = SimpleNamespace(
+            is_existing=True,
+            user=user,
+            email_addresses=[SimpleNamespace(verified=True)],
+        )
+
+        self.adapter.pre_social_login(self.factory.get("/"), sociallogin)
+
+        profile = UserProfile.objects.get(user=user)
+        self.assertTrue(profile.email_verified)
+
+    def test_save_user_creates_profile_for_new_social_user(self):
+        user = User.objects.create_user(
+            username="socialnew",
+            email="socialnew@example.com",
+            password="testpass123",
+        )
+        sociallogin = SimpleNamespace(
+            user=user,
+            email_addresses=[SimpleNamespace(verified=True)],
+        )
+
+        with mock.patch(
+            "allauth.socialaccount.adapter.DefaultSocialAccountAdapter.save_user",
+            autospec=True,
+            return_value=user,
+        ) as save_user:
+            returned_user = self.adapter.save_user(
+                self.factory.get("/"), sociallogin, form=None
+            )
+
+        self.assertEqual(returned_user, user)
+        self.assertTrue(save_user.called)
+        self.assertTrue(
+            UserProfile.objects.filter(user=user, email_verified=True).exists()
+        )
 
 
 class RegisterViewTest(TestCase):

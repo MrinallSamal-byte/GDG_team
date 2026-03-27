@@ -1,0 +1,13 @@
+{% extends 'socialaccount/base.html' %}
+
+{% block title %}CampusArena | Redirecting to {{ provider }}{% endblock %}
+{% block social_eyebrow %}Redirecting{% endblock %}
+{% block social_title %}Taking you to {{ provider }}{% endblock %}
+{% block social_subtitle %}If the redirect does not happen automatically, use the continue button below.{% endblock %}
+{% block social_body %}
+<meta http-equiv="refresh" content="0;URL='{{ redirect_to }}'">
+<div class="n-actions">
+    <a href="{{ redirect_to }}" class="n-submit">Continue</a>
+    <a href="{% url 'users:login' %}" class="n-secondary">Back to Login</a>
+</div>
+{% endblock %}

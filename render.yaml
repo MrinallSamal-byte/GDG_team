@@ -28,6 +28,8 @@ services:
           property: connectionString
       - key: MEDIA_ROOT
         value: /var/data/media
+      - key: AUTO_SEED_DEMO_DATA
+        value: "true"
       - key: SITE_URL
         sync: false
       - key: DEFAULT_FROM_EMAIL

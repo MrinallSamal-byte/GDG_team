@@ -47,5 +47,10 @@ fi
 echo "[entrypoint] Running database migrations..."
 python manage.py migrate --noinput
 
+if [ "${AUTO_SEED_DEMO_DATA:-false}" = "true" ] || [ "${AUTO_SEED_DEMO_DATA:-0}" = "1" ]; then
+    echo "[entrypoint] Bootstrapping demo data..."
+    python manage.py bootstrap_demo_data
+fi
+
 echo "[entrypoint] Starting server: $*"
 exec "$@"

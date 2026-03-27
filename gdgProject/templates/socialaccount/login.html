@@ -1,0 +1,18 @@
+{% extends 'socialaccount/base.html' %}
+
+{% block title %}CampusArena | Continue with {{ provider.name }}{% endblock %}
+{% block social_eyebrow %}{% if process == "connect" %}Connect Account{% else %}Continue{% endif %}{% endblock %}
+{% block social_title %}{% if process == "connect" %}Connect {{ provider.name }}{% else %}Continue with {{ provider.name }}{% endif %}{% endblock %}
+{% block social_subtitle %}{% if process == "connect" %}Link your {{ provider.name }} account to CampusArena to use it for sign-in later.{% else %}You are one step away from signing in with {{ provider.name }}.{% endif %}{% endblock %}
+{% block social_body %}
+<p class="n-auth-copy">{% if process == "connect" %}This will attach your third-party account to the current CampusArena profile.{% else %}Continue to {{ provider.name }} and we will bring you straight back into CampusArena once authentication succeeds.{% endif %}</p>
+
+<form method="post" class="n-actions">
+    {% csrf_token %}
+    <button type="submit" class="n-submit">
+        <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+        {% if process == "connect" %}Connect {{ provider.name }}{% else %}Continue with {{ provider.name }}{% endif %}
+    </button>
+    <a href="{% url 'users:login' %}" class="n-secondary">Back to Login</a>
+</form>
+{% endblock %}

@@ -4,6 +4,7 @@ import threading
 import time
 from contextlib import suppress
 
+from allauth.socialaccount.adapter import get_adapter
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import (
@@ -30,6 +31,26 @@ from .models import UserProfile
 logger = logging.getLogger(__name__)
 
 
+def _social_provider_is_configured(request, provider_id: str) -> bool:
+    try:
+        provider = get_adapter(request).get_provider(request, provider_id)
+    except Exception:
+        return False
+
+    app = getattr(provider, "app", None)
+    if app is None:
+        return True
+    return bool(getattr(app, "client_id", "") and getattr(app, "secret", ""))
+
+
+def _login_context(request, **extra):
+    context = {
+        "google_oauth_enabled": _social_provider_is_configured(request, "google"),
+    }
+    context.update(extra)
+    return context
+
+
 def _get_or_create_profile(user):
     profile, _ = UserProfile.objects.get_or_create(user=user)
     return profile
@@ -51,25 +72,41 @@ def login_view(request):
 
             if not email or not password:
                 messages.error(request, "Email and password are required.")
-                return render(request, "users/login.html", {"show_signup": True})
+                return render(
+                    request,
+                    "users/login.html",
+                    _login_context(request, show_signup=True),
+                )
 
             if len(password) < 10:
                 messages.error(request, "Password must be at least 10 characters.")
-                return render(request, "users/login.html", {"show_signup": True})
+                return render(
+                    request,
+                    "users/login.html",
+                    _login_context(request, show_signup=True),
+                )
 
             if User.objects.filter(email=email).exists():
                 messages.error(
                     request,
                     "An account with this email already exists. Please log in.",
                 )
-                return render(request, "users/login.html", {"show_signup": False})
+                return render(
+                    request,
+                    "users/login.html",
+                    _login_context(request, show_signup=False),
+                )
 
             try:
                 password_validation.validate_password(password)
             except ValidationError as exc:
                 for err in exc.messages:
                     messages.error(request, err)
-                return render(request, "users/login.html", {"show_signup": True})
+                return render(
+                    request,
+                    "users/login.html",
+                    _login_context(request, show_signup=True),
+                )
 
             base_username = email.split("@")[0]
             username = base_username
@@ -98,7 +135,11 @@ def login_view(request):
 
         if not email or not password:
             messages.error(request, "Please fill in all required fields.")
-            return render(request, "users/login.html", {"email": email})
+            return render(
+                request,
+                "users/login.html",
+                _login_context(request, email=email),
+            )
 
         user = None
         try:
@@ -124,9 +165,13 @@ def login_view(request):
             return redirect("dashboard:user_dashboard")
         else:
             messages.error(request, "Invalid email or password. Please try again.")
-            return render(request, "users/login.html", {"email": email})
+            return render(
+                request,
+                "users/login.html",
+                _login_context(request, email=email),
+            )
 
-    return render(request, "users/login.html")
+    return render(request, "users/login.html", _login_context(request))
 
 
 @require_http_methods(["GET", "POST"])

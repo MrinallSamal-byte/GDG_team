@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+.site-header,.site-footer{display:none!important}
+.main-content{padding:0!important;max-width:100%!important;width:100%!important}
+.n-auth{display:grid;grid-template-columns:360px 1fr;min-height:100vh}
+.n-auth-side{background:var(--surface);border-right:1px solid var(--border);padding:3rem 2.5rem;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.n-auth-side::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,0,0,.06) 1px,transparent 1px);background-size:18px 18px}
+.n-auth-side>*{position:relative;z-index:1}
+.n-auth-main{background:var(--bg);display:flex;align-items:center;justify-content:center;padding:2rem}
+.n-auth-box{width:100%;max-width:420px}
+.n-auth-eyebrow{font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
+.n-auth-eyebrow::after{content:'';flex:1;height:1px;background:rgba(255,0,0,.18)}
+.n-auth-box h1{font-size:1.65rem;font-weight:800;letter-spacing:-.03em;margin:0 0 .3rem}
+.n-auth-box .sub{color:var(--muted);font-size:.88rem;margin-bottom:1.25rem;line-height:1.7}
+.n-auth-copy{color:var(--text-soft);font-size:.9rem;line-height:1.7;margin:0 0 1.25rem}
+.n-actions{display:flex;flex-direction:column;gap:.75rem}
+.n-submit,.n-secondary,.n-link-btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;padding:.82rem 1rem;border:1px solid var(--primary);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:all .15s}
+.n-submit{background:var(--primary);color:#fff}
+.n-submit:hover{background:var(--primary-2);border-color:var(--primary-2)}
+.n-secondary{background:transparent;border-color:var(--border);color:var(--text)}
+.n-secondary:hover{border-color:var(--border-hover)}
+.n-alert{display:flex;align-items:flex-start;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:1rem;border:1px solid}
+.n-alert.err{background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger)}
+.n-alert.ok{background:var(--ok-soft);border-color:rgba(0,230,118,.22);color:var(--ok)}
+.n-field{margin-bottom:.9rem}
+.n-field label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.38rem}
+.n-field input,.n-field select,.n-field textarea{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font);font-size:.9rem;padding:.72rem .9rem;border-radius:0;outline:none;transition:border-color .15s}
+.n-field input:focus,.n-field select:focus,.n-field textarea:focus{border-color:var(--primary)}
+.n-help{margin-top:.35rem;font-size:.77rem;color:var(--muted)}
+.n-help.err{color:var(--danger)}
+@media(max-width:720px){
+    .n-auth{grid-template-columns:1fr;min-height:auto}
+    .n-auth-side{padding:2rem 1.5rem;border-right:none;border-bottom:1px solid var(--border)}
+    .n-auth-main{padding:2rem 1.25rem}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% include 'includes/_n_page.html' %}
+
+<div class="n-auth">
+    <div class="n-auth-side">
+        <div>
+            <a href="{% url 'events:home' %}" style="display:flex;align-items:center;gap:.45rem;font-size:1rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text);text-decoration:none;margin-bottom:2.5rem;">
+                <i data-lucide="zap" style="width:16px;height:16px;color:var(--primary);"></i> CampusArena
+            </a>
+            <div style="font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;color:var(--primary);margin-bottom:.75rem;">01 / SOCIAL AUTH</div>
+            <h2 style="font-size:1.75rem;font-weight:800;letter-spacing:-.03em;margin:0 0 .75rem;">Faster sign-in. Same arena.</h2>
+            <p style="color:var(--muted);font-size:.9rem;line-height:1.7;">Use your external account to get into CampusArena without creating another password flow.</p>
+        </div>
+        <div>
+            <div style="font-size:.65rem;color:var(--muted-soft);font-family:var(--font-mono);">Prefer email and password?</div>
+            <a href="{% url 'users:login' %}" style="display:inline-flex;align-items:center;gap:.4rem;margin-top:.4rem;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;">
+                Back to Sign In <i data-lucide="arrow-right" style="width:13px;height:13px;"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="n-auth-main">
+        <div class="n-auth-box">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="n-alert {% if 'error' in message.tags %}err{% else %}ok{% endif %}">
+                    <i data-lucide="{% if 'error' in message.tags %}alert-circle{% else %}check-circle{% endif %}" style="width:14px;height:14px;"></i>
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="n-auth-eyebrow">{% block social_eyebrow %}Social Sign In{% endblock %}</div>
+            <h1>{% block social_title %}{% endblock %}</h1>
+            <p class="sub">{% block social_subtitle %}{% endblock %}</p>
+            {% block social_body %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

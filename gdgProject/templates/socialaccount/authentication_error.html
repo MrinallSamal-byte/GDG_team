@@ -1,0 +1,13 @@
+{% extends 'socialaccount/base.html' %}
+
+{% block title %}CampusArena | Social Sign-In Failed{% endblock %}
+{% block social_eyebrow %}Sign-In Failed{% endblock %}
+{% block social_title %}We could not complete your social sign-in{% endblock %}
+{% block social_subtitle %}The external provider did not return a usable login response.{% endblock %}
+{% block social_body %}
+<p class="n-auth-copy">Try again in a moment. If the issue continues, use email and password for now or verify that the OAuth credentials are configured correctly for this deployment.</p>
+<div class="n-actions">
+    <a href="{% url 'users:login' %}" class="n-submit">Return to Login</a>
+    <a href="{% url 'events:home' %}" class="n-secondary">Go to Homepage</a>
+</div>
+{% endblock %}

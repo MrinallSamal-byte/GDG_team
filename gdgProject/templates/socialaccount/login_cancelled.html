@@ -1,0 +1,13 @@
+{% extends 'socialaccount/base.html' %}
+
+{% block title %}CampusArena | Login Cancelled{% endblock %}
+{% block social_eyebrow %}Cancelled{% endblock %}
+{% block social_title %}Social sign-in was cancelled{% endblock %}
+{% block social_subtitle %}No changes were made to your CampusArena account.{% endblock %}
+{% block social_body %}
+<p class="n-auth-copy">If you closed the provider window by mistake, start the flow again from the login page.</p>
+<div class="n-actions">
+    <a href="{% url 'users:login' %}" class="n-submit">Try Again</a>
+    <a href="{% url 'events:home' %}" class="n-secondary">Go to Homepage</a>
+</div>
+{% endblock %}
