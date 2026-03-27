@@ -1,7 +1,7 @@
+from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.test import TestCase
-
-from events.models import Event
+from events.models import Event, EventCategory, EventMode, EventStatus, ParticipationType
 from notification.models import Notification
 from registration.models import Registration
 from team.models import JoinRequest, Team
@@ -40,3 +40,35 @@ class BootstrapDemoDataCommandTest(TestCase):
         }
 
         self.assertEqual(first_counts, second_counts)
+
+    def test_bootstrap_seeds_when_only_draft_events_exist(self):
+        organizer = User.objects.create_user(
+            username="draft-organizer",
+            password="testpass123",
+        )
+        Event.objects.create(
+            title="Draft Only Event",
+            description="Draft event should not block demo seeding.",
+            category=EventCategory.OTHER,
+            mode=EventMode.ONLINE,
+            participation_type=ParticipationType.INDIVIDUAL,
+            status=EventStatus.DRAFT,
+            registration_start="2026-01-01T00:00:00Z",
+            registration_end="2026-01-02T00:00:00Z",
+            event_start="2026-01-03T00:00:00Z",
+            event_end="2026-01-04T00:00:00Z",
+            created_by=organizer,
+        )
+
+        call_command("bootstrap_demo_data", verbosity=0)
+
+        self.assertGreater(
+            Event.objects.filter(status__in=[
+                EventStatus.PUBLISHED,
+                EventStatus.REGISTRATION_OPEN,
+                EventStatus.REGISTRATION_CLOSED,
+                EventStatus.ONGOING,
+                EventStatus.COMPLETED,
+            ]).count(),
+            0,
+        )

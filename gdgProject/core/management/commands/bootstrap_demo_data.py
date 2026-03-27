@@ -2,16 +2,29 @@ import random
 
 from django.contrib.auth import get_user_model
 from django.core.management import BaseCommand, call_command
-
 from events.models import Event, EventStatus, ParticipationType
 from notification.models import Notification
 from registration.models import Registration, RegistrationStatus, RegistrationType
-from team.models import ChatMessage, JoinRequest, MemberRole, Team, TeamMembership, TeamStatus
+from team.models import (
+    ChatMessage,
+    JoinRequest,
+    MemberRole,
+    Team,
+    TeamMembership,
+    TeamStatus,
+)
 from users.models import UserProfile
 
 User = get_user_model()
 
 DEMO_PASSWORD = "DemoUser@2026"
+HOME_VISIBLE_STATUSES = [
+    EventStatus.PUBLISHED,
+    EventStatus.REGISTRATION_OPEN,
+    EventStatus.REGISTRATION_CLOSED,
+    EventStatus.ONGOING,
+    EventStatus.COMPLETED,
+]
 DEMO_USERS = [
     {
         "username": "demo_ava",
@@ -140,12 +153,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("[demo] Bootstrapping demo data...")
 
-        if not Event.objects.exists():
+        if not Event.objects.filter(status__in=HOME_VISIBLE_STATUSES).exists():
             random.seed(2026)
             call_command("seed_events", verbosity=0)
             self.stdout.write("[demo] Seeded sample events.")
         else:
-            self.stdout.write("[demo] Events already exist. Skipping event seed.")
+            self.stdout.write(
+                "[demo] Homepage-visible events already exist. Skipping event seed."
+            )
 
         demo_users = self._create_demo_users()
         demo_teams = self._create_demo_teams(demo_users)
@@ -228,7 +243,7 @@ class Command(BaseCommand):
     def _create_demo_teams(self, demo_users):
         events = self._get_team_events()
         teams = []
-        for blueprint, event in zip(TEAM_BLUEPRINTS, events):
+        for blueprint, event in zip(TEAM_BLUEPRINTS, events, strict=False):
             members = [demo_users[idx] for idx in blueprint["member_indexes"]]
             leader = members[0]
             team, _ = Team.objects.get_or_create(
@@ -238,7 +253,7 @@ class Command(BaseCommand):
             )
             teams.append(team)
 
-            for member, role in zip(members, blueprint["roles"]):
+            for member, role in zip(members, blueprint["roles"], strict=False):
                 TeamMembership.objects.get_or_create(
                     team=team,
                     user=member,
