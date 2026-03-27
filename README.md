@@ -25,7 +25,8 @@
 16. [Running Tests](#16-running-tests)
 17. [Settings Overview](#17-settings-overview)
 18. [Security](#18-security)
-19. [Future Enhancements](#19-future-enhancements)
+19. [Cloudflare Deployment](#19-cloudflare-deployment)
+20. [Future Enhancements](#20-future-enhancements)
 
 ---
 
@@ -833,6 +834,17 @@ DEBUG=False
 SECRET_KEY=<strong-random-key>
 ALLOWED_HOSTS=yourdomain.com
 
+# Preferred on Render / Railway / Heroku:
+# DATABASE_URL=postgresql://user:pass@host:5432/dbname
+# Optional if your platform exposes Postgres as PG* vars instead:
+# PGHOST=...
+# PGPORT=5432
+# PGDATABASE=...
+# PGUSER=...
+# PGPASSWORD=...
+# PGSSLMODE=require
+#
+# For direct MySQL deployments without DATABASE_URL:
 DB_ENGINE=django.db.backends.mysql
 DB_NAME=campusarena
 DB_USER=campusarena
@@ -954,7 +966,49 @@ Switch via `DJANGO_SETTINGS_MODULE` environment variable.
 
 ---
 
-## 19. Future Enhancements
+## 19. Cloudflare Deployment
+
+This repository is best served by a hybrid setup:
+
+- Keep the Django ASGI app on its current container platform because it depends on Daphne, Redis-backed Channels, and a traditional relational database.
+- Put Cloudflare in front for DNS, TLS, WAF, caching, and WebSocket proxying.
+- Use the Worker in [`cloudflare/src/index.js`](/home/mrinall-samal/Projects/GDG/GDG_team/cloudflare/src/index.js) only as a thin edge layer when you want Cloudflare-managed routing and response headers in front of the origin.
+
+### Why not Pages or a pure Worker runtime?
+
+- **Pages** is a poor fit for a long-running Django ASGI app with Redis and WebSockets.
+- **Workers** are great for edge logic, but porting this entire Django stack into a Worker would be a platform migration, not a deployment tweak.
+- **Tunnel** is useful if your origin is private or on your laptop. It is not required when the app already runs on a public host like Render.
+
+### Included Cloudflare workspace
+
+The repo now includes a dedicated Cloudflare folder:
+
+- [`cloudflare/wrangler.jsonc`](/home/mrinall-samal/Projects/GDG/GDG_team/cloudflare/wrangler.jsonc) for Wrangler configuration
+- [`cloudflare/package.json`](/home/mrinall-samal/Projects/GDG/GDG_team/cloudflare/package.json) for Wrangler scripts
+- [`cloudflare/.dev.vars.example`](/home/mrinall-samal/Projects/GDG/GDG_team/cloudflare/.dev.vars.example) for local Worker variables
+- [`cloudflare/src/index.js`](/home/mrinall-samal/Projects/GDG/GDG_team/cloudflare/src/index.js) for the proxy Worker
+
+### Typical deployment flow
+
+```bash
+cd cloudflare
+npm install
+npx wrangler login
+npx wrangler dev
+npx wrangler deploy
+```
+
+Before putting the Worker on a custom domain:
+
+- Point `ORIGIN_HOSTNAME` to your deployed Django origin.
+- Add your Cloudflare hostname to `ALLOWED_HOSTS`.
+- Set `SITE_URL` to the final HTTPS URL so Django builds secure callback and CSRF settings correctly.
+- Attach the Worker with a Cloudflare route for an external origin, not a custom domain-as-origin setup.
+
+---
+
+## 20. Future Enhancements
 
 These items are planned or partially implemented. See `PROJECT_SPECIFICATION.txt` for full details.
 

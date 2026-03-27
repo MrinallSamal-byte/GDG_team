@@ -6,11 +6,11 @@ All secrets MUST come from environment variables or a secrets manager.
 
 import os
 
-import dj_database_url
 from decouple import config
 from django.core.exceptions import ImproperlyConfigured
 
 from .base import *  # noqa: F401,F403
+from ._prod_db import resolve_production_database
 
 # ─── Security Hardening ─────────────────────────────────────────────────────
 DEBUG = False
@@ -49,22 +49,26 @@ if csrf_trusted_origins:
     CSRF_TRUSTED_ORIGINS = sorted(csrf_trusted_origins)
 
 # ─── Database (DATABASE_URL with MySQL fallback) ─────────────────────────────
-database_url = os.environ.get("DATABASE_URL", "").strip()
-if database_url:
-    DATABASES["default"] = dj_database_url.config(  # noqa: F405
-        default=database_url,
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-    DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa: F405
-else:
-    DATABASES["default"]["ENGINE"] = "django.db.backends.mysql"  # noqa: F405
-    DATABASES["default"]["CONN_MAX_AGE"] = 600  # noqa: F405
-    DATABASES["default"]["CONN_HEALTH_CHECKS"] = True  # noqa: F405
-    DATABASES["default"]["OPTIONS"] = {  # noqa: F405
-        **DATABASES["default"].get("OPTIONS", {}),  # noqa: F405
-        "connect_timeout": 5,
-    }
+effective_db_env = {}
+for key in (
+    "DATABASE_URL",
+    "PGHOST",
+    "PGPORT",
+    "PGDATABASE",
+    "PGUSER",
+    "PGPASSWORD",
+    "PGSSLMODE",
+):
+    value = os.environ.get(key)
+    if not value:
+        value = config(key, default="")
+    if value:
+        effective_db_env[key] = str(value).strip()
+
+DATABASES["default"] = resolve_production_database(  # noqa: F405
+    DATABASES["default"],
+    effective_db_env,
+)
 
 # ─── Cache (Redis) ───────────────────────────────────────────────────────────
 CACHES["default"] = {  # noqa: F405

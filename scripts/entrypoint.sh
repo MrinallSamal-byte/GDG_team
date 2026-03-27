@@ -10,8 +10,8 @@ echo " CampusArena — starting up"
 echo " DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-not set}"
 echo "──────────────────────────────────────────"
 
-db_host="${DB_HOST:-}"
-db_port="${DB_PORT:-}"
+db_host="${DB_HOST:-${PGHOST:-}}"
+db_port="${DB_PORT:-${PGPORT:-}}"
 
 if { [ -z "${db_host}" ] || [ -z "${db_port}" ]; } && [ -n "${DATABASE_URL:-}" ]; then
     parsed_db="$(python - <<'PY'
