@@ -43,6 +43,7 @@ _secret_key = os.environ.get("SECRET_KEY", "").strip()
 if not _secret_key:
     import logging as _logging
     import secrets as _secrets
+
     _secret_key = _secrets.token_urlsafe(50)
     _logging.getLogger("django").critical(
         "SECRET_KEY environment variable is not set. "
@@ -60,19 +61,18 @@ ALLOWED_HOSTS = [
 
 # Trust Vercel's TLS termination proxy
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT      = False   # Vercel handles HTTPS at the edge
-SECURE_HSTS_SECONDS      = 31_536_000
+SECURE_SSL_REDIRECT = False  # Vercel handles HTTPS at the edge
+SECURE_HSTS_SECONDS = 31_536_000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD      = True
+SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
 SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE    = True
+CSRF_COOKIE_SECURE = True
 
-CSRF_TRUSTED_ORIGINS = (
-    [f"https://{h}" for h in ALLOWED_HOSTS if not h.startswith(".")]
-    + ["https://*.vercel.app"]
-)
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{h}" for h in ALLOWED_HOSTS if not h.startswith(".")
+] + ["https://*.vercel.app"]
 
 # ── Database — PostgreSQL via DATABASE_URL ───────────────────────────────────
 # Free options: Neon (https://neon.tech), Supabase (https://supabase.com)
@@ -84,7 +84,7 @@ _database_url = os.environ.get("DATABASE_URL", "")
 if _database_url:
     DATABASES["default"] = dj_database_url.config(  # noqa: F405
         default=_database_url,
-        conn_max_age=0,          # serverless: don't persist connections
+        conn_max_age=0,  # serverless: don't persist connections
         conn_health_checks=True,
         ssl_require=True,
     )
@@ -125,13 +125,13 @@ STORAGES = {
 }
 
 # ── Email ─────────────────────────────────────────────────────────────────────
-EMAIL_BACKEND       = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST          = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT          = int(os.environ.get("EMAIL_PORT", 587))
-EMAIL_USE_TLS       = True
-EMAIL_HOST_USER     = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL  = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 LOGGING["handlers"]["console"]["formatter"] = "verbose"  # noqa: F405

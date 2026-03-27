@@ -10,7 +10,6 @@ import uuid
 
 from django.conf import settings
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 
 class CheckIn(models.Model):
@@ -33,7 +32,9 @@ class CheckIn(models.Model):
         related_name="checkins",
     )
     # Opaque token embedded in the QR code
-    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, db_index=True)
+    token = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False, db_index=True
+    )
     checked_in = models.BooleanField(default=False)
     checked_in_at = models.DateTimeField(null=True, blank=True)
     checked_in_by = models.ForeignKey(
@@ -48,7 +49,9 @@ class CheckIn(models.Model):
     class Meta:
         ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=["event", "checked_in"], name="idx_checkin_event_status"),
+            models.Index(
+                fields=["event", "checked_in"], name="idx_checkin_event_status"
+            ),
         ]
 
     def __str__(self):

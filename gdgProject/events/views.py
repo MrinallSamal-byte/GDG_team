@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from .models import Event, EventCategory, EventMode, EventStatus
+from .models import Event, EventCategory, EventStatus
 
 logger = logging.getLogger(__name__)
 
@@ -75,22 +75,30 @@ def events_api(request):
 
     data = []
     for ev in events:
-        data.append({
-            "id": ev.id,
-            "title": ev.title,
-            "category": ev.category,
-            "category_display": ev.get_category_display(),
-            "mode_display": ev.get_mode_display(),
-            "participation_type_display": ev.get_participation_type_display(),
-            "status": ev.status,
-            "status_display": ev.get_status_display(),
-            "event_start": ev.event_start.strftime("%d %b"),
-            "event_end": ev.event_end.strftime("%d %b") if ev.event_end and ev.event_end.date() != ev.event_start.date() else "",
-            "registered_count": ev.registered_count,
-            "capacity": ev.capacity,
-            "fill_pct": round(ev.registered_count / ev.capacity * 100) if ev.capacity else 0,
-            "prize_pool": str(int(ev.prize_pool)) if ev.prize_pool else "",
-        })
+        data.append(
+            {
+                "id": ev.id,
+                "title": ev.title,
+                "category": ev.category,
+                "category_display": ev.get_category_display(),
+                "mode_display": ev.get_mode_display(),
+                "participation_type_display": ev.get_participation_type_display(),
+                "status": ev.status,
+                "status_display": ev.get_status_display(),
+                "event_start": ev.event_start.strftime("%d %b"),
+                "event_end": (
+                    ev.event_end.strftime("%d %b")
+                    if ev.event_end and ev.event_end.date() != ev.event_start.date()
+                    else ""
+                ),
+                "registered_count": ev.registered_count,
+                "capacity": ev.capacity,
+                "fill_pct": (
+                    round(ev.registered_count / ev.capacity * 100) if ev.capacity else 0
+                ),
+                "prize_pool": str(int(ev.prize_pool)) if ev.prize_pool else "",
+            }
+        )
 
     return JsonResponse({"events": data})
 

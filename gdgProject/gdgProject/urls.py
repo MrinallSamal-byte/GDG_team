@@ -1,10 +1,9 @@
+from core.views import health
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
-
-from core.views import health
 
 handler404 = "django.views.defaults.page_not_found"
 handler500 = "django.views.defaults.server_error"
@@ -12,7 +11,6 @@ handler500 = "django.views.defaults.server_error"
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("health/", health, name="health"),
-
     # ── Core apps ────────────────────────────────────────────────────────────
     path("", include("events.urls")),
     path("registration/", include("registration.urls")),
@@ -21,17 +19,14 @@ urlpatterns = [
     path("organizer/", include("eventManagement.urls")),
     path("auth/", include("users.urls")),
     path("notifications/", include("notification.urls")),
-
     # ── New feature apps ─────────────────────────────────────────────────────
     path("payments/", include("payments.urls")),
     path("certificates/", include("certificates.urls")),
     path("leaderboard/", include("leaderboard.urls")),
     path("submissions/", include("submissions.urls")),
     path("checkin/", include("checkin.urls")),
-
     # ── [E6] OAuth (Google / GitHub) via django-allauth ───────────────────────
     path("accounts/", include("allauth.urls")),
-
     # ── [E7] PWA ──────────────────────────────────────────────────────────────
     path(
         "manifest.json",

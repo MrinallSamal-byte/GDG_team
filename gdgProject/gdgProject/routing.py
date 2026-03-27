@@ -4,10 +4,9 @@ Maps ws:// paths to their consumer classes.
 """
 
 from django.urls import re_path
-
+from events import consumers as event_consumers
 from notification import consumers as notification_consumers
 from team import consumers as team_consumers
-from events import consumers as event_consumers
 
 websocket_urlpatterns = [
     re_path(

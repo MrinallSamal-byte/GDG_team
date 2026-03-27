@@ -24,7 +24,11 @@ def user_dashboard(request):
         .order_by("-registered_at")[:5]
     )
     my_events = [
-        {"title": reg.event.title, "status": reg.get_status_display(), "id": reg.event.pk}
+        {
+            "title": reg.event.title,
+            "status": reg.get_status_display(),
+            "id": reg.event.pk,
+        }
         for reg in my_regs
     ]
 
@@ -43,7 +47,9 @@ def user_dashboard(request):
         for m in my_memberships
     ]
 
-    notifications = Notification.objects.filter(user=request.user).order_by("-created_at")[:5]
+    notifications = Notification.objects.filter(user=request.user).order_by(
+        "-created_at"
+    )[:5]
 
     return render(
         request,
@@ -79,11 +85,15 @@ def my_profile(request):
         "portfolio": profile.portfolio or "",
         "bio": profile.bio or "No bio yet. Click Edit Profile to add one.",
         "skills": profile.skills_list or [],
-        "profile_picture_url": profile.profile_picture.url if profile.profile_picture else None,
+        "profile_picture_url": (
+            profile.profile_picture.url if profile.profile_picture else None
+        ),
     }
     stats = {
         "events_joined": Registration.objects.filter(user=user).count(),
-        "teams": TeamMembership.objects.filter(user=user, team__is_deleted=False).count(),
+        "teams": TeamMembership.objects.filter(
+            user=user, team__is_deleted=False
+        ).count(),
         "certificates": cert_count,
     }
     return render(
@@ -119,12 +129,16 @@ def my_events(request):
             "status": reg.get_status_display(),
             "reg_id": reg.pk,
             "reg_status_raw": reg.status,
-            "team": membership_by_event[reg.event_id].team.name
-            if reg.event_id in membership_by_event
-            else None,
-            "role": membership_by_event[reg.event_id].get_role_display()
-            if reg.event_id in membership_by_event
-            else None,
+            "team": (
+                membership_by_event[reg.event_id].team.name
+                if reg.event_id in membership_by_event
+                else None
+            ),
+            "role": (
+                membership_by_event[reg.event_id].get_role_display()
+                if reg.event_id in membership_by_event
+                else None
+            ),
         }
         for reg in registrations
     ]
@@ -145,11 +159,15 @@ def my_teams(request):
     )
 
     if not memberships:
-        return render(request, "dashboard/my_teams.html", {"teams": [], "current_page": "teams"})
+        return render(
+            request, "dashboard/my_teams.html", {"teams": [], "current_page": "teams"}
+        )
 
     team_ids = [m.team_id for m in memberships]
     co_members: dict = defaultdict(list)
-    for cm in TeamMembership.objects.filter(team_id__in=team_ids).select_related("user"):
+    for cm in TeamMembership.objects.filter(team_id__in=team_ids).select_related(
+        "user"
+    ):
         co_members[cm.team_id].append(cm.user.get_full_name() or cm.user.username)
 
     teams = [
@@ -184,7 +202,11 @@ def pending_requests(request):
             "id": jr.pk,
             "team_id": jr.team_id,
             "from": jr.user.get_full_name() or jr.user.username,
-            "college": getattr(jr.user.profile, "college", "") if hasattr(jr.user, "profile") else "",
+            "college": (
+                getattr(jr.user.profile, "college", "")
+                if hasattr(jr.user, "profile")
+                else ""
+            ),
             "team": jr.team.name,
             "event": jr.team.event.title,
             "message": jr.message,
@@ -221,7 +243,9 @@ def pending_requests(request):
 
 @login_required
 def notifications_view(request):
-    notifications = Notification.objects.filter(user=request.user).order_by("-created_at")[:30]
+    notifications = Notification.objects.filter(user=request.user).order_by(
+        "-created_at"
+    )[:30]
     return render(
         request,
         "dashboard/notifications.html",
@@ -237,7 +261,9 @@ def mark_all_read(request):
     Returns JSON for AJAX callers (X-Requested-With: XMLHttpRequest) and
     a plain redirect for the synchronous <form> POST on notifications.html.
     """
-    updated = Notification.objects.filter(user=request.user, read=False).update(read=True)
+    updated = Notification.objects.filter(user=request.user, read=False).update(
+        read=True
+    )
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({"ok": True, "updated": updated})
     return redirect("dashboard:notifications")
@@ -262,7 +288,9 @@ def settings_view(request):
             from django.contrib.auth.models import User
 
             if User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
-                messages.error(request, "That email is already in use by another account.")
+                messages.error(
+                    request, "That email is already in use by another account."
+                )
             else:
                 request.user.email = email
                 request.user.save(update_fields=["email"])

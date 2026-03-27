@@ -48,7 +48,9 @@ def _build_suggested_members(team):
     role_labels = dict(MemberRole.choices)
     current_user_ids = {membership.user_id for membership in memberships}
     pending_request_user_ids = set(
-        team.join_requests.filter(status=JoinRequestStatus.PENDING).values_list("user_id", flat=True)
+        team.join_requests.filter(status=JoinRequestStatus.PENDING).values_list(
+            "user_id", flat=True
+        )
     )
     covered_roles = {membership.role for membership in memberships}
     team_skill_tokens = {
@@ -84,24 +86,33 @@ def _build_suggested_members(team):
         if score <= 0 and not tech_stack_names:
             continue
 
-        candidates.append({
-            "registration": registration,
-            "display_name": registration.user.get_full_name() or registration.user.username,
-            "college": getattr(registration.user.profile, "college", ""),
-            "preferred_role_label": role_labels.get(registration.preferred_role, registration.preferred_role),
-            "tech_stacks": tech_stack_names,
-            "match_reasons": missing_skill_matches[:3],
-            "score": score,
-        })
+        candidates.append(
+            {
+                "registration": registration,
+                "display_name": registration.user.get_full_name()
+                or registration.user.username,
+                "college": getattr(registration.user.profile, "college", ""),
+                "preferred_role_label": role_labels.get(
+                    registration.preferred_role, registration.preferred_role
+                ),
+                "tech_stacks": tech_stack_names,
+                "match_reasons": missing_skill_matches[:3],
+                "score": score,
+            }
+        )
 
-    return sorted(candidates, key=lambda c: (-c["score"], c["display_name"].lower()))[:5]
+    return sorted(candidates, key=lambda c: (-c["score"], c["display_name"].lower()))[
+        :5
+    ]
 
 
 def _build_team_context(team, request_user):
     memberships = list(team.memberships.select_related("user").all())
     is_leader = team.leader_id == request_user.id
     join_requests = (
-        team.join_requests.filter(status=JoinRequestStatus.PENDING).select_related("user")
+        team.join_requests.filter(status=JoinRequestStatus.PENDING).select_related(
+            "user"
+        )
         if is_leader
         else JoinRequest.objects.none()
     )
@@ -109,7 +120,9 @@ def _build_team_context(team, request_user):
         "team": team,
         "members": memberships,
         "requests": join_requests,
-        "chat_messages": team.messages.filter(is_deleted=False).select_related("sender")[:50],
+        "chat_messages": team.messages.filter(is_deleted=False).select_related(
+            "sender"
+        )[:50],
         "coverage": _build_coverage(memberships),
         "suggested_members": _build_suggested_members(team) if is_leader else [],
         "is_leader": is_leader,
@@ -121,12 +134,17 @@ def _build_team_context(team, request_user):
 @require_http_methods(["GET", "POST"])
 def team_management(request, team_id):
     team = get_object_or_404(
-        Team.objects.select_related("event", "leader").annotate(current_members=Count("memberships")),
+        Team.objects.select_related("event", "leader").annotate(
+            current_members=Count("memberships")
+        ),
         pk=team_id,
     )
 
     if not _user_can_access_team(team, request.user):
-        logger.warning("Unauthorized team access attempt", extra={"team_id": team.pk, "user_id": request.user.pk})
+        logger.warning(
+            "Unauthorized team access attempt",
+            extra={"team_id": team.pk, "user_id": request.user.pk},
+        )
         messages.error(request, "Only team members can access this team workspace.")
         return redirect("events:event_detail", event_id=team.event.pk)
 
@@ -149,9 +167,14 @@ def team_management(request, team_id):
             try:
                 join_req = JoinRequest.objects.get(pk=req_id, team=team)
                 TeamJoinRequestService().approve_request(
-                    team_id=team.pk, requester_user_id=join_req.user_id, approver=request.user,
+                    team_id=team.pk,
+                    requester_user_id=join_req.user_id,
+                    approver=request.user,
                 )
-                messages.success(request, f"Approved {join_req.user.get_full_name() or join_req.user.username}.")
+                messages.success(
+                    request,
+                    f"Approved {join_req.user.get_full_name() or join_req.user.username}.",
+                )
             except JoinRequest.DoesNotExist:
                 messages.error(request, "Request not found.")
             except AppError as exc:
@@ -168,9 +191,14 @@ def team_management(request, team_id):
             try:
                 join_req = JoinRequest.objects.get(pk=req_id, team=team)
                 TeamJoinRequestService().decline_request(
-                    team_id=team.pk, requester_user_id=join_req.user_id, decliner=request.user,
+                    team_id=team.pk,
+                    requester_user_id=join_req.user_id,
+                    decliner=request.user,
                 )
-                messages.success(request, f"Declined {join_req.user.get_full_name() or join_req.user.username}.")
+                messages.success(
+                    request,
+                    f"Declined {join_req.user.get_full_name() or join_req.user.username}.",
+                )
             except JoinRequest.DoesNotExist:
                 messages.error(request, "Request not found.")
             except AppError as exc:
@@ -181,7 +209,9 @@ def team_management(request, team_id):
 
         return redirect("team:team_management", team_id=team_id)
 
-    return render(request, "team/team_management.html", _build_team_context(team, request.user))
+    return render(
+        request, "team/team_management.html", _build_team_context(team, request.user)
+    )
 
 
 @login_required
@@ -196,12 +226,18 @@ def create_team(request, event_id):
         messages.error(request, "Team name is required.")
         return redirect("events:event_detail", event_id=event.pk)
     try:
-        team = Team.objects.create(event=event, name=name, leader=request.user, status=TeamStatus.OPEN)
-        TeamMembership.objects.create(team=team, user=request.user, role=MemberRole.OTHER)
+        team = Team.objects.create(
+            event=event, name=name, leader=request.user, status=TeamStatus.OPEN
+        )
+        TeamMembership.objects.create(
+            team=team, user=request.user, role=MemberRole.OTHER
+        )
         messages.success(request, f'Team "{name}" created successfully!')
         return redirect("team:team_management", team_id=team.pk)
     except IntegrityError:
-        messages.error(request, "A team with that name already exists, or you already lead a team.")
+        messages.error(
+            request, "A team with that name already exists, or you already lead a team."
+        )
         return redirect("events:event_detail", event_id=event.pk)
 
 
@@ -235,7 +271,10 @@ def request_join(request, team_id):
 def leave_team(request, team_id):
     team = get_object_or_404(Team, pk=team_id)
     if team.leader == request.user:
-        messages.error(request, "Team leaders cannot leave their own team. Disband the team instead.")
+        messages.error(
+            request,
+            "Team leaders cannot leave their own team. Disband the team instead.",
+        )
         return redirect("team:team_management", team_id=team.pk)
     membership = TeamMembership.objects.filter(team=team, user=request.user).first()
     if not membership:
@@ -297,7 +336,9 @@ def remove_member(request, team_id, user_id):
 @require_http_methods(["POST"])
 def approve_request(request, team_id, request_id):
     try:
-        join_req = JoinRequest.objects.select_related("team").get(pk=request_id, team_id=team_id)
+        join_req = JoinRequest.objects.select_related("team").get(
+            pk=request_id, team_id=team_id
+        )
     except JoinRequest.DoesNotExist:
         messages.error(request, "Join request not found.")
         return redirect("dashboard:pending_requests")
@@ -306,9 +347,14 @@ def approve_request(request, team_id, request_id):
         return redirect("dashboard:pending_requests")
     try:
         TeamJoinRequestService().approve_request(
-            team_id=team_id, requester_user_id=join_req.user_id, approver=request.user,
+            team_id=team_id,
+            requester_user_id=join_req.user_id,
+            approver=request.user,
         )
-        messages.success(request, f"Approved {join_req.user.get_full_name() or join_req.user.username}.")
+        messages.success(
+            request,
+            f"Approved {join_req.user.get_full_name() or join_req.user.username}.",
+        )
     except AppError as exc:
         messages.error(request, exc.message)
     except Exception:
@@ -321,7 +367,9 @@ def approve_request(request, team_id, request_id):
 @require_http_methods(["POST"])
 def decline_request(request, team_id, request_id):
     try:
-        join_req = JoinRequest.objects.select_related("team").get(pk=request_id, team_id=team_id)
+        join_req = JoinRequest.objects.select_related("team").get(
+            pk=request_id, team_id=team_id
+        )
     except JoinRequest.DoesNotExist:
         messages.error(request, "Join request not found.")
         return redirect("dashboard:pending_requests")
@@ -330,7 +378,9 @@ def decline_request(request, team_id, request_id):
         return redirect("dashboard:pending_requests")
     try:
         TeamJoinRequestService().decline_request(
-            team_id=team_id, requester_user_id=join_req.user_id, decliner=request.user,
+            team_id=team_id,
+            requester_user_id=join_req.user_id,
+            decliner=request.user,
         )
         messages.success(request, "Request declined.")
     except AppError as exc:
@@ -348,6 +398,7 @@ def find_teammates(request):
 
 # ── [E15] AI-Powered Team Matching ────────────────────────────────────────────
 
+
 @login_required
 @require_GET
 def ai_team_matches(request, event_id):
@@ -358,6 +409,7 @@ def ai_team_matches(request, event_id):
     event = get_object_or_404(Event, pk=event_id)
 
     from .ai_matching import get_team_recommendations
+
     matches = get_team_recommendations(user=request.user, event_id=event.pk, top_n=10)
 
     return render(

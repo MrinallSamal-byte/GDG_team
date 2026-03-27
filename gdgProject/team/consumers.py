@@ -121,9 +121,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         from team.models import Team, TeamMembership
 
         return (
-            TeamMembership.objects.filter(
-                team_id=self.team_id, user=self.user
-            ).exists()
+            TeamMembership.objects.filter(team_id=self.team_id, user=self.user).exists()
             or Team.objects.filter(pk=self.team_id, leader=self.user).exists()
         )
 

@@ -9,10 +9,11 @@ import logging
 import traceback
 import uuid
 
-from core.exceptions import AppError
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, JsonResponse
 from django.shortcuts import render
+
+from core.exceptions import AppError
 
 logger = logging.getLogger("campusarena.middleware")
 

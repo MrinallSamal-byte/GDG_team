@@ -11,7 +11,6 @@ import io
 import logging
 
 from django.conf import settings
-from django.utils import timezone
 
 logger = logging.getLogger("campusarena.certificates")
 
@@ -24,19 +23,16 @@ def generate_certificate_pdf(certificate) -> bytes:
     Requires: reportlab, qrcode[pil]
     """
     try:
-        from reportlab.lib import colors
         from reportlab.lib.pagesizes import A4, landscape
-        from reportlab.lib.units import cm
         from reportlab.pdfgen import canvas
-    except ImportError:
+    except ImportError as exc:
         raise RuntimeError(
             "reportlab is required for PDF generation. "
             "Install it with: pip install reportlab"
-        )
+        ) from exc
 
     try:
         import qrcode
-        from PIL import Image as PILImage
     except ImportError:
         qrcode = None
 
@@ -54,7 +50,13 @@ def generate_certificate_pdf(certificate) -> bytes:
     margin = 20
     c.rect(margin, margin, page_width - 2 * margin, page_height - 2 * margin, fill=0)
     c.setLineWidth(1.5)
-    c.rect(margin + 6, margin + 6, page_width - 2 * (margin + 6), page_height - 2 * (margin + 6), fill=0)
+    c.rect(
+        margin + 6,
+        margin + 6,
+        page_width - 2 * (margin + 6),
+        page_height - 2 * (margin + 6),
+        fill=0,
+    )
 
     # ── Header — platform name ────────────────────────────────────────────────
     c.setFillColorRGB(0.33, 0.29, 0.72)
@@ -88,8 +90,10 @@ def generate_certificate_pdf(certificate) -> bytes:
     c.setLineWidth(0.5)
     name_width = len(full_name) * 16
     c.line(
-        page_width / 2 - name_width / 2, page_height - 230,
-        page_width / 2 + name_width / 2, page_height - 230,
+        page_width / 2 - name_width / 2,
+        page_height - 230,
+        page_width / 2 + name_width / 2,
+        page_height - 230,
     )
 
     # ── Event participation text ──────────────────────────────────────────────
@@ -126,6 +130,7 @@ def generate_certificate_pdf(certificate) -> bytes:
             qr.save(qr_buf, format="PNG")
             qr_buf.seek(0)
             from reportlab.lib.utils import ImageReader
+
             qr_img = ImageReader(qr_buf)
             c.drawImage(qr_img, page_width - 130, 40, width=90, height=90)
             c.setFont("Helvetica", 8)

@@ -110,19 +110,25 @@ def scan_qr(request, token):
 
     if checkin.event.created_by != request.user and not request.user.is_superuser:
         if _wants_json(request):
-            return JsonResponse({"ok": False, "error": "Permission denied."}, status=403)
+            return JsonResponse(
+                {"ok": False, "error": "Permission denied."}, status=403
+            )
         messages.error(request, "You are not the organiser of this event.")
         return redirect("eventManagement:organizer_dashboard")
 
     if _wants_json(request):
-        return JsonResponse({
-            "ok": True,
-            "already_checked_in": checkin.checked_in,
-            "name": checkin.user.get_full_name() or checkin.user.username,
-            "registration_id": checkin.registration.registration_id,
-            "event": checkin.event.title,
-            "checked_in_at": checkin.checked_in_at.isoformat() if checkin.checked_in_at else None,
-        })
+        return JsonResponse(
+            {
+                "ok": True,
+                "already_checked_in": checkin.checked_in,
+                "name": checkin.user.get_full_name() or checkin.user.username,
+                "registration_id": checkin.registration.registration_id,
+                "event": checkin.event.title,
+                "checked_in_at": (
+                    checkin.checked_in_at.isoformat() if checkin.checked_in_at else None
+                ),
+            }
+        )
 
     return render(
         request,
@@ -146,14 +152,18 @@ def confirm_checkin(request, token):
 
     if checkin.event.created_by != request.user and not request.user.is_superuser:
         if _wants_json(request):
-            return JsonResponse({"ok": False, "error": "Permission denied."}, status=403)
+            return JsonResponse(
+                {"ok": False, "error": "Permission denied."}, status=403
+            )
         messages.error(request, "Permission denied.")
         return redirect("eventManagement:organizer_dashboard")
 
     if checkin.checked_in:
         name = checkin.user.get_full_name() or checkin.user.username
         if _wants_json(request):
-            return JsonResponse({"ok": False, "error": f"{name} is already checked in."}, status=409)
+            return JsonResponse(
+                {"ok": False, "error": f"{name} is already checked in."}, status=409
+            )
         messages.warning(request, f"{name} was already checked in.")
         return redirect("checkin:dashboard", event_id=checkin.event.pk)
 
@@ -171,11 +181,13 @@ def confirm_checkin(request, token):
     )
 
     if _wants_json(request):
-        return JsonResponse({
-            "ok": True,
-            "name": name,
-            "checked_in_at": checkin.checked_in_at.isoformat(),
-        })
+        return JsonResponse(
+            {
+                "ok": True,
+                "name": name,
+                "checked_in_at": checkin.checked_in_at.isoformat(),
+            }
+        )
 
     messages.success(request, f"{name} checked in successfully.")
     return redirect("checkin:dashboard", event_id=checkin.event.pk)

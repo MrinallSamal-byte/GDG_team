@@ -4,12 +4,23 @@ Production settings — extends base.py.
 All secrets MUST come from environment variables or a secrets manager.
 """
 
+import os
+
+import dj_database_url
 from decouple import config
+from django.core.exceptions import ImproperlyConfigured
 
 from .base import *  # noqa: F401,F403
 
 # ─── Security Hardening ─────────────────────────────────────────────────────
 DEBUG = False
+
+secret_key = os.environ.get("SECRET_KEY", "").strip()
+if not secret_key:
+    raise ImproperlyConfigured("SECRET_KEY must be set when using production settings.")
+SECRET_KEY = secret_key
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = True
 SECURE_HSTS_SECONDS = 31_536_000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
@@ -22,14 +33,38 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
 
-# ─── Database (MySQL) ────────────────────────────────────────────────────────
-DATABASES["default"]["ENGINE"] = "django.db.backends.mysql"  # noqa: F405
-DATABASES["default"]["CONN_MAX_AGE"] = 600  # noqa: F405
-DATABASES["default"]["CONN_HEALTH_CHECKS"] = True  # noqa: F405
-DATABASES["default"]["OPTIONS"] = {  # noqa: F405
-    **DATABASES["default"].get("OPTIONS", {}),  # noqa: F405
-    "connect_timeout": 5,
-}
+render_external_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+if (
+    render_external_hostname and render_external_hostname not in ALLOWED_HOSTS
+):  # noqa: F405
+    ALLOWED_HOSTS.append(render_external_hostname)  # noqa: F405
+
+site_url = config("SITE_URL", default="").strip()
+csrf_trusted_origins = set()
+if site_url.startswith(("http://", "https://")):
+    csrf_trusted_origins.add(site_url.rstrip("/"))
+if render_external_hostname:
+    csrf_trusted_origins.add(f"https://{render_external_hostname}")
+if csrf_trusted_origins:
+    CSRF_TRUSTED_ORIGINS = sorted(csrf_trusted_origins)
+
+# ─── Database (DATABASE_URL with MySQL fallback) ─────────────────────────────
+database_url = os.environ.get("DATABASE_URL", "").strip()
+if database_url:
+    DATABASES["default"] = dj_database_url.config(  # noqa: F405
+        default=database_url,
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+    DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa: F405
+else:
+    DATABASES["default"]["ENGINE"] = "django.db.backends.mysql"  # noqa: F405
+    DATABASES["default"]["CONN_MAX_AGE"] = 600  # noqa: F405
+    DATABASES["default"]["CONN_HEALTH_CHECKS"] = True  # noqa: F405
+    DATABASES["default"]["OPTIONS"] = {  # noqa: F405
+        **DATABASES["default"].get("OPTIONS", {}),  # noqa: F405
+        "connect_timeout": 5,
+    }
 
 # ─── Cache (Redis) ───────────────────────────────────────────────────────────
 CACHES["default"] = {  # noqa: F405

@@ -1,6 +1,7 @@
 import logging
-import random
+import secrets
 import time
+from contextlib import suppress
 
 from django.conf import settings
 from django.contrib import messages
@@ -18,6 +19,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.shortcuts import redirect, render
 from django.utils.encoding import force_bytes, force_str
+
 # from django.utils.http import urlsafe_base64_decode, urlsafe
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.decorators.http import require_http_methods
@@ -188,10 +190,8 @@ def register_view(request):
         )
 
         year_int = None
-        try:
+        with suppress(ValueError, TypeError):
             year_int = int(year)
-        except (ValueError, TypeError):
-            pass
 
         # UserProfile.objects.create(
         #     user=user,
@@ -205,14 +205,13 @@ def register_view(request):
         # login(request, user)
 
         UserProfile.objects.create(
-        user=user,
-        phone=phone,
-        college=college,
-        branch=branch,
-        year=year_int,
-        skills=skills,
-        
-    )
+            user=user,
+            phone=phone,
+            college=college,
+            branch=branch,
+            year=year_int,
+            skills=skills,
+        )
 
         login(request, user, backend="django.contrib.auth.backends.ModelBackend")
 
@@ -334,14 +333,12 @@ def _send_otp_email(user, otp: str) -> None:
             fail_silently=False,
         )
     except Exception:
-        logger.error(
-            "Failed to send OTP email to user %d", user.pk, exc_info=True
-        )
+        logger.error("Failed to send OTP email to user %d", user.pk, exc_info=True)
 
 
 def _issue_otp(request):
     """Generate a fresh OTP, store it in session with a creation timestamp, and email it."""
-    otp = f"{random.randint(0, 999_999):06d}"
+    otp = f"{secrets.randbelow(1_000_000):06d}"
     request.session[_OTP_SESSION_KEY] = otp
     request.session[_OTP_UID_KEY] = request.user.pk
     request.session[_OTP_CREATED_KEY] = time.time()
@@ -391,7 +388,7 @@ def email_verification_view(request):
             len(submitted) == 6
             and submitted.isdigit()
             and stored_otp is not None
-            and submitted == stored_otp
+            and secrets.compare_digest(submitted, stored_otp)
             and stored_uid == request.user.pk
         ):
             profile.email_verified = True
@@ -428,8 +425,16 @@ def edit_profile(request):
     branches = ["CSE", "IT", "ECE", "EEE", "Mechanical", "Civil", "Biotech"]
     years = [1, 2, 3, 4, 5]
     skills = [
-        "React", "Node.js", "Python", "Django", "Flutter", "Figma",
-        "TensorFlow", "Docker", "AWS", "MongoDB",
+        "React",
+        "Node.js",
+        "Python",
+        "Django",
+        "Flutter",
+        "Figma",
+        "TensorFlow",
+        "Docker",
+        "AWS",
+        "MongoDB",
     ]
 
     if request.method == "POST":

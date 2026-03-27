@@ -6,11 +6,12 @@ Deliverable #6: Three test archetypes demonstrating the test pyramid strategy.
 
 from unittest.mock import MagicMock, patch
 
-from core.exceptions import ConflictError, ValidationError
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.utils import timezone
 from events.models import Event, EventRound, EventStatus
+
+from core.exceptions import ConflictError, ValidationError
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

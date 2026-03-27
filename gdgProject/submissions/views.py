@@ -17,9 +17,13 @@ def _get_team_for_user(user, event):
     """Return the user's active team for this event, or None."""
     from team.models import TeamMembership
 
-    membership = TeamMembership.objects.filter(
-        user=user, team__event=event, team__is_deleted=False
-    ).select_related("team").first()
+    membership = (
+        TeamMembership.objects.filter(
+            user=user, team__event=event, team__is_deleted=False
+        )
+        .select_related("team")
+        .first()
+    )
     return membership.team if membership else None
 
 
@@ -64,7 +68,12 @@ def submit_project(request, event_id):
         return render(
             request,
             "submissions/submit.html",
-            {"event": event, "team": team, "existing": existing, "form_data": request.POST},
+            {
+                "event": event,
+                "team": team,
+                "existing": existing,
+                "form_data": request.POST,
+            },
         )
 
     if existing:
@@ -99,7 +108,10 @@ def submit_project(request, event_id):
     action = "submitted" if is_final else "saved as draft"
     logger.info(
         "Submission %d %s by user %d for event %d",
-        sub.pk, action, request.user.pk, event.pk,
+        sub.pk,
+        action,
+        request.user.pk,
+        event.pk,
     )
     messages.success(request, f'Project "{title}" {action} successfully.')
     return redirect("submissions:my_submission", event_id=event.pk)

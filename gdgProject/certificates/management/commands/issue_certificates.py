@@ -12,6 +12,10 @@ Usage:
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from events.models import Event, EventStatus
+from registration.models import Registration, RegistrationStatus
+
+from certificates.models import Certificate, CertificateType
 
 
 class Command(BaseCommand):
@@ -37,10 +41,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        from certificates.models import Certificate, CertificateType
-        from events.models import Event, EventStatus
-        from registration.models import Registration, RegistrationStatus
-
         dry_run = options["dry_run"]
 
         # Resolve which events to process

@@ -262,12 +262,14 @@ class Event(models.Model):
         from django.core.exceptions import ValidationError
 
         errors: dict = {}
-        if self.registration_end and self.registration_start:
-            if self.registration_end < self.registration_start:
-                errors["registration_end"] = _("Must be after registration start.")
-        if self.event_end and self.event_start:
-            if self.event_end < self.event_start:
-                errors["event_end"] = _("Must be after event start.")
+        if (
+            self.registration_end
+            and self.registration_start
+            and self.registration_end < self.registration_start
+        ):
+            errors["registration_end"] = _("Must be after registration start.")
+        if self.event_end and self.event_start and self.event_end < self.event_start:
+            errors["event_end"] = _("Must be after event start.")
         if self.max_team_size < self.min_team_size:
             errors["max_team_size"] = _("Must be >= min team size.")
         if errors:

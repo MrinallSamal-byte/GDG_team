@@ -1,5 +1,6 @@
 import logging
 import textwrap
+from contextlib import suppress
 from datetime import timedelta
 
 from django.contrib import messages
@@ -28,6 +29,7 @@ def _aware(dt):
     if dt is None:
         return dt
     from django.utils.timezone import is_naive, make_aware
+
     return make_aware(dt) if is_naive(dt) else dt
 
 
@@ -56,6 +58,7 @@ def organizer_dashboard(request):
 
     # Compute team-vs-solo breakdown across all organiser events
     from registration.models import Registration
+
     event_ids = list(my_events.values_list("pk", flat=True))
     confirmed_statuses = ["confirmed", "submitted"]
     team_count = Registration.objects.filter(
@@ -68,11 +71,13 @@ def organizer_dashboard(request):
         status__in=confirmed_statuses,
         team__isnull=True,
     ).count()
-    team_vs_solo = f"{team_count}T / {solo_count}S" if (team_count + solo_count) > 0 else None
+    team_vs_solo = (
+        f"{team_count}T / {solo_count}S" if (team_count + solo_count) > 0 else None
+    )
 
     # Compute top skill/stack from participant profiles
-    from django.db.models import Value
     from users.models import UserProfile
+
     reg_user_ids = list(
         Registration.objects.filter(
             event_id__in=event_ids,
@@ -80,9 +85,9 @@ def organizer_dashboard(request):
         ).values_list("user_id", flat=True)
     )
     skill_counts: dict = {}
-    for skills_str in UserProfile.objects.filter(
-        user_id__in=reg_user_ids
-    ).values_list("skills", flat=True):
+    for skills_str in UserProfile.objects.filter(user_id__in=reg_user_ids).values_list(
+        "skills", flat=True
+    ):
         if skills_str:
             for skill in skills_str.split(","):
                 skill = skill.strip()
@@ -118,7 +123,9 @@ def create_event(request):
         reg_end = request.POST.get("reg_end_date", "").strip()
         description = request.POST.get("description", "").strip()
         venue = request.POST.get("venue", "").strip()
-        participation_type = request.POST.get("participation_type", "individual").strip()
+        participation_type = request.POST.get(
+            "participation_type", "individual"
+        ).strip()
         max_participants = request.POST.get("max_participants", "100").strip()
         min_team_size = request.POST.get("min_team_size", "1").strip()
         max_team_size = request.POST.get("max_team_size", "1").strip()
@@ -235,14 +242,18 @@ def create_event(request):
             rname = rname.strip()
             if not rname:
                 continue
-            rstart_raw = round_start_dates[i].strip() if i < len(round_start_dates) else ""
+            rstart_raw = (
+                round_start_dates[i].strip() if i < len(round_start_dates) else ""
+            )
             rend_raw = round_end_dates[i].strip() if i < len(round_end_dates) else ""
             rdesc = round_descs[i].strip() if i < len(round_descs) else ""
 
             rd_start = _aware(parse_datetime(rstart_raw)) if rstart_raw else event_start
             # FIX: use the round's own end date; default to rd_start + 1 day
-            rd_end = _aware(parse_datetime(rend_raw)) if rend_raw else (
-                rd_start + timedelta(days=1) if rd_start else event_end
+            rd_end = (
+                _aware(parse_datetime(rend_raw))
+                if rend_raw
+                else (rd_start + timedelta(days=1) if rd_start else event_end)
             )
 
             EventRound.objects.create(
@@ -266,7 +277,9 @@ def create_event(request):
                 if name:
                     EventSponsor.objects.create(event=event, name=name)
 
-        logger.info("Event created: %s (id=%d) by user %s", title, event.pk, request.user.pk)
+        logger.info(
+            "Event created: %s (id=%d) by user %s", title, event.pk, request.user.pk
+        )
         messages.success(request, f'"{title}" has been created successfully!')
         return redirect("eventManagement:organizer_dashboard")
 
@@ -316,7 +329,11 @@ def edit_event(request, event_id):
         messages.error(request, "You can only edit your own events.")
         return redirect("eventManagement:organizer_dashboard")
 
-    if event.status in (EventStatus.ONGOING, EventStatus.COMPLETED, EventStatus.CANCELLED):
+    if event.status in (
+        EventStatus.ONGOING,
+        EventStatus.COMPLETED,
+        EventStatus.CANCELLED,
+    ):
         messages.warning(request, "This event cannot be edited in its current status.")
         return redirect("eventManagement:organizer_dashboard")
 
@@ -359,15 +376,21 @@ def edit_event(request, event_id):
     if mode and mode not in EventMode.values:
         errors.append("Please select a valid event mode.")
 
-    event_start = _aware(parse_datetime(start_date)) if start_date else event.event_start
+    event_start = (
+        _aware(parse_datetime(start_date)) if start_date else event.event_start
+    )
     event_end = _aware(parse_datetime(end_date)) if end_date else event.event_end
-    reg_start_dt = _aware(parse_datetime(reg_start)) if reg_start else event.registration_start
+    reg_start_dt = (
+        _aware(parse_datetime(reg_start)) if reg_start else event.registration_start
+    )
     reg_end_dt = _aware(parse_datetime(reg_end)) if reg_end else event.registration_end
 
     if event_start and event_end and event_start > event_end:
         errors.append("Event end date must be on or after the start date.")
     if reg_start_dt and reg_end_dt and reg_start_dt > reg_end_dt:
-        errors.append("Registration end date must be on or after the registration start date.")
+        errors.append(
+            "Registration end date must be on or after the registration start date."
+        )
     if reg_end_dt and event_start and reg_end_dt > event_start:
         errors.append("Registration must close before the event starts.")
 
@@ -406,22 +429,20 @@ def edit_event(request, event_id):
     event.contact_info = contact_info
 
     if max_participants:
-        try:
+        with suppress(ValueError):
             event.capacity = max(1, int(max_participants))
-        except ValueError:
-            pass
     if registration_fee:
-        try:
+        with suppress(ValueError):
             event.registration_fee = max(0, float(registration_fee))
-        except ValueError:
-            pass
 
     banner = request.FILES.get("banner_image")
     if banner:
         event.banner = banner
 
     event.save()
-    logger.info("Event updated: %s (id=%d) by user %s", event.title, event.pk, request.user.pk)
+    logger.info(
+        "Event updated: %s (id=%d) by user %s", event.title, event.pk, request.user.pk
+    )
     messages.success(request, f'"{event.title}" has been updated.')
     return redirect("eventManagement:organizer_dashboard")
 
@@ -443,7 +464,12 @@ def delete_event(request, event_id):
         return redirect("eventManagement:organizer_dashboard")
 
     event.delete()
-    logger.info("Event soft-deleted: %s (id=%d) by user %s", event.title, event_id, request.user.pk)
+    logger.info(
+        "Event soft-deleted: %s (id=%d) by user %s",
+        event.title,
+        event_id,
+        request.user.pk,
+    )
     messages.success(request, f'"{event.title}" has been archived.')
     return redirect("eventManagement:organizer_dashboard")
 
@@ -451,7 +477,9 @@ def delete_event(request, event_id):
 @staff_member_required
 @require_POST
 def update_event_status(request, event_id):
-    event = Event.all_objects.filter(pk=event_id, is_deleted=False, created_by=request.user).first()
+    event = Event.all_objects.filter(
+        pk=event_id, is_deleted=False, created_by=request.user
+    ).first()
     if event is None:
         messages.error(request, "Event not found or permission denied.")
         return redirect("eventManagement:organizer_dashboard")
@@ -473,9 +501,14 @@ def update_event_status(request, event_id):
     event.save(update_fields=["status", "updated_at"])
     logger.info(
         "Event status changed: %s (id=%d) → %s by user %s",
-        event.title, event.pk, new_status, request.user.pk,
+        event.title,
+        event.pk,
+        new_status,
+        request.user.pk,
     )
-    messages.success(request, f'"{event.title}" status updated to {EventStatus(new_status).label}.')
+    messages.success(
+        request, f'"{event.title}" status updated to {EventStatus(new_status).label}.'
+    )
     return redirect("eventManagement:organizer_dashboard")
 
 
@@ -485,7 +518,9 @@ def create_announcement(request, event_id):
     from notification.models import Notification
     from registration.models import Registration
 
-    event = Event.all_objects.filter(pk=event_id, is_deleted=False, created_by=request.user).first()
+    event = Event.all_objects.filter(
+        pk=event_id, is_deleted=False, created_by=request.user
+    ).first()
     if event is None:
         messages.error(request, "Event not found or permission denied.")
         return redirect("eventManagement:organizer_dashboard")
@@ -522,7 +557,9 @@ def create_announcement(request, event_id):
 
     logger.info(
         "Announcement '%s' created for event %d, notified %d users.",
-        title, event.pk, len(registrant_user_ids),
+        title,
+        event.pk,
+        len(registrant_user_ids),
     )
     messages.success(
         request,
@@ -552,17 +589,22 @@ def update_registration_status(request, reg_id):
 
     reg.status = new_status
     reg.save(update_fields=["status", "updated_at"])
-    messages.success(request, f"Registration {reg.registration_id} updated to {new_status}.")
+    messages.success(
+        request, f"Registration {reg.registration_id} updated to {new_status}."
+    )
     return redirect("eventManagement:organizer_dashboard")
 
 
 @staff_member_required
 def export_registrations(request, event_id):
     import csv
+
     from django.http import StreamingHttpResponse
     from registration.models import Registration
 
-    event = Event.all_objects.filter(pk=event_id, created_by=request.user, is_deleted=False).first()
+    event = Event.all_objects.filter(
+        pk=event_id, created_by=request.user, is_deleted=False
+    ).first()
     if event is None:
         messages.error(request, "Event not found or permission denied.")
         return redirect("eventManagement:organizer_dashboard")
@@ -579,28 +621,42 @@ def export_registrations(request, event_id):
 
     def csv_rows():
         writer = csv.writer(Echo())
-        yield writer.writerow([
-            "registration_id", "name", "email", "college", "branch",
-            "year", "phone", "type", "status", "team", "role",
-            "looking_for_team", "registered_at",
-        ])
+        yield writer.writerow(
+            [
+                "registration_id",
+                "name",
+                "email",
+                "college",
+                "branch",
+                "year",
+                "phone",
+                "type",
+                "status",
+                "team",
+                "role",
+                "looking_for_team",
+                "registered_at",
+            ]
+        )
         for reg in registrations:
             profile = getattr(reg.user, "profile", None)
-            yield writer.writerow([
-                reg.registration_id,
-                reg.user.get_full_name() or reg.user.username,
-                reg.user.email,
-                profile.college if profile else "",
-                profile.branch if profile else "",
-                profile.year if profile else "",
-                profile.phone if profile else "",
-                reg.get_type_display(),
-                reg.get_status_display(),
-                reg.team.name if reg.team else "",
-                reg.preferred_role,
-                reg.looking_for_team,
-                reg.registered_at.strftime("%Y-%m-%d %H:%M:%S"),
-            ])
+            yield writer.writerow(
+                [
+                    reg.registration_id,
+                    reg.user.get_full_name() or reg.user.username,
+                    reg.user.email,
+                    profile.college if profile else "",
+                    profile.branch if profile else "",
+                    profile.year if profile else "",
+                    profile.phone if profile else "",
+                    reg.get_type_display(),
+                    reg.get_status_display(),
+                    reg.team.name if reg.team else "",
+                    reg.preferred_role,
+                    reg.looking_for_team,
+                    reg.registered_at.strftime("%Y-%m-%d %H:%M:%S"),
+                ]
+            )
 
     filename = f"registrations_{event.slug or event.pk}.csv"
     response = StreamingHttpResponse(csv_rows(), content_type="text/csv")
@@ -609,6 +665,7 @@ def export_registrations(request, event_id):
 
 
 # ── [E10] Event Cloning ───────────────────────────────────────────────────────
+
 
 @staff_member_required
 @require_POST
@@ -619,9 +676,7 @@ def clone_event(request, event_id):
     Copies: all event fields, rounds, FAQs, judges, sponsors.
     Does NOT copy: registrations, teams, announcements.
     """
-    source = get_object_or_404(
-        Event.all_objects, pk=event_id, created_by=request.user
-    )
+    source = get_object_or_404(Event.all_objects, pk=event_id, created_by=request.user)
 
     with transaction.atomic():
         cloned = Event.objects.create(
@@ -691,7 +746,9 @@ def clone_event(request, event_id):
 
     logger.info(
         "Event cloned: source=%d → clone=%d by user %s",
-        source.pk, cloned.pk, request.user.pk,
+        source.pk,
+        cloned.pk,
+        request.user.pk,
     )
     messages.success(
         request,

@@ -20,9 +20,17 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-CACHES["default"]["BACKEND"] = "django.core.cache.backends.locmem.LocMemCache"  # noqa: F405
+CACHES["default"][
+    "BACKEND"
+] = "django.core.cache.backends.locmem.LocMemCache"  # noqa: F405
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:5600", "http://127.0.0.1:5600"]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:5600",
+    "http://127.0.0.1:5600",
+]
+
 
 # ─── Database — MySQL with automatic SQLite fallback ─────────────────────────
 def _mysql_reachable(host: str, port: int, timeout: float = 1.0) -> bool:
@@ -60,6 +68,7 @@ _redis_url = os.environ.get("REDIS_URL", "")
 if not _redis_url:
     try:
         from decouple import config as _cfg
+
         _redis_url = _cfg("REDIS_URL", default="")
     except ModuleNotFoundError:
         pass

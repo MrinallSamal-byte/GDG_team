@@ -9,7 +9,6 @@ Pushed to when a new registration is confirmed.
 import json
 import logging
 
-from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 logger = logging.getLogger("campusarena.events.ws")

@@ -1,4 +1,5 @@
 import logging
+from contextlib import suppress
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -44,8 +45,16 @@ _ROLE_VALUE_MAP = {
 }
 
 _SKILLS = [
-    "React", "Node.js", "Python", "Django", "Flutter", "Figma",
-    "TensorFlow", "Docker", "AWS", "MongoDB",
+    "React",
+    "Node.js",
+    "Python",
+    "Django",
+    "Flutter",
+    "Figma",
+    "TensorFlow",
+    "Docker",
+    "AWS",
+    "MongoDB",
 ]
 
 
@@ -151,7 +160,9 @@ def registration_confirmation(request, registration_id):
     registration = get_object_or_404(
         Registration.objects.select_related("event", "team"), **lookup
     )
-    return render(request, "registration/confirmation.html", {"registration": registration})
+    return render(
+        request, "registration/confirmation.html", {"registration": registration}
+    )
 
 
 @login_required
@@ -169,7 +180,9 @@ def cancel_registration(request, registration_id):
         return redirect("dashboard:my_events")
 
     if registration.event.event_start <= timezone.now():
-        messages.error(request, "You cannot cancel a registration after the event has started.")
+        messages.error(
+            request, "You cannot cancel a registration after the event has started."
+        )
         return redirect("dashboard:my_events")
 
     with transaction.atomic():
@@ -187,7 +200,9 @@ def cancel_registration(request, registration_id):
                     # Leader cancels — disband the whole team
                     registration.team.status = TeamStatus.DISBANDED
                     registration.team.is_deleted = True
-                    registration.team.save(update_fields=["status", "is_deleted", "updated_at"])
+                    registration.team.save(
+                        update_fields=["status", "is_deleted", "updated_at"]
+                    )
                 else:
                     membership.delete()
                     team = registration.team
@@ -200,7 +215,10 @@ def cancel_registration(request, registration_id):
         registration.registration_id,
         request.user.pk,
     )
-    messages.success(request, f'Your registration for "{registration.event.title}" has been cancelled.')
+    messages.success(
+        request,
+        f'Your registration for "{registration.event.title}" has been cancelled.',
+    )
     return redirect("dashboard:my_events")
 
 
@@ -218,7 +236,9 @@ def register_event(request, event_id):
         messages.warning(request, "Registration is not currently open for this event.")
         return redirect("events:event_detail", event_id=event.pk)
 
-    custom_fields = CustomFormField.objects.filter(event=event).order_by("display_order")
+    custom_fields = CustomFormField.objects.filter(event=event).order_by(
+        "display_order"
+    )
 
     open_teams = []
     if event.participation_type in ("team", "both"):
@@ -235,8 +255,11 @@ def register_event(request, event_id):
         # Validate initial_type to prevent mismatch
         if event.participation_type == "individual":
             initial_type = "individual"
-        elif event.participation_type == "team" and initial_type not in ("create_team", "join_team"):
-            initial_type = "create_team" # Default for team events
+        elif event.participation_type == "team" and initial_type not in (
+            "create_team",
+            "join_team",
+        ):
+            initial_type = "create_team"  # Default for team events
         elif not initial_type:
             initial_type = "individual"
 
@@ -328,10 +351,8 @@ def register_event(request, event_id):
     if branch:
         profile.branch = branch
     if year:
-        try:
+        with suppress(ValueError):
             profile.year = int(year)
-        except ValueError:
-            pass
     profile.save()
 
     # ── Individual registration ──────────────────────────────────────────────
@@ -356,7 +377,10 @@ def register_event(request, event_id):
             return redirect("payments:initiate", registration_id=registration.pk)
 
         _send_confirmation_email(registration)
-        messages.success(request, f"Registered for {event.title}! ID: {registration.registration_id}.")
+        messages.success(
+            request,
+            f"Registered for {event.title}! ID: {registration.registration_id}.",
+        )
         return redirect("registration:confirmation", registration_id=registration.pk)
 
     # ── Create a new team ────────────────────────────────────────────────────
@@ -393,7 +417,11 @@ def register_event(request, event_id):
                 TeamMembership.objects.create(
                     team=team,
                     user=request.user,
-                    role=normalized_role if normalized_role in MemberRole.values else MemberRole.OTHER,
+                    role=(
+                        normalized_role
+                        if normalized_role in MemberRole.values
+                        else MemberRole.OTHER
+                    ),
                 )
                 registration = Registration.objects.create(
                     event=event,
@@ -406,14 +434,19 @@ def register_event(request, event_id):
                 _save_custom_responses(registration, custom_fields, request.POST)
                 _save_registration_tech_stacks(registration, selected_skills)
         except IntegrityError:
-            messages.error(request, "A team with that name already exists, or you are already registered.")
+            messages.error(
+                request,
+                "A team with that name already exists, or you are already registered.",
+            )
             return redirect("events:event_detail", event_id=event.pk)
 
         if event.registration_fee and event.registration_fee > 0:
             return redirect("payments:initiate", registration_id=registration.pk)
 
         _send_confirmation_email(registration)
-        messages.success(request, f'Team "{team_name}" created! ID: {registration.registration_id}.')
+        messages.success(
+            request, f'Team "{team_name}" created! ID: {registration.registration_id}.'
+        )
         return redirect("registration:confirmation", registration_id=registration.pk)
 
     # ── Join existing team ───────────────────────────────────────────────────

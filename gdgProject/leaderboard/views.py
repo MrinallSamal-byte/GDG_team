@@ -19,12 +19,13 @@ def event_leaderboard(request, event_id):
 
     # Hide unpublished leaderboard from non-organisers
     if lb and not lb.is_public:
-        is_organiser = (
-            request.user.is_authenticated
-            and (request.user == event.created_by or request.user.is_superuser)
+        is_organiser = request.user.is_authenticated and (
+            request.user == event.created_by or request.user.is_superuser
         )
         if not is_organiser:
-            messages.info(request, "The leaderboard for this event has not been published yet.")
+            messages.info(
+                request, "The leaderboard for this event has not been published yet."
+            )
             return redirect("events:event_detail", event_id=event.pk)
 
     entries = lb.entries.select_related("team", "user").order_by("rank") if lb else []
@@ -73,7 +74,9 @@ def upsert_entry(request, event_id):
         rank_int = int(rank)
         score_dec = float(score)
     except (ValueError, TypeError):
-        messages.error(request, "Rank must be a whole number and score must be numeric.")
+        messages.error(
+            request, "Rank must be a whole number and score must be numeric."
+        )
         return redirect("leaderboard:manage", event_id=event.pk)
 
     LeaderboardEntry.objects.update_or_create(

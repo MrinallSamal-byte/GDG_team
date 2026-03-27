@@ -12,7 +12,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.12"
-  DJANGO_SETTINGS_MODULE: gdgProject.settings.dev
+  DJANGO_SETTINGS_MODULE: gdgProject.settings.test
 
 jobs:
   # ── Lint & Format ─────────────────────────────────────────────────────────
@@ -27,16 +27,13 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install linters
-        run: pip install ruff black isort
+        run: pip install ruff black
 
       - name: Ruff check
         run: ruff check gdgProject/
 
       - name: Black check
         run: black --check gdgProject/
-
-      - name: isort check
-        run: isort --check-only gdgProject/
 
   # ── Tests ─────────────────────────────────────────────────────────────────
   test:
@@ -84,14 +81,10 @@ jobs:
         run: python manage.py migrate --run-syncdb
 
       - name: Run tests with coverage
-        working-directory: gdgProject
         env:
           SECRET_KEY: ci-test-secret-key-not-for-production
-          DB_ENGINE: django.db.backends.sqlite3
-          DB_NAME: ":memory:"
         run: |
-          pip install coverage
-          coverage run manage.py test --verbosity=2
+          coverage run -m pytest
           coverage report --fail-under=60
           coverage xml
 
@@ -100,7 +93,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: gdgProject/coverage.xml
+          path: coverage.xml
 
   # ── Security Scan ─────────────────────────────────────────────────────────
   security:

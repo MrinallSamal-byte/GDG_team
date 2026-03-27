@@ -39,8 +39,8 @@ class TeamRepository:
 
         try:
             return Team.objects.select_related("event", "leader").get(id=team_id)
-        except Team.DoesNotExist:
-            raise NotFoundError(f"Team {team_id} not found")
+        except Team.DoesNotExist as exc:
+            raise NotFoundError(f"Team {team_id} not found") from exc
 
     @staticmethod
     def get_pending_request(team_id: int, user_id: int):
@@ -52,8 +52,8 @@ class TeamRepository:
                 user_id=user_id,
                 status=JoinRequestStatus.PENDING,
             )
-        except JoinRequest.DoesNotExist:
-            raise NotFoundError("No pending join request found")
+        except JoinRequest.DoesNotExist as exc:
+            raise NotFoundError("No pending join request found") from exc
 
     @staticmethod
     def user_has_team_for_event(user_id: int, event_id: int) -> bool:
@@ -121,8 +121,10 @@ class TeamJoinRequestService:
             join_request = self.repo.create_join_request(
                 team=team, user=user, role=role, skills=skills, message=message
             )
-        except IntegrityError:
-            raise ConflictError("You already have a pending request for this team.")
+        except IntegrityError as exc:
+            raise ConflictError(
+                "You already have a pending request for this team."
+            ) from exc
 
         logger.info(
             "join_request_created",
@@ -209,7 +211,11 @@ class TeamJoinRequestService:
             skills=join_request.skills,
         )
 
-        from registration.models import Registration, RegistrationStatus, RegistrationType
+        from registration.models import (
+            Registration,
+            RegistrationStatus,
+            RegistrationType,
+        )
 
         Registration.objects.get_or_create(
             event=team.event,
@@ -253,7 +259,7 @@ class TeamJoinRequestService:
             lambda: _push_ws_notification(
                 user_id=requester.id,
                 title=f"Join request approved — {team_name}",
-                body=f"You have been added to team \"{team_name}\".",
+                body=f'You have been added to team "{team_name}".',
                 notif_type="request_approved",
             )
         )
@@ -319,7 +325,9 @@ class TeamJoinRequestService:
 # ─── Deferred notification helpers ───────────────────────────────────────────
 
 
-def _create_leader_notification(*, team_id, leader_id, requester_id, team_name, requester_name):
+def _create_leader_notification(
+    *, team_id, leader_id, requester_id, team_name, requester_name
+):
     """Create notification for team leader — synchronous, runs inside the atomic block."""
     try:
         from django.contrib.auth.models import User
@@ -340,11 +348,16 @@ def _create_leader_notification(*, team_id, leader_id, requester_id, team_name, 
         )
     except Exception:
         logger.error(
-            "Failed to notify leader %d for team %s", leader_id, team_name, exc_info=True
+            "Failed to notify leader %d for team %s",
+            leader_id,
+            team_name,
+            exc_info=True,
         )
 
 
-def _create_requester_approved_notification(*, requester_id, team_name, event_title, leader_id):
+def _create_requester_approved_notification(
+    *, requester_id, team_name, event_title, leader_id
+):
     """Create approval notification — synchronous, runs inside the atomic block."""
     try:
         from django.contrib.auth.models import User
@@ -415,4 +428,6 @@ def _push_ws_notification(*, user_id, title, body, notif_type):
             },
         )
     except Exception:
-        logger.warning("Failed to push WS notification to user %d", user_id, exc_info=True)
+        logger.warning(
+            "Failed to push WS notification to user %d", user_id, exc_info=True
+        )

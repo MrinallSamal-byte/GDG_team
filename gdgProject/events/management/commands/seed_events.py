@@ -13,7 +13,6 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from django.utils.text import slugify
 
 from events.models import (
     Event,
@@ -26,59 +25,108 @@ from events.models import (
 # ── Rich event data pools ────────────────────────────────────────────────────
 
 HACKATHON_TITLES = [
-    "CodeStorm 2026", "HackNova Spring", "BuildTheWeb Hackathon",
-    "DevSprint Summit", "ByteBash 2026", "InnoHack Challenge",
-    "PixelForge Hack", "FutureTech Hack", "CloudHack Carnival",
-    "BlockChain Blitz", "AIthon Grand Finale", "GreenCode Hackathon",
-    "CyberHack Challenge", "HealthTech Hack", "OpenSource Weekend Hack",
+    "CodeStorm 2026",
+    "HackNova Spring",
+    "BuildTheWeb Hackathon",
+    "DevSprint Summit",
+    "ByteBash 2026",
+    "InnoHack Challenge",
+    "PixelForge Hack",
+    "FutureTech Hack",
+    "CloudHack Carnival",
+    "BlockChain Blitz",
+    "AIthon Grand Finale",
+    "GreenCode Hackathon",
+    "CyberHack Challenge",
+    "HealthTech Hack",
+    "OpenSource Weekend Hack",
 ]
 
 WORKSHOP_TITLES = [
-    "React Masterclass", "Django Deep Dive", "Flutter Bootcamp",
-    "AWS Cloud Workshop", "Docker & Kubernetes 101", "ML with Python",
-    "Figma Design Sprint", "Data Science Crash Course", "Git & GitHub Essentials",
-    "GraphQL Workshop", "Next.js for Beginners", "Rust Programming Basics",
-    "Blockchain Fundamentals", "iOS SwiftUI Lab", "DevOps Essentials",
+    "React Masterclass",
+    "Django Deep Dive",
+    "Flutter Bootcamp",
+    "AWS Cloud Workshop",
+    "Docker & Kubernetes 101",
+    "ML with Python",
+    "Figma Design Sprint",
+    "Data Science Crash Course",
+    "Git & GitHub Essentials",
+    "GraphQL Workshop",
+    "Next.js for Beginners",
+    "Rust Programming Basics",
+    "Blockchain Fundamentals",
+    "iOS SwiftUI Lab",
+    "DevOps Essentials",
 ]
 
 CODING_CONTEST_TITLES = [
-    "Code Warriors", "Algorithm Arena", "Competitive Coding Cup",
-    "DSA Championship", "SpeedCode Challenge", "Binary Battle",
-    "Logic Olympiad", "Code Golf Masters", "Recursion Rumble",
+    "Code Warriors",
+    "Algorithm Arena",
+    "Competitive Coding Cup",
+    "DSA Championship",
+    "SpeedCode Challenge",
+    "Binary Battle",
+    "Logic Olympiad",
+    "Code Golf Masters",
+    "Recursion Rumble",
     "Graph Theory Grand Prix",
 ]
 
 QUIZ_TITLES = [
-    "TechQuiz Mania", "CS Fundamentals Quiz", "Cybersecurity Quiz Bowl",
-    "Cloud Computing Quiz", "OS & Networks Challenge", "Database Derby",
-    "AI/ML Quiz Showdown", "Web Standards Quiz", "Programming Trivia Night",
+    "TechQuiz Mania",
+    "CS Fundamentals Quiz",
+    "Cybersecurity Quiz Bowl",
+    "Cloud Computing Quiz",
+    "OS & Networks Challenge",
+    "Database Derby",
+    "AI/ML Quiz Showdown",
+    "Web Standards Quiz",
+    "Programming Trivia Night",
     "FOSS Knowledge Bowl",
 ]
 
 DESIGN_TITLES = [
-    "UI/UX Design Sprint", "Logo Design Clash", "Wireframe Wars",
-    "Design Thinking Workshop", "Brand Identity Challenge",
-    "Poster Design Jam", "Mobile UI Contest", "Accessibility Design Jam",
+    "UI/UX Design Sprint",
+    "Logo Design Clash",
+    "Wireframe Wars",
+    "Design Thinking Workshop",
+    "Brand Identity Challenge",
+    "Poster Design Jam",
+    "Mobile UI Contest",
+    "Accessibility Design Jam",
 ]
 
 IDEATHON_TITLES = [
-    "GreenTech Ideathon", "Social Impact Ideathon", "EduTech Innovate",
-    "SmartCity Ideathon", "FinTech Ideas Challenge", "AgriTech Brainstorm",
-    "HealthCare Ideathon", "Sustainability Pitch",
+    "GreenTech Ideathon",
+    "Social Impact Ideathon",
+    "EduTech Innovate",
+    "SmartCity Ideathon",
+    "FinTech Ideas Challenge",
+    "AgriTech Brainstorm",
+    "HealthCare Ideathon",
+    "Sustainability Pitch",
 ]
 
 PAPER_TITLES = [
-    "IEEE Paper Presentation", "ACM Research Symposium",
-    "Emerging Tech Paper Fest", "AI Research Showcase",
+    "IEEE Paper Presentation",
+    "ACM Research Symposium",
+    "Emerging Tech Paper Fest",
+    "AI Research Showcase",
     "Systems Design Paper Forum",
 ]
 
 OTHER_TITLES = [
-    "Campus Treasure Hunt", "Tech Debate Championship",
-    "Open Mic: Tech Edition", "Startup Pitch Night",
-    "Resume Building Workshop", "Mock Interview Marathon",
-    "Career Fair 2026", "Alumni Tech Talk",
-    "Photography Challenge", "Gaming Tournament",
+    "Campus Treasure Hunt",
+    "Tech Debate Championship",
+    "Open Mic: Tech Edition",
+    "Startup Pitch Night",
+    "Resume Building Workshop",
+    "Mock Interview Marathon",
+    "Career Fair 2026",
+    "Alumni Tech Talk",
+    "Photography Challenge",
+    "Gaming Tournament",
 ]
 
 CATEGORY_TITLE_MAP = {
@@ -89,18 +137,41 @@ CATEGORY_TITLE_MAP = {
     EventCategory.DESIGN_CHALLENGE: DESIGN_TITLES,
     EventCategory.IDEATHON: IDEATHON_TITLES,
     EventCategory.PAPER_PRESENTATION: PAPER_TITLES,
-    EventCategory.CASE_STUDY: ["Case Study Showdown", "Business Case Slam", "MBA Case Challenge"],
-    EventCategory.CULTURAL: ["Dance Fiesta", "Music Night Live", "Drama Fest", "Art Exhibition"],
-    EventCategory.SPORTS: ["Cricket Tournament", "Football League", "Badminton Open", "Chess Championship", "E-Sports Arena"],
+    EventCategory.CASE_STUDY: [
+        "Case Study Showdown",
+        "Business Case Slam",
+        "MBA Case Challenge",
+    ],
+    EventCategory.CULTURAL: [
+        "Dance Fiesta",
+        "Music Night Live",
+        "Drama Fest",
+        "Art Exhibition",
+    ],
+    EventCategory.SPORTS: [
+        "Cricket Tournament",
+        "Football League",
+        "Badminton Open",
+        "Chess Championship",
+        "E-Sports Arena",
+    ],
     EventCategory.OTHER: OTHER_TITLES,
 }
 
 VENUES = [
-    "Main Auditorium", "CS Department Lab 3", "Innovation Hub",
-    "Open Air Theatre", "Conference Hall A", "Library Seminar Room",
-    "Sports Complex", "Startup Incubation Centre", "Virtual (Zoom)",
-    "Virtual (Google Meet)", "Engineering Block Seminar Hall",
-    "Student Activity Centre", "MBA Department Hall",
+    "Main Auditorium",
+    "CS Department Lab 3",
+    "Innovation Hub",
+    "Open Air Theatre",
+    "Conference Hall A",
+    "Library Seminar Room",
+    "Sports Complex",
+    "Startup Incubation Centre",
+    "Virtual (Zoom)",
+    "Virtual (Google Meet)",
+    "Engineering Block Seminar Hall",
+    "Student Activity Centre",
+    "MBA Department Hall",
 ]
 
 DESCRIPTIONS = {
@@ -147,10 +218,11 @@ class Command(BaseCommand):
         if created:
             organizer.set_password("Organizer@2026")
             organizer.save()
-            self.stdout.write(self.style.SUCCESS("Created organizer user: campus_organizer"))
+            self.stdout.write(
+                self.style.SUCCESS("Created organizer user: campus_organizer")
+            )
 
         now = timezone.now()
-        categories = list(EventCategory.choices)
         modes = list(EventMode.choices)
         participation_types = list(ParticipationType.choices)
 
@@ -210,12 +282,14 @@ class Command(BaseCommand):
                 event_end = event_start + timedelta(hours=random.randint(4, 72))
                 reg_start = now - timedelta(days=random.randint(0, 7))
                 reg_end = event_start - timedelta(days=1)
-                status = random.choice([
-                    EventStatus.PUBLISHED,
-                    EventStatus.REGISTRATION_OPEN,
-                    EventStatus.REGISTRATION_OPEN,
-                    EventStatus.REGISTRATION_OPEN,
-                ])
+                status = random.choice(
+                    [
+                        EventStatus.PUBLISHED,
+                        EventStatus.REGISTRATION_OPEN,
+                        EventStatus.REGISTRATION_OPEN,
+                        EventStatus.REGISTRATION_OPEN,
+                    ]
+                )
 
             mode = random.choice(modes)[0]
             part_type = random.choice(participation_types)[0]
@@ -229,12 +303,14 @@ class Command(BaseCommand):
 
             venue = random.choice(VENUES) if mode != "online" else ""
             platform = (
-                random.choice([
-                    "https://meet.google.com/example",
-                    "https://zoom.us/j/example",
-                    "https://teams.microsoft.com/example",
-                    "",
-                ])
+                random.choice(
+                    [
+                        "https://meet.google.com/example",
+                        "https://zoom.us/j/example",
+                        "https://teams.microsoft.com/example",
+                        "",
+                    ]
+                )
                 if mode != "offline"
                 else ""
             )
@@ -243,9 +319,18 @@ class Command(BaseCommand):
             is_featured = random.random() < 0.12  # ~12% featured
 
             faqs = [
-                {"q": "Who can participate?", "a": "All college students with a valid ID."},
-                {"q": "Is there a registration fee?", "a": f"{'Yes, ₹' + str(int(fee)) if fee else 'No, it is free!'}"},
-                {"q": "Will certificates be provided?", "a": "Yes, participation and merit certificates will be issued."},
+                {
+                    "q": "Who can participate?",
+                    "a": "All college students with a valid ID.",
+                },
+                {
+                    "q": "Is there a registration fee?",
+                    "a": f"{'Yes, ₹' + str(int(fee)) if fee else 'No, it is free!'}",
+                },
+                {
+                    "q": "Will certificates be provided?",
+                    "a": "Yes, participation and merit certificates will be issued.",
+                },
             ]
 
             event = Event(
@@ -274,7 +359,7 @@ class Command(BaseCommand):
                 merit_certificate=random.choice([True, False]),
                 registration_fee=fee,
                 eligibility="Open to all college students",
-                rules=f"1. Participants must register before the deadline.\\n2. Plagiarism will result in disqualification.\\n3. Judge's decision is final.",
+                rules="1. Participants must register before the deadline.\\n2. Plagiarism will result in disqualification.\\n3. Judge's decision is final.",
                 faqs=faqs,
                 contact_info="events@campusarena.dev | +91 98765 43210",
                 is_featured=is_featured,
@@ -286,6 +371,10 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(f"\n✅ Successfully created {events_created} events!")
         )
-        self.stdout.write(f"   Organizer: campus_organizer / Organizer@2026")
-        self.stdout.write(f"   Featured events: {Event.objects.filter(is_featured=True).count()}")
-        self.stdout.write(f"   Open registration: {Event.objects.filter(status=EventStatus.REGISTRATION_OPEN).count()}")
+        self.stdout.write("   Organizer: campus_organizer / Organizer@2026")
+        self.stdout.write(
+            f"   Featured events: {Event.objects.filter(is_featured=True).count()}"
+        )
+        self.stdout.write(
+            f"   Open registration: {Event.objects.filter(status=EventStatus.REGISTRATION_OPEN).count()}"
+        )

@@ -10,6 +10,10 @@ Usage:
 """
 
 from django.core.management.base import BaseCommand, CommandError
+from events.models import Event
+from registration.models import Registration, RegistrationStatus
+
+from checkin.models import CheckIn
 
 
 class Command(BaseCommand):
@@ -30,28 +34,32 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        from checkin.models import CheckIn
-        from events.models import Event
-        from registration.models import Registration, RegistrationStatus
-
         event_id = options["event_id"]
         dry_run = options["dry_run"]
 
         try:
             event = Event.all_objects.get(pk=event_id)
-        except Event.DoesNotExist:
-            raise CommandError(f"Event with id={event_id} does not exist.")
+        except Event.DoesNotExist as exc:
+            raise CommandError(f"Event with id={event_id} does not exist.") from exc
 
         self.stdout.write(f"Event: {event.title} (id={event.pk})")
 
-        registrations = Registration.objects.filter(
-            event=event,
-            status__in=[RegistrationStatus.CONFIRMED, RegistrationStatus.SUBMITTED],
-        ).select_related("user").exclude(checkin__isnull=False)
+        registrations = (
+            Registration.objects.filter(
+                event=event,
+                status__in=[RegistrationStatus.CONFIRMED, RegistrationStatus.SUBMITTED],
+            )
+            .select_related("user")
+            .exclude(checkin__isnull=False)
+        )
 
         count = registrations.count()
         if count == 0:
-            self.stdout.write(self.style.WARNING("All registrants already have QR tokens. Nothing to do."))
+            self.stdout.write(
+                self.style.WARNING(
+                    "All registrants already have QR tokens. Nothing to do."
+                )
+            )
             return
 
         self.stdout.write(f"Found {count} registrant(s) without a check-in token.")
@@ -62,7 +70,9 @@ class Command(BaseCommand):
                     f"  [DRY RUN] Would create token for "
                     f"{reg.user.get_full_name() or reg.user.username} ({reg.registration_id})"
                 )
-            self.stdout.write(self.style.SUCCESS(f"\n[DRY RUN] Would create {count} token(s)."))
+            self.stdout.write(
+                self.style.SUCCESS(f"\n[DRY RUN] Would create {count} token(s).")
+            )
             return
 
         created = 0
@@ -73,4 +83,6 @@ class Command(BaseCommand):
             )
             created += 1
 
-        self.stdout.write(self.style.SUCCESS(f"Done. Created {created} check-in token(s)."))
+        self.stdout.write(
+            self.style.SUCCESS(f"Done. Created {created} check-in token(s).")
+        )

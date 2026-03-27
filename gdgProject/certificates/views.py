@@ -64,7 +64,9 @@ def verify_certificate(request, token):
     )
     if not cert:
         return render(request, "certificates/verify.html", {"valid": False})
-    return render(request, "certificates/verify.html", {"valid": True, "certificate": cert})
+    return render(
+        request, "certificates/verify.html", {"valid": True, "certificate": cert}
+    )
 
 
 @login_required

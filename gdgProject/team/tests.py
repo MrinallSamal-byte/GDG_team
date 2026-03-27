@@ -9,8 +9,9 @@ from registration.models import (
     RegistrationTechStack,
     RegistrationType,
 )
-from team.models import Team, TeamMembership
 from users.models import UserProfile
+
+from team.models import Team, TeamMembership
 
 
 class TeamManagementViewTest(TestCase):

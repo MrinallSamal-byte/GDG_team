@@ -15,12 +15,11 @@ def generate_qr_png(data: str) -> bytes:
     """Return raw PNG bytes for a QR code encoding *data*."""
     try:
         import qrcode
-        from qrcode.image.pil import PilImage
-    except ImportError:
+    except ImportError as exc:
         raise RuntimeError(
             "qrcode[pil] is required for QR generation. "
             "Install with: pip install 'qrcode[pil]'"
-        )
+        ) from exc
 
     qr = qrcode.QRCode(
         version=None,

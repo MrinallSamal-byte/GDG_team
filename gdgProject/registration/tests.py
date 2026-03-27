@@ -3,9 +3,10 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 from events.models import Event, EventStatus
-from registration.models import Registration, RegistrationTechStack, RegistrationType
 from team.models import Team, TeamMembership
 from users.models import UserProfile
+
+from registration.models import Registration, RegistrationTechStack, RegistrationType
 
 
 class RegistrationViewTest(TestCase):

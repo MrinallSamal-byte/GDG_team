@@ -14,7 +14,6 @@ Optional: call Claude via the Anthropic API for natural-language explanations.
 
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 logger = logging.getLogger("campusarena.ai_matching")
 
@@ -24,13 +23,13 @@ class TeamMatchResult:
     team_id: int
     team_name: str
     event_title: str
-    score: float          # 0–100
+    score: float  # 0–100
     spots_remaining: int
     missing_roles: list[str]
     complementary_skills: list[str]
     shared_skills: list[str]
     match_reason: str
-    user_preferred_role: Optional[str] = None
+    user_preferred_role: str | None = None
 
 
 def get_team_recommendations(
@@ -45,9 +44,7 @@ def get_team_recommendations(
     from team.models import Team
 
     # Resolve max_team_size from the event (fall back to 4 if no teams yet)
-    first_team = (
-        Team.objects.filter(event_id=event_id).select_related("event").first()
-    )
+    first_team = Team.objects.filter(event_id=event_id).select_related("event").first()
     max_size = first_team.event.max_team_size if first_team else 4
 
     user_skills = _get_user_skills(user)
@@ -64,7 +61,14 @@ def get_team_recommendations(
     results = [
         result
         for team in open_teams
-        if (result := _score_team(team=team, user_skills=user_skills, user_role=user_role, max_size=max_size))
+        if (
+            result := _score_team(
+                team=team,
+                user_skills=user_skills,
+                user_role=user_role,
+                max_size=max_size,
+            )
+        )
     ]
 
     results.sort(key=lambda r: -r.score)
@@ -92,7 +96,7 @@ def _get_user_skills(user) -> set[str]:
     return skills
 
 
-def _get_user_preferred_role(user, event_id: int) -> Optional[str]:
+def _get_user_preferred_role(user, event_id: int) -> str | None:
     try:
         from registration.models import Registration
 
@@ -131,9 +135,9 @@ def _score_team(
     *,
     team,
     user_skills: set[str],
-    user_role: Optional[str],
+    user_role: str | None,
     max_size: int,
-) -> Optional[TeamMatchResult]:
+) -> TeamMatchResult | None:
     member_count = team.memberships.count()
     spots = max_size - member_count
     if spots <= 0:
@@ -154,7 +158,9 @@ def _score_team(
     role_score = 40 if (user_role and user_role in missing_roles) else 0
     skill_score = min(len(complementary), 3) * 10
     max_spots = max_size - 1
-    size_score = round((1 - (spots - 1) / max(max_spots, 1)) * 20) if max_spots > 0 else 10
+    size_score = (
+        round((1 - (spots - 1) / max(max_spots, 1)) * 20) if max_spots > 0 else 10
+    )
     familiarity_score = min(len(shared), 2) * 5
 
     total = role_score + skill_score + size_score + familiarity_score
@@ -195,6 +201,7 @@ def get_ai_explanation(match: TeamMatchResult, user) -> str:
         import anthropic
 
         from team.models import MemberRole
+
         role_labels = dict(MemberRole.choices)
 
         # Use the user_preferred_role stored on the match result

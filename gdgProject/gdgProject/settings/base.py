@@ -28,7 +28,9 @@ except ModuleNotFoundError:
             if not val:
                 return []
             return [v.strip() for v in val.split(",") if v.strip()]
+
         return _cast
+
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # gdgProject/
@@ -137,7 +139,9 @@ CHANNEL_LAYERS = {
 
 # ─── Auth & Password Validation ──────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
         "OPTIONS": {"min_length": 10},
@@ -191,8 +195,8 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = config("MEDIA_URL", default="/media/")
+MEDIA_ROOT = Path(config("MEDIA_ROOT", default=str(BASE_DIR / "media")))
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -232,8 +236,16 @@ LOGGING = {
     "root": {"handlers": ["console"], "level": LOG_LEVEL},
     "loggers": {
         "django": {"handlers": ["console"], "level": "WARNING", "propagate": False},
-        "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
-        "campusarena": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "campusarena": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        },
     },
 }
 

@@ -41,7 +41,9 @@ class Certificate(models.Model):
         default=CertificateType.PARTICIPATION,
     )
     # UUID token used for public verification URL
-    verification_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    verification_token = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False
+    )
     pdf_file = models.FileField(upload_to="certificates/pdfs/", blank=True)
     issued_at = models.DateTimeField(auto_now_add=True)
 

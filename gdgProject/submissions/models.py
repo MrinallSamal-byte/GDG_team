@@ -39,8 +39,12 @@ class Submission(models.Model):
     )
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, default="")
-    project_url = models.URLField(blank=True, default="", help_text=_("GitHub / live demo URL"))
-    presentation_url = models.URLField(blank=True, default="", help_text=_("Slides / Figma link"))
+    project_url = models.URLField(
+        blank=True, default="", help_text=_("GitHub / live demo URL")
+    )
+    presentation_url = models.URLField(
+        blank=True, default="", help_text=_("Slides / Figma link")
+    )
     file_upload = models.FileField(upload_to="submissions/files/", blank=True)
     status = models.CharField(
         max_length=15,
@@ -71,9 +75,15 @@ class Submission(models.Model):
             ),
         ]
         indexes = [
-            models.Index(fields=["event", "status"], name="idx_submission_event_status"),
+            models.Index(
+                fields=["event", "status"], name="idx_submission_event_status"
+            ),
         ]
 
     def __str__(self):
-        entity = self.team.name if self.team else (self.user.get_full_name() or self.user.username)
+        entity = (
+            self.team.name
+            if self.team
+            else (self.user.get_full_name() or self.user.username)
+        )
         return f"{self.title} by {entity} @ {self.event.title}"
