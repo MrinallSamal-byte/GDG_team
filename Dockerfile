@@ -59,11 +59,14 @@ COPY gdgProject/ ./
 # ── Static file collection ───────────────────────────────────────────────────
 # SECRET_KEY is required by Django's settings loader, but this value is
 # NEVER used in production — real SECRET_KEY comes from the .env / env vars.
+# DATABASE_URL points at a temporary SQLite file so collectstatic can run
+# during image build without requiring the real production database.
 ARG SECRET_KEY=build-time-placeholder-not-used-at-runtime
 ARG DEBUG=False
 
 RUN SECRET_KEY=${SECRET_KEY} \
     DEBUG=${DEBUG} \
+    DATABASE_URL=sqlite:////tmp/build-collectstatic.sqlite3 \
     python manage.py collectstatic --noinput --clear --skip-checks
 
 # ── Security: non-root user ──────────────────────────────────────────────────
