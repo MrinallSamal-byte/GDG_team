@@ -64,8 +64,8 @@ class DashboardViewsTest(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Dash Test")
         self.assertContains(resp, "MIT")
-        self.assertContains(resp, "https://leetcode.com/u/dash")
-        self.assertContains(resp, "https://dash.dev")
+        self.assertContains(resp, "#leetcode")
+        self.assertContains(resp, "#portfolio")
 
     def test_my_events(self):
         resp = self.client.get(reverse("dashboard:my_events"))
