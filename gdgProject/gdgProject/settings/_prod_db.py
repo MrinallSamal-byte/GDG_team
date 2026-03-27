@@ -37,6 +37,19 @@ def _looks_like_placeholder_mysql(db_config: dict) -> bool:
     )
 
 
+def _truthy(value) -> bool:
+    """Interpret common environment truthy strings."""
+    return _clean(value).lower() in {"1", "true", "yes", "on"}
+
+
+def _uses_localhost_mysql(db_config: dict) -> bool:
+    """Return True when production would try to use a local MySQL socket/TCP host."""
+    return (
+        _clean(db_config.get("ENGINE")) == "django.db.backends.mysql"
+        and _clean(db_config.get("HOST")).lower() in {"", "127.0.0.1", "localhost"}
+    )
+
+
 def _database_from_url(database_url: str) -> dict:
     """Parse DATABASE_URL into a Django DATABASES entry."""
     db_config = dj_database_url.parse(
@@ -109,6 +122,14 @@ def resolve_production_database(default_db: dict, env: dict) -> dict:
             "Production database is not configured. Set DATABASE_URL for "
             "Render/Postgres, provide PGHOST/PGDATABASE/PGUSER/PGPASSWORD, "
             "or override the DB_* settings for your production database."
+        )
+
+    if _uses_localhost_mysql(db_config) and not _truthy(env.get("ALLOW_LOCALHOST_DB")):
+        raise ImproperlyConfigured(
+            "Production MySQL configuration points to localhost. This is almost "
+            "certainly incorrect in Render. Remove stale DB_* variables and set "
+            "DATABASE_URL, or set ALLOW_LOCALHOST_DB=true only if localhost "
+            "MySQL is truly intentional."
         )
 
     return db_config

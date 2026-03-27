@@ -58,6 +58,7 @@ for key in (
     "PGUSER",
     "PGPASSWORD",
     "PGSSLMODE",
+    "ALLOW_LOCALHOST_DB",
 ):
     value = os.environ.get(key)
     if not value:

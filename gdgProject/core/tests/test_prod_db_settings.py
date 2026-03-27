@@ -65,3 +65,34 @@ def test_resolve_production_database_rejects_placeholder_mysql_defaults():
         assert "Production database is not configured" in str(exc)
     else:
         raise AssertionError("Expected ImproperlyConfigured for placeholder MySQL config")
+
+
+def test_resolve_production_database_rejects_localhost_mysql_in_production():
+    db_config = {
+        **PLACEHOLDER_MYSQL,
+        "PASSWORD": "custom-password",
+    }
+
+    try:
+        resolve_production_database(db_config, {})
+    except ImproperlyConfigured as exc:
+        assert "points to localhost" in str(exc)
+    else:
+        raise AssertionError("Expected ImproperlyConfigured for localhost MySQL config")
+
+
+def test_resolve_production_database_allows_localhost_mysql_when_explicitly_enabled():
+    db_config = {
+        **PLACEHOLDER_MYSQL,
+        "PASSWORD": "custom-password",
+    }
+
+    resolved = resolve_production_database(
+        db_config,
+        {
+            "ALLOW_LOCALHOST_DB": "true",
+        },
+    )
+
+    assert resolved["ENGINE"] == "django.db.backends.mysql"
+    assert resolved["HOST"] == "127.0.0.1"
