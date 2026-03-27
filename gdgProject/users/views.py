@@ -482,6 +482,7 @@ def edit_profile(request):
         profile.branch = request.POST.get("branch", "").strip()
         profile.github = request.POST.get("github", "").strip()
         profile.linkedin = request.POST.get("linkedin", "").strip()
+        profile.leetcode = request.POST.get("leetcode", "").strip()
         profile.portfolio = request.POST.get("portfolio", "").strip()
         profile.bio = request.POST.get("bio", "").strip()
         profile.skills = request.POST.get("skills", "").strip()

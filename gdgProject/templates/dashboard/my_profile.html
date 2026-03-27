@@ -116,6 +116,7 @@
             <div class="n-info-cell"><div class="k">Phone</div><div class="v">{{ profile.phone }}</div></div>
             <div class="n-info-cell"><div class="k">GitHub</div><div class="v">{% if profile.github %}<a href="{{ profile.github }}" target="_blank">{{ profile.github }}</a>{% else %}<span style="color:var(--muted-soft);">—</span>{% endif %}</div></div>
             <div class="n-info-cell"><div class="k">LinkedIn</div><div class="v">{% if profile.linkedin %}<a href="{{ profile.linkedin }}" target="_blank">{{ profile.linkedin }}</a>{% else %}<span style="color:var(--muted-soft);">—</span>{% endif %}</div></div>
+            <div class="n-info-cell"><div class="k">LeetCode</div><div class="v">{% if profile.leetcode %}<a href="{{ profile.leetcode }}" target="_blank">{{ profile.leetcode }}</a>{% else %}<span style="color:var(--muted-soft);">—</span>{% endif %}</div></div>
             <div class="n-info-cell"><div class="k">Portfolio</div><div class="v">{% if profile.portfolio %}<a href="{{ profile.portfolio }}" target="_blank">{{ profile.portfolio }}</a>{% else %}<span style="color:var(--muted-soft);">—</span>{% endif %}</div></div>
             <div class="n-info-cell"><div class="k">College</div><div class="v">{{ profile.college }}</div></div>
         </div>

@@ -46,6 +46,10 @@ class DashboardViewsTest(TestCase):
             college="MIT",
             branch="CSE",
             year=3,
+            github="https://github.com/dash",
+            linkedin="https://linkedin.com/in/dash",
+            leetcode="https://leetcode.com/u/dash",
+            portfolio="https://dash.dev",
         )
         self.client.login(username="dashtest", password="testpass123")
 
@@ -60,6 +64,8 @@ class DashboardViewsTest(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Dash Test")
         self.assertContains(resp, "MIT")
+        self.assertContains(resp, "https://leetcode.com/u/dash")
+        self.assertContains(resp, "https://dash.dev")
 
     def test_my_events(self):
         resp = self.client.get(reverse("dashboard:my_events"))

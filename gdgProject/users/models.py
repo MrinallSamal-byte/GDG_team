@@ -23,6 +23,7 @@ class UserProfile(models.Model):
     )
     github = models.URLField(blank=True, default="")
     linkedin = models.URLField(blank=True, default="")
+    leetcode = models.URLField(blank=True, default="")
     portfolio = models.URLField(
         blank=True, default="", help_text=_("Portfolio / personal website URL")
     )

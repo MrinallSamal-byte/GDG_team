@@ -21,6 +21,9 @@
 .n-g2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
 .n-sub-btn{width:100%;padding:.8rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-top:1rem}
 .n-sub-btn:hover{background:var(--primary-2);border-color:var(--primary-2)}
+.n-auth-link{margin-top:1rem;text-align:center;color:var(--muted);font-size:.82rem}
+.n-auth-link a{color:var(--primary);font-weight:700;text-decoration:none;letter-spacing:.04em;text-transform:uppercase;font-size:.76rem}
+.n-auth-link a:hover{text-decoration:underline}
 .n-alert{display:flex;align-items:flex-start;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:1rem;border:1px solid}
 .n-alert.err{background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger)}
 .n-chip-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}
@@ -133,6 +136,10 @@
                 </div>
 
                 <button type="submit" class="n-sub-btn">Create Account <i data-lucide="arrow-right" style="width:13px;height:13px;display:inline;"></i></button>
+                <div class="n-auth-link">
+                    Already have an account?
+                    <a href="{% url 'users:login' %}">Sign In</a>
+                </div>
             </form>
         </div>
     </div>

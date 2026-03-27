@@ -219,6 +219,16 @@
                                     <i data-lucide="linkedin"></i> LinkedIn
                                 </a>
                                 {% endif %}
+                                {% if p.leetcode %}
+                                <a href="{{ p.leetcode }}" target="_blank" rel="noopener" class="ft-btn">
+                                    <i data-lucide="code-2"></i> LeetCode
+                                </a>
+                                {% endif %}
+                                {% if p.portfolio %}
+                                <a href="{{ p.portfolio }}" target="_blank" rel="noopener" class="ft-btn">
+                                    <i data-lucide="briefcase"></i> Portfolio
+                                </a>
+                                {% endif %}
                                 <a href="{% url 'events:event_detail' reg.event.pk %}" class="ft-btn">
                                     <i data-lucide="calendar"></i> View Event
                                 </a>

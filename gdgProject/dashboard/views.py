@@ -82,6 +82,7 @@ def my_profile(request):
         "year": profile.year_display or "Not set",
         "github": profile.github or "",
         "linkedin": profile.linkedin or "",
+        "leetcode": profile.leetcode or "",
         "portfolio": profile.portfolio or "",
         "bio": profile.bio or "No bio yet. Click Edit Profile to add one.",
         "skills": profile.skills_list or [],
@@ -332,6 +333,7 @@ def edit_profile(request):
         profile.phone = request.POST.get("phone", "").strip()
         profile.github = request.POST.get("github", "").strip()
         profile.linkedin = request.POST.get("linkedin", "").strip()
+        profile.leetcode = request.POST.get("leetcode", "").strip()
         profile.portfolio = request.POST.get("portfolio", "").strip()
         profile.bio = request.POST.get("bio", "").strip()
         profile.college = request.POST.get("college", "").strip()

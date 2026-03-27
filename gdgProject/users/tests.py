@@ -21,6 +21,7 @@ class UserProfileModelTest(TestCase):
             college="MIT",
             branch="CSE",
             year=3,
+            leetcode="https://leetcode.com/u/testuser",
             skills="Python,Django,React",
         )
 
@@ -48,6 +49,9 @@ class UserProfileModelTest(TestCase):
     def test_year_display_none(self):
         self.profile.year = None
         self.assertEqual(self.profile.year_display, "")
+
+    def test_leetcode_field(self):
+        self.assertEqual(self.profile.leetcode, "https://leetcode.com/u/testuser")
 
 
 class LoginViewTest(TestCase):
