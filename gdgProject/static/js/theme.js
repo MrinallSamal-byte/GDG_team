@@ -19,7 +19,7 @@
  */
 
 (function () {
-  var STORAGE_KEY = "ca-theme";
+  var STORAGE_KEY = "campusarena-theme";
   var ROOT = document.documentElement;
 
   function getSystemTheme() {
@@ -42,6 +42,10 @@
 
   function applyTheme(theme) {
     ROOT.setAttribute("data-theme", theme);
+    var label = document.getElementById("theme-label");
+    if (label) {
+      label.textContent = theme === "dark" ? "Dark" : "Light";
+    }
     // Update all toggle icons on the page
     document.querySelectorAll("[data-theme-icon]").forEach(function (el) {
       el.textContent = theme === "dark" ? "☀" : "🌙";
