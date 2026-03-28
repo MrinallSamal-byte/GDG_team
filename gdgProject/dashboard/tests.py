@@ -1,4 +1,7 @@
+from unittest.mock import patch
+
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 from notification.models import Notification
@@ -72,6 +75,91 @@ class DashboardViewsTest(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Edit Profile")
         self.assertContains(resp, "Save Changes")
+
+    def test_edit_profile_post_updates_details(self):
+        resp = self.client.post(
+            reverse("dashboard:edit_profile"),
+            {
+                "phone": "9876543210",
+                "college": "Stanford",
+                "branch": "AI",
+                "year": "2",
+                "github": "https://github.com/updated",
+                "linkedin": "https://linkedin.com/in/updated",
+                "leetcode": "https://leetcode.com/u/updated",
+                "portfolio": "https://updated.dev",
+                "bio": "Updated bio",
+                "skills": "React,Python",
+            },
+            follow=True,
+        )
+        self.assertRedirects(resp, reverse("dashboard:my_profile"))
+        profile = UserProfile.objects.get(user=self.user)
+        self.assertEqual(profile.phone, "9876543210")
+        self.assertEqual(profile.college, "Stanford")
+        self.assertEqual(profile.branch, "AI")
+        self.assertEqual(profile.year, 2)
+        self.assertEqual(profile.skills, "React,Python")
+        self.assertContains(resp, "Profile updated successfully.")
+
+    def test_edit_profile_post_uploads_photo(self):
+        photo = SimpleUploadedFile(
+            "avatar.gif",
+            b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;",
+            content_type="image/gif",
+        )
+        resp = self.client.post(
+            reverse("dashboard:edit_profile"),
+            {
+                "phone": "555",
+                "college": "MIT",
+                "branch": "CSE",
+                "year": "3",
+                "github": "https://github.com/dash",
+                "linkedin": "https://linkedin.com/in/dash",
+                "leetcode": "https://leetcode.com/u/dash",
+                "portfolio": "https://dash.dev",
+                "bio": "Bio",
+                "skills": "Django",
+                "profile_photo": photo,
+            },
+            follow=True,
+        )
+        self.assertRedirects(resp, reverse("dashboard:my_profile"))
+        profile = UserProfile.objects.get(user=self.user)
+        self.assertTrue(profile.profile_picture.name.startswith("profiles/avatars/"))
+
+    def test_edit_profile_photo_failure_keeps_text_changes(self):
+        photo = SimpleUploadedFile(
+            "avatar.gif",
+            b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;",
+            content_type="image/gif",
+        )
+        with patch("dashboard.views._save_profile_photo", side_effect=OSError("disk full")):
+            resp = self.client.post(
+                reverse("dashboard:edit_profile"),
+                {
+                    "phone": "1112223333",
+                    "college": "IIIT",
+                    "branch": "ECE",
+                    "year": "4",
+                    "github": "https://github.com/dash",
+                    "linkedin": "https://linkedin.com/in/dash",
+                    "leetcode": "https://leetcode.com/u/dash",
+                    "portfolio": "https://dash.dev",
+                    "bio": "Still saved",
+                    "skills": "MongoDB",
+                    "profile_photo": photo,
+                },
+                follow=True,
+            )
+
+        self.assertRedirects(resp, reverse("dashboard:edit_profile"))
+        profile = UserProfile.objects.get(user=self.user)
+        self.assertEqual(profile.college, "IIIT")
+        self.assertEqual(profile.branch, "ECE")
+        self.assertEqual(profile.skills, "MongoDB")
+        self.assertContains(resp, "Profile details were saved, but we")
 
     def test_my_events(self):
         resp = self.client.get(reverse("dashboard:my_events"))

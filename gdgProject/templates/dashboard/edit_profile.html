@@ -3,8 +3,11 @@
 {% block extra_css %}
 {% include 'includes/_dash_layout.html' %}
 <style>
-.n-dash-content{max-width:660px!important}
-.n-card{background:var(--surface);border:1px solid var(--border);padding:1.25rem;margin-bottom:1px}
+.n-dash-content{width:100%;max-width:1120px!important}
+.n-edit-form{display:grid;gap:1rem}
+.n-edit-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);gap:1rem;align-items:start}
+.n-edit-main,.n-edit-side{display:grid;gap:1px}
+.n-card{background:var(--surface);border:1px solid var(--border);padding:1.25rem;margin-bottom:0;min-width:0}
 .n-card-head{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;display:flex;align-items:center;gap:.4rem}
 .n-card-head i{width:12px;height:12px;color:var(--primary)}
 .n-f label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.38rem}
@@ -12,10 +15,20 @@
 .n-i{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font);font-size:.88rem;padding:.65rem .9rem;border-radius:0;outline:none;transition:border-color .15s}
 .n-i:focus{border-color:var(--primary)}
 .n-g2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.n-photo-row{display:grid;grid-template-columns:96px minmax(0,1fr);gap:.9rem;align-items:center;margin-bottom:.75rem}
+.n-photo-preview{width:96px;height:96px;border:1px solid var(--border);background:var(--surface-2);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.n-photo-preview img{width:100%;height:100%;object-fit:cover}
+.n-photo-fallback{font-size:1.2rem;font-weight:700;font-family:var(--font-mono);color:var(--muted)}
+.n-photo-copy{color:var(--muted);font-size:.8rem;line-height:1.6}
+.n-card--sticky{position:sticky;top:92px}
+.n-action-card{display:grid;gap:.85rem}
+.n-action-copy{margin:0;color:var(--muted);font-size:.84rem;line-height:1.7}
+.n-actions{display:flex;gap:.5rem;flex-wrap:wrap}
 .n-sk{padding:.3rem .7rem;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;letter-spacing:.04em;transition:all .15s;font-family:var(--font)}
 .n-sk.on{border-color:var(--primary);color:var(--primary);background:var(--primary-glow)}
-@media(max-width:768px){.n-g2{grid-template-columns:1fr}}
-@media(max-width:480px){.n-dash-content{max-width:100%!important}}
+@media(max-width:1100px){.n-edit-grid{grid-template-columns:1fr}.n-card--sticky{position:static}}
+@media(max-width:768px){.n-g2{grid-template-columns:1fr}.n-photo-row{grid-template-columns:1fr}}
+@media(max-width:480px){.n-dash-content{max-width:100%!important}.n-actions{flex-direction:column}.n-actions a,.n-actions button{width:100%;justify-content:center}}
 </style>
 {% endblock %}
 {% block content %}
@@ -42,65 +55,92 @@
         </div>
         {% endfor %}{% endif %}
 
-        <form method="POST" action="" enctype="multipart/form-data">
+        <form method="POST" action="" enctype="multipart/form-data" class="n-edit-form">
             {% csrf_token %}
-            <div class="n-card n-reveal">
-                <div class="n-card-head"><i data-lucide="user-circle"></i> Personal Information</div>
-                <div class="n-g2">
-                    <div class="n-f"><label>Phone</label><input class="n-i" type="tel" name="phone" value="{{ profile.phone|default:'' }}" placeholder="+91..."></div>
-                    <div class="n-f"><label>College</label><input class="n-i" type="text" name="college" value="{{ profile.college|default:'' }}" placeholder="College name"></div>
-                    <div class="n-f"><label>Branch</label><input class="n-i" type="text" name="branch" value="{{ profile.branch|default:'' }}" placeholder="e.g. CSE"></div>
-                    <div class="n-f">
-                        <label>Year</label>
-                        <select class="n-i" name="year">
-                            <option value="">Select year</option>
-                            <option value="1" {% if profile.year == 1 %}selected{% endif %}>Year 1</option>
-                            <option value="2" {% if profile.year == 2 %}selected{% endif %}>Year 2</option>
-                            <option value="3" {% if profile.year == 3 %}selected{% endif %}>Year 3</option>
-                            <option value="4" {% if profile.year == 4 %}selected{% endif %}>Year 4</option>
-                            <option value="5" {% if profile.year == 5 %}selected{% endif %}>Year 5</option>
-                            <option value="6" {% if profile.year == 6 %}selected{% endif %}>Year 6</option>
-                        </select>
+            <div class="n-edit-grid">
+                <div class="n-edit-main">
+                    <div class="n-card n-reveal">
+                        <div class="n-card-head"><i data-lucide="user-circle"></i> Personal Information</div>
+                        <div class="n-photo-row">
+                            <div class="n-photo-preview">
+                                {% if profile.profile_picture %}
+                                <img src="{{ profile.profile_picture.url }}" alt="Profile photo preview">
+                                {% else %}
+                                <span class="n-photo-fallback">
+                                    {% if user.first_name %}{{ user.first_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="n-f" style="margin-bottom:.45rem;">
+                                    <label>Profile Photo</label>
+                                    <input class="n-i" type="file" name="profile_photo" accept="image/*" style="padding:.45rem .9rem;">
+                                </div>
+                                <div class="n-photo-copy">Upload a square image under 5 MB. If the photo upload fails, your text changes will still be saved.</div>
+                            </div>
+                        </div>
+                        <div class="n-g2">
+                            <div class="n-f"><label>Phone</label><input class="n-i" type="tel" name="phone" value="{{ profile.phone|default:'' }}" placeholder="+91..."></div>
+                            <div class="n-f"><label>College</label><input class="n-i" type="text" name="college" value="{{ profile.college|default:'' }}" placeholder="College name"></div>
+                            <div class="n-f"><label>Branch</label><input class="n-i" type="text" name="branch" value="{{ profile.branch|default:'' }}" placeholder="e.g. CSE"></div>
+                            <div class="n-f">
+                                <label>Year</label>
+                                <select class="n-i" name="year">
+                                    <option value="">Select year</option>
+                                    <option value="1" {% if profile.year == 1 %}selected{% endif %}>Year 1</option>
+                                    <option value="2" {% if profile.year == 2 %}selected{% endif %}>Year 2</option>
+                                    <option value="3" {% if profile.year == 3 %}selected{% endif %}>Year 3</option>
+                                    <option value="4" {% if profile.year == 4 %}selected{% endif %}>Year 4</option>
+                                    <option value="5" {% if profile.year == 5 %}selected{% endif %}>Year 5</option>
+                                    <option value="6" {% if profile.year == 6 %}selected{% endif %}>Year 6</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="n-card n-reveal">
+                        <div class="n-card-head"><i data-lucide="link"></i> Links & Bio</div>
+                        <div class="n-g2">
+                            <div class="n-f"><label>GitHub</label><input class="n-i" type="url" name="github" value="{{ profile.github|default:'' }}" placeholder="https://github.com/..."></div>
+                            <div class="n-f"><label>LinkedIn</label><input class="n-i" type="url" name="linkedin" value="{{ profile.linkedin|default:'' }}" placeholder="https://linkedin.com/in/..."></div>
+                            <div class="n-f"><label>LeetCode</label><input class="n-i" type="url" name="leetcode" value="{{ profile.leetcode|default:'' }}" placeholder="https://leetcode.com/u/..."></div>
+                            <div class="n-f"><label>Portfolio</label><input class="n-i" type="url" name="portfolio" value="{{ profile.portfolio|default:'' }}" placeholder="https://yoursite.dev"></div>
+                        </div>
+                        <div class="n-f" style="margin-bottom:0;"><label>Bio</label><textarea class="n-i" name="bio" rows="5" placeholder="Tell others about yourself...">{{ profile.bio|default:'' }}</textarea></div>
                     </div>
                 </div>
-                <div class="n-f"><label>Profile Photo</label><input class="n-i" type="file" name="profile_photo" accept="image/*" style="padding:.45rem .9rem;"></div>
-            </div>
 
-            <div class="n-card n-reveal" style="margin-top:1px;">
-                <div class="n-card-head"><i data-lucide="link"></i> Links & Bio</div>
-                <div class="n-g2">
-                    <div class="n-f"><label>GitHub</label><input class="n-i" type="url" name="github" value="{{ profile.github|default:'' }}" placeholder="https://github.com/..."></div>
-                    <div class="n-f"><label>LinkedIn</label><input class="n-i" type="url" name="linkedin" value="{{ profile.linkedin|default:'' }}" placeholder="https://linkedin.com/in/..."></div>
-                    <div class="n-f"><label>LeetCode</label><input class="n-i" type="url" name="leetcode" value="{{ profile.leetcode|default:'' }}" placeholder="https://leetcode.com/u/..."></div>
-                    <div class="n-f"><label>Portfolio</label><input class="n-i" type="url" name="portfolio" value="{{ profile.portfolio|default:'' }}" placeholder="https://yoursite.dev"></div>
+                <div class="n-edit-side">
+                    <div class="n-card n-reveal n-card--sticky">
+                        <div class="n-card-head"><i data-lucide="cpu"></i> Skills</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:.35rem;" id="sk-chips">
+                            <button type="button" class="n-sk {% if 'React' in profile.skills|default:'' %}on{% endif %}" data-s="React">React</button>
+                            <button type="button" class="n-sk {% if 'Python' in profile.skills|default:'' %}on{% endif %}" data-s="Python">Python</button>
+                            <button type="button" class="n-sk {% if 'Django' in profile.skills|default:'' %}on{% endif %}" data-s="Django">Django</button>
+                            <button type="button" class="n-sk {% if 'Figma' in profile.skills|default:'' %}on{% endif %}" data-s="Figma">Figma</button>
+                            <button type="button" class="n-sk {% if 'Flutter' in profile.skills|default:'' %}on{% endif %}" data-s="Flutter">Flutter</button>
+                            <button type="button" class="n-sk {% if 'AWS' in profile.skills|default:'' %}on{% endif %}" data-s="AWS">AWS</button>
+                            <button type="button" class="n-sk {% if 'Node' in profile.skills|default:'' %}on{% endif %}" data-s="Node.js">Node.js</button>
+                            <button type="button" class="n-sk {% if 'TensorFlow' in profile.skills|default:'' %}on{% endif %}" data-s="TensorFlow">TensorFlow</button>
+                            <button type="button" class="n-sk {% if 'Docker' in profile.skills|default:'' %}on{% endif %}" data-s="Docker">Docker</button>
+                            <button type="button" class="n-sk {% if 'MongoDB' in profile.skills|default:'' %}on{% endif %}" data-s="MongoDB">MongoDB</button>
+                        </div>
+                        <input type="hidden" name="skills" id="sk-hidden" value="{{ profile.skills|default:'' }}">
+                    </div>
+
+                    <div class="n-card n-reveal n-action-card">
+                        <div class="n-card-head"><i data-lucide="save"></i> Save</div>
+                        <p class="n-action-copy">Review your profile details, then save. If an image upload fails, the rest of the profile update will still go through and you can retry the photo separately.</p>
+                        <div class="n-actions">
+                            <a href="{% url 'dashboard:my_profile' %}" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.1rem;background:transparent;color:var(--text);border:1px solid var(--border);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;">
+                                <i data-lucide="x" style="width:12px;height:12px;"></i> Cancel
+                            </a>
+                            <button type="submit" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.25rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s;">
+                                <i data-lucide="save" style="width:12px;height:12px;"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="n-f" style="margin-bottom:0;"><label>Bio</label><textarea class="n-i" name="bio" rows="3" placeholder="Tell others about yourself...">{{ profile.bio|default:'' }}</textarea></div>
-            </div>
-
-            <div class="n-card n-reveal" style="margin-top:1px;">
-                <div class="n-card-head"><i data-lucide="cpu"></i> Skills</div>
-                <div style="display:flex;flex-wrap:wrap;gap:.35rem;" id="sk-chips">
-                    <button type="button" class="n-sk {% if 'React' in profile.skills|default:'' %}on{% endif %}" data-s="React">React</button>
-                    <button type="button" class="n-sk {% if 'Python' in profile.skills|default:'' %}on{% endif %}" data-s="Python">Python</button>
-                    <button type="button" class="n-sk {% if 'Django' in profile.skills|default:'' %}on{% endif %}" data-s="Django">Django</button>
-                    <button type="button" class="n-sk {% if 'Figma' in profile.skills|default:'' %}on{% endif %}" data-s="Figma">Figma</button>
-                    <button type="button" class="n-sk {% if 'Flutter' in profile.skills|default:'' %}on{% endif %}" data-s="Flutter">Flutter</button>
-                    <button type="button" class="n-sk {% if 'AWS' in profile.skills|default:'' %}on{% endif %}" data-s="AWS">AWS</button>
-                    <button type="button" class="n-sk {% if 'Node' in profile.skills|default:'' %}on{% endif %}" data-s="Node.js">Node.js</button>
-                    <button type="button" class="n-sk {% if 'TensorFlow' in profile.skills|default:'' %}on{% endif %}" data-s="TensorFlow">TensorFlow</button>
-                    <button type="button" class="n-sk {% if 'Docker' in profile.skills|default:'' %}on{% endif %}" data-s="Docker">Docker</button>
-                    <button type="button" class="n-sk {% if 'MongoDB' in profile.skills|default:'' %}on{% endif %}" data-s="MongoDB">MongoDB</button>
-                </div>
-                <input type="hidden" name="skills" id="sk-hidden" value="{{ profile.skills|default:'' }}">
-            </div>
-
-            <div style="display:flex;gap:.5rem;margin-top:1rem;" class="n-reveal">
-                <a href="{% url 'dashboard:my_profile' %}" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.1rem;background:transparent;color:var(--text);border:1px solid var(--border);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;">
-                    <i data-lucide="x" style="width:12px;height:12px;"></i> Cancel
-                </a>
-                <button type="submit" style="display:inline-flex;align-items:center;gap:.35rem;padding:.72rem 1.25rem;background:var(--primary);color:#fff;border:1px solid var(--primary);font-family:var(--font);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s;">
-                    <i data-lucide="save" style="width:12px;height:12px;"></i> Save Changes
-                </button>
             </div>
         </form>
     </div>

@@ -1,7 +1,9 @@
+import logging
 from collections import defaultdict
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
@@ -10,10 +12,28 @@ from registration.models import Registration, RegistrationStatus
 from team.models import JoinRequest, JoinRequestStatus, Team, TeamMembership
 from users.models import UserProfile
 
+logger = logging.getLogger("campusarena")
+
 
 def _get_profile(user):
     profile, _ = UserProfile.objects.get_or_create(user=user)
     return profile
+
+
+def _edit_profile_context(profile):
+    return {"profile": profile, "current_page": "profile"}
+
+
+def _save_profile_photo(profile, uploaded_file):
+    max_size = 5 * 1024 * 1024
+    if getattr(uploaded_file, "size", 0) > max_size:
+        raise ValidationError("Profile photo must be 5 MB or smaller.")
+
+    content_type = (getattr(uploaded_file, "content_type", "") or "").lower()
+    if content_type and not content_type.startswith("image/"):
+        raise ValidationError("Profile photo must be a valid image file.")
+
+    profile.profile_picture.save(uploaded_file.name, uploaded_file, save=True)
 
 
 @login_required
@@ -350,31 +370,43 @@ def edit_profile(request):
                     profile.year = year_int
                 else:
                     messages.error(request, "Year must be between 1 and 6.")
-                    return render(
-                        request,
-                        "dashboard/edit_profile.html",
-                        {"profile": profile, "current_page": "profile"},
-                    )
+                    return render(request, "dashboard/edit_profile.html", _edit_profile_context(profile))
             except ValueError:
                 messages.error(request, "Year must be a number.")
-                return render(
-                    request,
-                    "dashboard/edit_profile.html",
-                    {"profile": profile, "current_page": "profile"},
-                )
+                return render(request, "dashboard/edit_profile.html", _edit_profile_context(profile))
         else:
             profile.year = None
 
-        skills = request.POST.get("skills", "").strip()
-        if skills:
-            profile.skills = skills
+        profile.skills = request.POST.get("skills", "").strip()
 
-        profile.save()
-        messages.success(request, "Profile updated successfully!")
+        try:
+            profile.save()
+        except Exception:
+            logger.exception("Failed to save profile details for user %s", request.user.pk)
+            messages.error(request, "We couldn't save your profile right now. Please try again.")
+            return render(request, "dashboard/edit_profile.html", _edit_profile_context(profile))
+
+        uploaded_photo = request.FILES.get("profile_photo")
+        if uploaded_photo:
+            try:
+                _save_profile_photo(profile, uploaded_photo)
+            except ValidationError as exc:
+                messages.error(
+                    request,
+                    f"Profile details were saved, but the photo was not updated. {exc.messages[0]}",
+                )
+                return redirect("dashboard:edit_profile")
+            except Exception:
+                logger.exception(
+                    "Failed to upload profile photo for user %s", request.user.pk
+                )
+                messages.error(
+                    request,
+                    "Profile details were saved, but we couldn't upload the photo right now. Try a smaller image or try again.",
+                )
+                return redirect("dashboard:edit_profile")
+
+        messages.success(request, "Profile updated successfully.")
         return redirect("dashboard:my_profile")
 
-    return render(
-        request,
-        "dashboard/edit_profile.html",
-        {"profile": profile, "current_page": "profile"},
-    )
+    return render(request, "dashboard/edit_profile.html", _edit_profile_context(profile))
