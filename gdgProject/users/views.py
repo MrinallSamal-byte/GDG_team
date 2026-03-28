@@ -1,6 +1,5 @@
 import logging
 import secrets
-import threading
 import time
 from contextlib import suppress
 
@@ -18,7 +17,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
 from django.shortcuts import redirect, render
 from django.utils.encoding import force_bytes, force_str
 
@@ -27,6 +25,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.decorators.http import require_http_methods
 
 from .models import UserProfile
+from .services import EmailDeliveryResult, send_plaintext_email
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +55,13 @@ def _get_or_create_profile(user):
     return profile
 
 
+def _absolute_auth_url(request, path: str) -> str:
+    site_url = str(getattr(settings, "SITE_URL", "") or "").strip().rstrip("/")
+    if site_url.startswith(("http://", "https://")):
+        return f"{site_url}{path}"
+    return request.build_absolute_uri(path)
+
+
 @require_http_methods(["GET", "POST"])
 def login_view(request):
     if request.user.is_authenticated:
@@ -67,7 +73,7 @@ def login_view(request):
         action = request.POST.get("action", "login")
 
         if action == "signup":
-            email = request.POST.get("email", "").strip()
+            email = request.POST.get("email", "").strip().lower()
             password = request.POST.get("password", "")
 
             if not email or not password:
@@ -86,7 +92,7 @@ def login_view(request):
                     _login_context(request, show_signup=True),
                 )
 
-            if User.objects.filter(email=email).exists():
+            if User.objects.filter(email__iexact=email).exists():
                 messages.error(
                     request,
                     "An account with this email already exists. Please log in.",
@@ -129,7 +135,7 @@ def login_view(request):
             )
             return redirect("users:verify_email")
 
-        email = request.POST.get("email", "").strip()
+        email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
         role = request.POST.get("roleLogin", "student")
 
@@ -143,7 +149,7 @@ def login_view(request):
 
         user = None
         try:
-            db_user = User.objects.get(email=email)
+            db_user = User.objects.get(email__iexact=email)
             user = authenticate(request, username=db_user.username, password=password)
         except User.DoesNotExist:
             pass
@@ -184,7 +190,7 @@ def register_view(request):
 
     if request.method == "POST":
         full_name = request.POST.get("full_name", "").strip()
-        email = request.POST.get("email", "").strip()
+        email = request.POST.get("email", "").strip().lower()
         phone = request.POST.get("phone", "").strip()
         college = request.POST.get("college", "").strip()
         branch = request.POST.get("branch", "").strip()
@@ -198,7 +204,7 @@ def register_view(request):
             errors.append("Please fill in all required fields.")
         if password and password_confirm and password != password_confirm:
             errors.append("Passwords do not match.")
-        if email and User.objects.filter(email=email).exists():
+        if email and User.objects.filter(email__iexact=email).exists():
             errors.append("An account with this email already exists. Try logging in.")
         if password and not errors:
             try:
@@ -276,38 +282,34 @@ def register_view(request):
 @require_http_methods(["GET", "POST"])
 def forgot_password_view(request):
     if request.method == "POST":
-        email = request.POST.get("email", "").strip()
+        email = request.POST.get("email", "").strip().lower()
         if not email:
             messages.error(request, "Please enter your email address.")
             return redirect("users:forgot_password")
 
-        try:
-            user = User.objects.get(email=email)
+        user = User.objects.filter(email__iexact=email).first()
+        if user is not None:
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            reset_url = request.build_absolute_uri(
-                f"/auth/reset-password/{uid}/{token}/"
+            reset_url = _absolute_auth_url(
+                request,
+                f"/auth/reset-password/{uid}/{token}/",
             )
-            try:
-                send_mail(
-                    subject="CampusArena — Password Reset",
-                    message=(
-                        f"Hi {user.first_name or user.username},\n\n"
-                        f"Click the link below to reset your password:\n{reset_url}\n\n"
-                        "This link will expire in 24 hours.\n\n"
-                        "If you did not request this, you can ignore this email.\n\n"
-                        "Team CampusArena"
-                    ),
-                    from_email=None,
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                )
-            except Exception:
-                logger.error(
-                    "Failed to send password reset email to %s", email, exc_info=True
-                )
-        except User.DoesNotExist:
-            pass
+            delivery = send_plaintext_email(
+                subject="CampusArena — Password Reset",
+                body=(
+                    f"Hi {user.first_name or user.username},\n\n"
+                    f"Click the link below to reset your password:\n{reset_url}\n\n"
+                    "This link will expire in 24 hours.\n\n"
+                    "If you did not request this, you can ignore this email.\n\n"
+                    "Team CampusArena"
+                ),
+                recipients=[user.email],
+                log_context=f"password-reset user_id={user.pk}",
+            )
+            if not delivery.sent:
+                messages.error(request, delivery.error_message)
+                return redirect("users:forgot_password")
 
         messages.success(
             request,
@@ -362,43 +364,33 @@ _OTP_UID_KEY = "email_otp_uid"
 _OTP_CREATED_KEY = "email_otp_created_at"
 
 
-def _send_otp_email(user, otp: str) -> None:
+def _send_otp_email(user, otp: str) -> EmailDeliveryResult:
     expiry_minutes = getattr(settings, "OTP_EXPIRY_SECONDS", 600) // 60
-    try:
-        send_mail(
-            subject="CampusArena — Verify your email",
-            message=(
-                f"Hi {user.first_name or user.username},\n\n"
-                f"Your email verification code is: {otp}\n\n"
-                f"This code is valid for {expiry_minutes} minutes.\n"
-                "If you did not request this, please ignore this email.\n\n"
-                "Team CampusArena"
-            ),
-            from_email=None,
-            recipient_list=[user.email],
-            fail_silently=False,
-        )
-    except Exception:
-        logger.error("Failed to send OTP email to user %d", user.pk, exc_info=True)
+    return send_plaintext_email(
+        subject="CampusArena — Verify your email",
+        body=(
+            f"Hi {user.first_name or user.username},\n\n"
+            f"Your email verification code is: {otp}\n\n"
+            f"This code is valid for {expiry_minutes} minutes.\n"
+            "If you did not request this, please ignore this email.\n\n"
+            "Team CampusArena"
+        ),
+        recipients=[user.email],
+        log_context=f"email-verification user_id={user.pk}",
+    )
 
 
-def _send_otp_email_async(user, otp: str) -> None:
-    # Email delivery should not block the verification page render.
-    threading.Thread(
-        target=_send_otp_email,
-        args=(user, otp),
-        name=f"send-otp-email-{user.pk}",
-        daemon=True,
-    ).start()
-
-
-def _issue_otp(request):
-    """Generate a fresh OTP, store it in session with a creation timestamp, and email it."""
+def _issue_otp(request) -> EmailDeliveryResult:
+    """Generate a fresh OTP, send it, then persist it in session on success."""
     otp = f"{secrets.randbelow(1_000_000):06d}"
+    delivery = _send_otp_email(request.user, otp)
+    if not delivery.sent:
+        return delivery
+
     request.session[_OTP_SESSION_KEY] = otp
     request.session[_OTP_UID_KEY] = request.user.pk
     request.session[_OTP_CREATED_KEY] = time.time()
-    _send_otp_email_async(request.user, otp)
+    return delivery
 
 
 def _otp_is_expired(request) -> bool:
@@ -421,11 +413,11 @@ def email_verification_view(request):
         action = request.POST.get("action", "verify")
 
         if action == "resend":
-            request.session.pop(_OTP_SESSION_KEY, None)
-            request.session.pop(_OTP_UID_KEY, None)
-            request.session.pop(_OTP_CREATED_KEY, None)
-            _issue_otp(request)
-            messages.info(request, "A new code has been sent to your email.")
+            delivery = _issue_otp(request)
+            if delivery.sent:
+                messages.success(request, "A new code has been sent to your email.")
+            else:
+                messages.error(request, delivery.error_message)
             return redirect("users:verify_email")
 
         otp_parts = [request.POST.get(f"otp_{i}", "") for i in range(1, 7)]
@@ -462,7 +454,9 @@ def email_verification_view(request):
         request.session.get(_OTP_UID_KEY) != request.user.pk
         or _OTP_SESSION_KEY not in request.session
     ):
-        _issue_otp(request)
+        delivery = _issue_otp(request)
+        if not delivery.sent:
+            messages.error(request, delivery.error_message)
 
     return render(request, "users/email_verification.html")
 
@@ -495,11 +489,13 @@ def edit_profile(request):
 
     if request.method == "POST":
         full_name = request.POST.get("full_name", "").strip()
-        email = request.POST.get("email", "").strip()
+        email = request.POST.get("email", "").strip().lower()
 
         if (
             email
-            and User.objects.filter(email=email).exclude(pk=request.user.pk).exists()
+            and User.objects.filter(email__iexact=email)
+            .exclude(pk=request.user.pk)
+            .exists()
         ):
             messages.error(request, "That email is already in use by another account.")
             return render(

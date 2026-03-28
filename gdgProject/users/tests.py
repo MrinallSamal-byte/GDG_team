@@ -2,11 +2,13 @@ from types import SimpleNamespace
 from unittest import mock
 
 from django.contrib.auth.models import User
+from django.core import mail
 from django.test import Client, RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
 from .adapters import CampusArenaSocialAccountAdapter
 from .models import UserProfile
+from .services import EmailDeliveryResult
 
 
 class UserProfileModelTest(TestCase):
@@ -395,6 +397,7 @@ class ForgotPasswordViewTest(TestCase):
 
     def setUp(self):
         self.url = reverse("users:forgot_password")
+        mail.outbox.clear()
 
     def test_page_renders(self):
         resp = self.client.get(self.url)
@@ -409,6 +412,40 @@ class ForgotPasswordViewTest(TestCase):
         resp = self.client.post(self.url, {"email": ""})
         self.assertRedirects(resp, self.url)
 
+    def test_registered_user_receives_reset_email(self):
+        user = User.objects.create_user(
+            username="forgotuser",
+            email="forgot@example.com",
+            password="testpass12345",
+        )
+
+        resp = self.client.post(self.url, {"email": user.email})
+
+        self.assertRedirects(resp, self.url)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Password Reset", mail.outbox[0].subject)
+        self.assertIn("/auth/reset-password/", mail.outbox[0].body)
+
+    def test_registered_user_sees_error_when_delivery_fails(self):
+        user = User.objects.create_user(
+            username="forgotfail",
+            email="forgotfail@example.com",
+            password="testpass12345",
+        )
+
+        with mock.patch(
+            "users.views.send_plaintext_email",
+            return_value=EmailDeliveryResult(
+                sent=False,
+                error_message="Mail service is unavailable.",
+            ),
+        ):
+            resp = self.client.post(self.url, {"email": user.email}, follow=True)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Mail service is unavailable.")
+        self.assertEqual(len(mail.outbox), 0)
+
 
 class EmailVerificationViewTest(TestCase):
     """Tests for email verification."""
@@ -417,16 +454,20 @@ class EmailVerificationViewTest(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(
             username="verifytest",
+            email="verify@example.com",
             password="testpass123",
         )
         UserProfile.objects.create(user=self.user)
         self.client.login(username="verifytest", password="testpass123")
         self.url = reverse("users:verify_email")
+        mail.outbox.clear()
 
     def test_page_renders(self):
         resp = self.client.get(self.url)
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Email Verification")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Verify your email", mail.outbox[0].subject)
 
     def test_valid_otp(self):
         # Visit the page first to trigger OTP generation and capture it
@@ -465,3 +506,34 @@ class EmailVerificationViewTest(TestCase):
         resp = self.client.get(self.url)
         self.assertEqual(resp.status_code, 302)
         self.assertIn("/auth/login/", resp.url)
+
+    def test_resend_rotates_code_and_sends_fresh_email(self):
+        self.client.get(self.url)
+        initial_otp = self.client.session.get("email_otp_code")
+        self.assertIsNotNone(initial_otp)
+        self.assertEqual(len(mail.outbox), 1)
+
+        resp = self.client.post(self.url, {"action": "resend"}, follow=True)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "A new code has been sent to your email.")
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertNotEqual(initial_otp, self.client.session.get("email_otp_code"))
+
+    def test_resend_keeps_existing_code_when_delivery_fails(self):
+        self.client.get(self.url)
+        initial_otp = self.client.session.get("email_otp_code")
+
+        with mock.patch(
+            "users.views.send_plaintext_email",
+            return_value=EmailDeliveryResult(
+                sent=False,
+                error_message="Mail service is unavailable.",
+            ),
+        ):
+            resp = self.client.post(self.url, {"action": "resend"}, follow=True)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Mail service is unavailable.")
+        self.assertEqual(self.client.session.get("email_otp_code"), initial_otp)
+        self.assertEqual(len(mail.outbox), 1)

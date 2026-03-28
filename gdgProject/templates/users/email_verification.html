@@ -23,6 +23,8 @@
 .n-btn-o:hover{border-color:var(--border-hover);color:var(--text)}
 .n-alert{display:flex;align-items:flex-start;gap:.5rem;padding:.65rem .9rem;font-size:.82rem;font-weight:500;margin-bottom:1rem;border:1px solid}
 .n-alert.err{background:var(--danger-soft);border-color:rgba(255,82,82,.25);color:var(--danger)}
+.n-alert.ok{background:var(--ok-soft);border-color:rgba(0,230,118,.22);color:var(--ok)}
+.n-alert.info{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.24);color:#93c5fd}
 @media(max-width:720px){.n-auth{grid-template-columns:1fr}.n-auth-side{padding:2rem 1.5rem;border-right:none;border-bottom:1px solid var(--border)}.n-auth-main{padding:2rem 1.25rem}}
 </style>
 {% endblock %}
@@ -49,7 +51,10 @@
             <p class="sub">Check your inbox for the 6-digit verification code.</p>
 
             {% if messages %}{% for message in messages %}
-            <div class="n-alert err"><i data-lucide="alert-circle" style="width:14px;height:14px;flex-shrink:0;"></i><span>{{ message }}</span></div>
+            <div class="n-alert {% if 'success' in message.tags %}ok{% elif 'info' in message.tags %}info{% else %}err{% endif %}">
+                <i data-lucide="{% if 'success' in message.tags %}check-circle{% elif 'info' in message.tags %}mail{% else %}alert-circle{% endif %}" style="width:14px;height:14px;flex-shrink:0;"></i>
+                <span>{{ message }}</span>
+            </div>
             {% endfor %}{% endif %}
 
             {% if expired %}
