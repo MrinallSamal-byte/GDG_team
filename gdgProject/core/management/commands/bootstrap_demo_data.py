@@ -1,3 +1,4 @@
+import os
 import random
 
 from django.contrib.auth import get_user_model
@@ -152,15 +153,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write("[demo] Bootstrapping demo data...")
+        self._create_bootstrap_admin()
 
         if not Event.objects.filter(status__in=HOME_VISIBLE_STATUSES).exists():
             random.seed(2026)
             call_command("seed_events", verbosity=0)
             self.stdout.write("[demo] Seeded sample events.")
         else:
-            self.stdout.write(
-                "[demo] Homepage-visible events already exist. Skipping event seed."
-            )
+            self.stdout.write("[demo] Homepage-visible events already exist. Skipping event seed.")
 
         demo_users = self._create_demo_users()
         demo_teams = self._create_demo_teams(demo_users)
@@ -181,6 +181,54 @@ class Command(BaseCommand):
             "[demo] Demo user password: "
             f"{DEMO_PASSWORD} (for demo_ava, demo_rahul, demo_priya, and others)"
         )
+
+    def _create_bootstrap_admin(self):
+        admin_email = os.getenv("BOOTSTRAP_ADMIN_EMAIL", "").strip()
+        admin_password = os.getenv("BOOTSTRAP_ADMIN_PASSWORD", "").strip()
+        admin_name = os.getenv("BOOTSTRAP_ADMIN_NAME", "").strip()
+        admin_username = os.getenv("BOOTSTRAP_ADMIN_USERNAME", "").strip() or (
+            admin_email.split("@", 1)[0] if admin_email else ""
+        )
+
+        if not admin_email or not admin_password or not admin_username:
+            self.stdout.write("[demo] No bootstrap admin configured. Skipping admin seed.")
+            return None
+
+        user = User.objects.filter(email__iexact=admin_email).first()
+        if user is None:
+            user = User.objects.filter(username=admin_username).first()
+
+        created = False
+        if user is None:
+            user = User(username=admin_username, email=admin_email)
+            created = True
+
+        user.username = admin_username
+        user.email = admin_email
+        user.is_staff = True
+        user.is_superuser = True
+        user.is_active = True
+
+        if admin_name:
+            name_parts = admin_name.split(None, 1)
+            user.first_name = name_parts[0]
+            user.last_name = name_parts[1] if len(name_parts) > 1 else ""
+
+        user.set_password(admin_password)
+        user.save()
+
+        profile, profile_created = UserProfile.objects.get_or_create(
+            user=user,
+            defaults={"email_verified": True},
+        )
+        if not profile.email_verified:
+            profile.email_verified = True
+            profile.save(update_fields=["email_verified"])
+
+        action = "Created" if created else "Updated"
+        profile_action = "and created profile" if profile_created else ""
+        self.stdout.write(f"[demo] {action} bootstrap admin {admin_email} {profile_action}".strip())
+        return user
 
     def _create_demo_users(self):
         users = []
@@ -274,9 +322,7 @@ class Command(BaseCommand):
                     registration.type = RegistrationType.TEAM
                     registration.status = RegistrationStatus.CONFIRMED
                     registration.preferred_role = role
-                    registration.save(
-                        update_fields=["team", "type", "status", "preferred_role"]
-                    )
+                    registration.save(update_fields=["team", "type", "status", "preferred_role"])
 
             if not ChatMessage.objects.filter(team=team).exists():
                 ChatMessage.objects.create(

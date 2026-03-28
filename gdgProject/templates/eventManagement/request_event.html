@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block title %}CampusArena | Request Event{% endblock %}
+
+{% block extra_css %}
+<style>
+.request-shell{padding:2.5rem 0 3rem}
+.request-wrap{display:grid;grid-template-columns:minmax(280px,.9fr) minmax(0,1.1fr);border:1px solid var(--border);background:var(--surface)}
+.request-side{padding:1.75rem;border-right:1px solid var(--border);background:linear-gradient(180deg,rgba(255,0,0,.07),transparent)}
+.request-side h1{margin:0 0 .75rem;font-size:2rem;letter-spacing:-.04em}
+.request-side p{margin:0;color:var(--muted);line-height:1.7}
+.request-points{margin-top:1.5rem;display:grid;gap:.7rem}
+.request-point{padding:.8rem .9rem;border:1px solid var(--border);background:var(--bg);font-size:.84rem;color:var(--muted)}
+.request-form{padding:1.75rem}
+.request-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.request-field{display:grid;gap:.38rem}
+.request-field--full{grid-column:1 / -1}
+.request-field label{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.request-input,.request-textarea,.request-select{width:100%;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:.78rem .9rem;font:inherit}
+.request-textarea{min-height:120px;resize:vertical}
+.request-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem}
+.request-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.82rem 1rem;border:1px solid var(--primary);background:var(--primary);color:#fff;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.78rem;text-decoration:none}
+.request-btn--ghost{background:transparent;color:var(--text);border-color:var(--border)}
+@media(max-width:900px){
+  .request-wrap{grid-template-columns:1fr}
+  .request-side{border-right:none;border-bottom:1px solid var(--border)}
+}
+@media(max-width:640px){
+  .request-grid{grid-template-columns:1fr}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% include 'includes/_n_page.html' %}
+<section class="request-shell">
+    <div class="request-wrap">
+        <aside class="request-side">
+            <div class="creator-eyebrow" style="font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--primary);margin-bottom:.8rem;">Creator Request</div>
+            <h1>Submit your event proposal.</h1>
+            <p>Share the essential event details. The admin team can approve or reject the request, and approved events will be published on CampusArena.</p>
+            <div class="request-points">
+                <div class="request-point">Use exact dates so the event appears correctly on the website timeline.</div>
+                <div class="request-point">Add contact details so students know how to reach the event organizer after approval.</div>
+                <div class="request-point">Team events should include realistic minimum and maximum team sizes.</div>
+            </div>
+        </aside>
+
+        <div class="request-form">
+            <form method="POST" action="">
+                {% csrf_token %}
+                <div class="request-grid">
+                    <div class="request-field">
+                        <label>Event Title</label>
+                        <input class="request-input" type="text" name="title" value="{{ form_data.title|default:'' }}" required>
+                    </div>
+                    <div class="request-field">
+                        <label>Category</label>
+                        <select class="request-select" name="category" required>
+                            <option value="">Select category</option>
+                            {% for value, label in categories %}
+                            <option value="{{ value }}" {% if form_data.category == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="request-field">
+                        <label>Mode</label>
+                        <select class="request-select" name="mode" required>
+                            <option value="">Select mode</option>
+                            {% for value, label in modes %}
+                            <option value="{{ value }}" {% if form_data.mode == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="request-field">
+                        <label>Participation Type</label>
+                        <select class="request-select" name="participation_type" required>
+                            {% for value, label in participation_types %}
+                            <option value="{{ value }}" {% if form_data.participation_type|default:'individual' == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="request-field">
+                        <label>Registration Start</label>
+                        <input class="request-input" type="datetime-local" name="reg_start_date" value="{{ form_data.reg_start_date|default:'' }}" required>
+                    </div>
+                    <div class="request-field">
+                        <label>Registration End</label>
+                        <input class="request-input" type="datetime-local" name="reg_end_date" value="{{ form_data.reg_end_date|default:'' }}" required>
+                    </div>
+                    <div class="request-field">
+                        <label>Event Start</label>
+                        <input class="request-input" type="datetime-local" name="start_date" value="{{ form_data.start_date|default:'' }}" required>
+                    </div>
+                    <div class="request-field">
+                        <label>Event End</label>
+                        <input class="request-input" type="datetime-local" name="end_date" value="{{ form_data.end_date|default:'' }}" required>
+                    </div>
+                    <div class="request-field">
+                        <label>Venue</label>
+                        <input class="request-input" type="text" name="venue" value="{{ form_data.venue|default:'' }}" placeholder="Auditorium / campus / city">
+                    </div>
+                    <div class="request-field">
+                        <label>Platform Link</label>
+                        <input class="request-input" type="url" name="platform_link" value="{{ form_data.platform_link|default:'' }}" placeholder="https://meet.google.com/...">
+                    </div>
+                    <div class="request-field">
+                        <label>Max Participants</label>
+                        <input class="request-input" type="number" min="1" name="max_participants" value="{{ form_data.max_participants|default:'100' }}">
+                    </div>
+                    <div class="request-field">
+                        <label>Registration Fee</label>
+                        <input class="request-input" type="number" min="0" step="0.01" name="registration_fee" value="{{ form_data.registration_fee|default:'0' }}">
+                    </div>
+                    <div class="request-field">
+                        <label>Min Team Size</label>
+                        <input class="request-input" type="number" min="1" name="min_team_size" value="{{ form_data.min_team_size|default:'1' }}">
+                    </div>
+                    <div class="request-field">
+                        <label>Max Team Size</label>
+                        <input class="request-input" type="number" min="1" name="max_team_size" value="{{ form_data.max_team_size|default:'1' }}">
+                    </div>
+                    <div class="request-field request-field--full">
+                        <label>Description</label>
+                        <textarea class="request-textarea" name="description" required>{{ form_data.description|default:'' }}</textarea>
+                    </div>
+                    <div class="request-field request-field--full">
+                        <label>Rules / Important Notes</label>
+                        <textarea class="request-textarea" name="rules">{{ form_data.rules|default:'' }}</textarea>
+                    </div>
+                    <div class="request-field request-field--full">
+                        <label>Contact Info</label>
+                        <textarea class="request-textarea" name="contact_info" placeholder="Organizer phone, email, or department contact details">{{ form_data.contact_info|default:'' }}</textarea>
+                    </div>
+                </div>
+                <div class="request-actions">
+                    <button type="submit" class="request-btn"><i data-lucide="send"></i> Submit Request</button>
+                    <a href="{% url 'eventManagement:creator_dashboard' %}" class="request-btn request-btn--ghost"><i data-lucide="arrow-left"></i> Back to Creator Hub</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -359,6 +359,21 @@
 .n-cta-text h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; margin: 0 0 .35rem; }
 .n-cta-text p  { color: var(--muted); font-size: .88rem; }
 .n-cta-btns { display: flex; gap: .5rem; flex-shrink: 0; }
+.n-pagination {
+    margin-top: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.n-page-info {
+    margin: 0;
+    color: var(--muted);
+    font-size: .78rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
 
 /* ── Reveal animations ────────────────────────────────────────── */
 .n-reveal {
@@ -521,6 +536,8 @@
 
                 <form method="GET" action="" class="n-search">
                     <input type="text" name="q" id="event-search" value="{{ q }}" placeholder="Search events, tech stacks, colleges…" autocomplete="off">
+                    {% if active_category %}<input type="hidden" name="category" value="{{ active_category }}">{% endif %}
+                    <input type="hidden" name="sort" value="{{ active_sort }}">
                     <button type="submit">
                         <i data-lucide="search" style="width:14px;height:14px;"></i> Search
                     </button>
@@ -595,23 +612,23 @@
             </div>
             <div id="filter-controls" style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
                 <div class="n-filters" id="category-filters">
-                    <button type="button" class="n-chip active" data-category="">All</button>
+                    <button type="button" class="n-chip {% if not active_category %}active{% endif %}" data-category="">All</button>
                     {% for val, label in categories %}
-                    <button type="button" class="n-chip" data-category="{{ val }}">{{ label }}</button>
+                    <button type="button" class="n-chip {% if active_category == val %}active{% endif %}" data-category="{{ val }}">{{ label }}</button>
                     {% endfor %}
                 </div>
                 <div class="n-sort">
                     <select id="sort-select">
-                        <option value="newest">Newest</option>
-                        <option value="deadline">Deadline</option>
-                        <option value="popular">Popular</option>
+                        <option value="newest" {% if active_sort == 'newest' %}selected{% endif %}>Newest</option>
+                        <option value="deadline" {% if active_sort == 'deadline' %}selected{% endif %}>Deadline</option>
+                        <option value="popular" {% if active_sort == 'popular' %}selected{% endif %}>Popular</option>
                     </select>
                 </div>
             </div>
         </div>
 
         <div class="n-card-grid" id="events-grid">
-            {% for event in event_grid %}
+            {% for event in event_page %}
             <article class="n-ev-card">
                 <div class="n-ev-cat">{{ event.get_category_display }}</div>
                 <h3 class="n-ev-title">{{ event.title }}</h3>
@@ -647,6 +664,24 @@
             </div>
             {% endfor %}
         </div>
+
+        {% if event_page.paginator.num_pages > 1 %}
+        <div class="n-pagination">
+            <p class="n-page-info">Page {{ event_page.number }} of {{ event_page.paginator.num_pages }}</p>
+            <div class="n-cta-btns">
+                {% if event_page.has_previous %}
+                <a href="?{{ pagination_query }}{% if pagination_query %}&{% endif %}page={{ event_page.previous_page_number }}" class="n-btn-outline">
+                    <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Previous
+                </a>
+                {% endif %}
+                {% if event_page.has_next %}
+                <a href="?{{ pagination_query }}{% if pagination_query %}&{% endif %}page={{ event_page.next_page_number }}" class="n-btn-primary">
+                    Next 16 Events <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </section>
 
@@ -794,120 +829,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    /* ══════════════════════════════════════════════════════════════
-       AJAX FILTERING — no page reload
-       ══════════════════════════════════════════════════════════════ */
     const grid         = document.getElementById('events-grid');
     const catBtns      = document.querySelectorAll('#category-filters .n-chip');
     const sortSelect   = document.getElementById('sort-select');
     const searchInput  = document.getElementById('event-search');
+    let activeCategory = "{{ active_category|escapejs }}";
 
-    let activeCategory = '';
-    let activeSort     = 'newest';
-    let searchTimer    = null;
+    function navigateListing(nextCategory, nextSort) {
+        const url = new URL(window.location.href);
+        const params = url.searchParams;
+        const query = searchInput ? searchInput.value.trim() : '';
 
-    function statusClass(status) {
-        if (status === 'registration_open')  return 'open';
-        if (status === 'completed' || status === 'registration_closed') return 'closed';
-        return 'other';
-    }
+        if (query) params.set('q', query);
+        else params.delete('q');
 
-    function renderCards(events) {
-        if (!events.length) {
-            grid.innerHTML = '<div style="grid-column:1/-1;padding:3rem;text-align:center;color:var(--muted);font-size:.88rem;border-bottom:1px solid var(--border);">No events found. Try adjusting your filters.</div>';
-            return;
-        }
-        grid.innerHTML = events.map(ev => {
-            const dateRange = ev.event_end ? `${ev.event_start}→${ev.event_end}` : ev.event_start;
-            const isClosed = ev.status === 'completed' || ev.status === 'registration_closed';
-            const ctaHtml = isClosed
-                ? `<span class="n-ev-cta-closed">Closed</span>`
-                : `<a href="/events/${ev.id}/" class="n-ev-cta">Register <i data-lucide="arrow-right" style="width:11px;height:11px;"></i></a>`;
-            const prizeHtml = ev.prize_pool ? `<span class="n-ev-prize">₹${ev.prize_pool}</span>` : '';
-            return `<article class="n-ev-card">
-                <div class="n-ev-cat">${ev.category_display}</div>
-                <h3 class="n-ev-title">${ev.title}</h3>
-                <div class="n-ev-meta">
-                    <span class="n-ev-tag"><i data-lucide="calendar"></i>${dateRange}</span>
-                    <span class="n-ev-tag"><i data-lucide="radio"></i>${ev.mode_display}</span>
-                    <span class="n-ev-tag"><i data-lucide="users"></i>${ev.participation_type_display}</span>
-                </div>
-                <div class="n-ev-progress">
-                    <div class="n-ev-bar"><div class="n-ev-bar-fill" style="width:${ev.fill_pct}%;"></div></div>
-                    <div class="n-ev-bar-label"><span>${ev.registered_count}/${ev.capacity}</span><span>${ev.fill_pct}%</span></div>
-                </div>
-                <div class="n-ev-footer">
-                    <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;">
-                        <span class="n-ev-status ${statusClass(ev.status)}">${ev.status_display}</span>
-                        ${prizeHtml}
-                    </div>
-                    ${ctaHtml}
-                </div>
-            </article>`;
-        }).join('');
+        if (nextCategory) params.set('category', nextCategory);
+        else params.delete('category');
 
-        // Re-initialize Lucide icons for dynamically added elements
-        if (window.lucide) lucide.createIcons();
-    }
+        if (nextSort && nextSort !== 'newest') params.set('sort', nextSort);
+        else params.delete('sort');
 
-    function showLoadingSkeleton() {
-        const skeletons = Array.from({length: 6}, () =>
-            `<article class="n-ev-card" style="opacity:.4;animation:pulse 1.2s ease-in-out infinite;">
-                <div class="n-ev-cat" style="width:60%;height:10px;background:var(--border);"></div>
-                <h3 class="n-ev-title" style="width:80%;height:14px;background:var(--border);margin:.4rem 0;"></h3>
-                <div style="width:100%;height:8px;background:var(--border);margin:.3rem 0;"></div>
-                <div style="width:45%;height:8px;background:var(--border);"></div>
-            </article>`
-        ).join('');
-        grid.innerHTML = skeletons;
-    }
-
-    async function fetchEvents() {
-        const params = new URLSearchParams();
-        if (activeCategory) params.set('category', activeCategory);
-        if (activeSort && activeSort !== 'newest') params.set('sort', activeSort);
-        const q = searchInput ? searchInput.value.trim() : '';
-        if (q) params.set('q', q);
-
-        showLoadingSkeleton();
-
-        try {
-            const res = await fetch(`/api/events/?${params.toString()}`);
-            const data = await res.json();
-            renderCards(data.events);
-        } catch (err) {
-            console.error('Failed to fetch events:', err);
-            grid.innerHTML = '<div style="grid-column:1/-1;padding:3rem;text-align:center;color:var(--danger);font-size:.88rem;">Failed to load events. Please try again.</div>';
-        }
+        params.delete('page');
+        url.search = params.toString();
+        window.location.assign(url.toString());
     }
 
     /* ── Category chip clicks ─────────────────────────────────── */
     catBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            catBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            activeCategory = btn.dataset.category;
-            fetchEvents();
+            activeCategory = btn.dataset.category || '';
+            navigateListing(activeCategory, sortSelect ? sortSelect.value : 'newest');
         });
     });
 
     /* ── Sort dropdown ─────────────────────────────────────────── */
-    sortSelect.addEventListener('change', () => {
-        activeSort = sortSelect.value;
-        fetchEvents();
-    });
-
-    /* ── Live search (debounced) ───────────────────────────────── */
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(fetchEvents, 300);
-        });
-
-        // Prevent form submission (page reload) on Enter
-        searchInput.closest('form')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            fetchEvents();
+    if (sortSelect) {
+        sortSelect.addEventListener('change', () => {
+            navigateListing(activeCategory, sortSelect.value);
         });
     }
 

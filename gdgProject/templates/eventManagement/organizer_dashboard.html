@@ -57,6 +57,131 @@
         font-size: .75rem;
         padding: .3rem .6rem;
     }
+    .admin-toolbar {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:1rem;
+        flex-wrap:wrap;
+        margin-bottom:1rem;
+    }
+    .admin-toolbar p {
+        margin:.25rem 0 0;
+        color:var(--text-muted);
+        font-size:.88rem;
+    }
+    .admin-search {
+        display:flex;
+        gap:.6rem;
+        flex-wrap:wrap;
+        align-items:center;
+    }
+    .admin-search input {
+        min-width:240px;
+        border:1px solid var(--border-color);
+        background:var(--surface);
+        color:var(--text-main);
+        padding:.72rem .9rem;
+        font-family:var(--font);
+    }
+    .admin-user-list {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+        gap:1rem;
+    }
+    .admin-user-card {
+        padding:1.2rem;
+        display:grid;
+        gap:.9rem;
+    }
+    .admin-user-head {
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:1rem;
+    }
+    .admin-user-head h3,
+    .admin-event-head h3 {
+        margin:0;
+        font-size:1rem;
+    }
+    .admin-user-head p,
+    .admin-event-head p {
+        margin:.3rem 0 0;
+        color:var(--text-muted);
+        font-size:.84rem;
+        line-height:1.6;
+    }
+    .admin-meta-grid {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:.7rem;
+        border-top:1px solid var(--border-color);
+        border-bottom:1px solid var(--border-color);
+        padding:.9rem 0;
+    }
+    .admin-meta-grid div {
+        display:grid;
+        gap:.2rem;
+    }
+    .admin-meta-grid span {
+        color:var(--text-muted);
+        font-size:.72rem;
+        text-transform:uppercase;
+        letter-spacing:.08em;
+    }
+    .admin-meta-grid strong {
+        color:var(--text-main);
+        font-size:.92rem;
+    }
+    .admin-inline-form {
+        display:flex;
+        gap:.5rem;
+        flex-wrap:wrap;
+        align-items:center;
+    }
+    .admin-inline-form input {
+        flex:1 1 180px;
+        min-width:0;
+        border:1px solid var(--border-color);
+        background:var(--surface);
+        color:var(--text-main);
+        padding:.68rem .8rem;
+        font-family:var(--font);
+    }
+    .pagination-bar {
+        margin-top:1rem;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:1rem;
+        flex-wrap:wrap;
+    }
+    .pagination-bar p {
+        margin:0;
+        color:var(--text-muted);
+        font-size:.84rem;
+    }
+    .pagination-actions {
+        display:flex;
+        gap:.5rem;
+        flex-wrap:wrap;
+    }
+    .admin-event-head {
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:1rem;
+        margin-bottom:.75rem;
+    }
+    .admin-event-owner {
+        color:var(--text-muted);
+        font-size:.8rem;
+        margin-top:.35rem;
+        display:flex;
+        flex-wrap:wrap;
+        gap:.5rem;
+    }
 </style>
 {% endblock %}
 
@@ -148,25 +273,228 @@
             <p>Active Events</p>
             <strong>{{ analytics.active_events }}</strong>
         </article>
+        <article class="surface metric">
+            <div class="metric-icon" style="background:rgba(59,130,246,.14);color:#60a5fa;"><i data-lucide="shield"></i></div>
+            <p>Total Users</p>
+            <strong>{{ admin_metrics.total_users }}</strong>
+        </article>
+        <article class="surface metric">
+            <div class="metric-icon" style="background:rgba(239,68,68,.12);color:#ef4444;"><i data-lucide="user-x"></i></div>
+            <p>Blocked Users</p>
+            <strong>{{ admin_metrics.blocked_users }}</strong>
+        </article>
+        <article class="surface metric">
+            <div class="metric-icon" style="background:rgba(250,204,21,.12);color:#facc15;"><i data-lucide="clipboard-clock"></i></div>
+            <p>Pending Requests</p>
+            <strong>{{ admin_metrics.pending_requests }}</strong>
+        </article>
+        <article class="surface metric">
+            <div class="metric-icon" style="background:rgba(148,163,184,.14);color:#cbd5e1;"><i data-lucide="archive"></i></div>
+            <p>Archived Events</p>
+            <strong>{{ admin_metrics.archived_events }}</strong>
+        </article>
     </div>
 
-    <!-- My Events -->
     <div class="section-head reveal" style="margin-top:2rem;">
-        <h2><i data-lucide="calendar"></i> My Events</h2>
+        <h2><i data-lucide="clipboard-check"></i> Event Requests</h2>
     </div>
 
     <div class="card-grid reveal" style="margin-bottom:2.5rem;">
-        {% for event in my_events %}
         <article class="surface" style="padding:1.25rem;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem;">
-                <div>
-                    <h3 style="margin:0;font-size:1.1rem;">{{ event.title }}</h3>
-                    <span class="text-soft" style="font-size:.85rem;">
-                        {{ event.event_start|date:"M d" }}–{{ event.event_end|date:"M d, Y" }}
+            <h3 style="margin:0 0 .85rem;font-size:1rem;">Pending Requests</h3>
+            {% for req in pending_event_requests %}
+            <div style="padding:1rem 0;border-bottom:1px solid var(--border-color);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;">
+                    <div>
+                        <div style="font-size:1rem;font-weight:700;">{{ req.title }}</div>
+                        <div class="text-soft" style="font-size:.82rem;margin-top:.25rem;">
+                            {{ req.requested_by.get_full_name|default:req.requested_by.username }} · {{ req.get_category_display }} · {{ req.get_mode_display }}
+                        </div>
+                    </div>
+                    <span class="status closing">Pending</span>
+                </div>
+                <p style="margin:.75rem 0;color:var(--text-soft);font-size:.88rem;line-height:1.65;">{{ req.description|truncatechars:180 }}</p>
+                <div class="text-soft" style="font-size:.78rem;margin-bottom:.75rem;">
+                    Registration: {{ req.registration_start|date:"M d, Y H:i" }} → {{ req.registration_end|date:"M d, Y H:i" }}<br>
+                    Event: {{ req.event_start|date:"M d, Y H:i" }} → {{ req.event_end|date:"M d, Y H:i" }}
+                </div>
+                <form method="POST" action="{% url 'eventManagement:review_event_request' req.pk %}" style="display:grid;gap:.65rem;">
+                    {% csrf_token %}
+                    <textarea name="review_note" rows="2" placeholder="Optional note for the creator" style="width:100%;border:1px solid var(--border-color);background:var(--surface);color:var(--text-main);padding:.75rem;font-family:var(--font);"></textarea>
+                    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                        <button type="submit" name="action" value="approve" class="btn-primary btn-small">
+                            <i data-lucide="check"></i> Approve & Publish
+                        </button>
+                        <button type="submit" name="action" value="reject" class="btn-secondary btn-small" style="border-color:rgba(239,68,68,.3);color:#ef4444;">
+                            <i data-lucide="x"></i> Reject
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% empty %}
+            <p class="text-soft" style="margin:0;">No pending creator requests right now.</p>
+            {% endfor %}
+        </article>
+
+        <article class="surface" style="padding:1.25rem;">
+            <h3 style="margin:0 0 .85rem;font-size:1rem;">Recently Reviewed</h3>
+            {% for req in reviewed_event_requests %}
+            <div style="padding:1rem 0;border-bottom:1px solid var(--border-color);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;">
+                    <div>
+                        <div style="font-size:1rem;font-weight:700;">{{ req.title }}</div>
+                        <div class="text-soft" style="font-size:.82rem;margin-top:.25rem;">
+                            {{ req.requested_by.get_full_name|default:req.requested_by.username }}
+                            {% if req.reviewed_by %} · Reviewed by {{ req.reviewed_by.get_full_name|default:req.reviewed_by.username }}{% endif %}
+                        </div>
+                    </div>
+                    <span class="status {% if req.status == 'approved' %}open{% else %}closing{% endif %}">
+                        {{ req.get_status_display }}
                     </span>
                 </div>
-                <span class="status {% if event.status == 'registration_open' or event.status == 'ongoing' %}open{% elif event.status == 'completed' %}closed{% else %}closing{% endif %}">
-                    {{ event.get_status_display }}
+                {% if req.review_note %}
+                <p style="margin:.75rem 0 0;color:var(--text-soft);font-size:.85rem;line-height:1.65;">{{ req.review_note }}</p>
+                {% endif %}
+                {% if req.created_event %}
+                <div style="margin-top:.75rem;">
+                    <a href="{% url 'events:event_detail' req.created_event.pk %}" class="btn-secondary btn-small">
+                        <i data-lucide="external-link"></i> View Live Event
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-soft" style="margin:0;">Reviewed creator requests will appear here.</p>
+            {% endfor %}
+        </article>
+    </div>
+
+    <div class="section-head reveal" style="margin-top:2rem;">
+        <h2><i data-lucide="users-round"></i> User Management</h2>
+    </div>
+
+    <article class="surface reveal" style="padding:1.25rem;margin-bottom:2.5rem;">
+        <div class="admin-toolbar">
+            <div>
+                <h3 style="margin:0;font-size:1rem;">Current Users</h3>
+                <p>Monitor activity, block compromised accounts, or rotate passwords from one place.</p>
+            </div>
+            <form method="GET" class="admin-search">
+                <input type="text" name="user_q" value="{{ user_search }}" placeholder="Search users by name, email, college...">
+                {% if event_search %}<input type="hidden" name="event_q" value="{{ event_search }}">{% endif %}
+                <button type="submit" class="btn-secondary btn-small"><i data-lucide="search"></i> Search</button>
+            </form>
+        </div>
+
+        <div class="admin-user-list">
+            {% for member in users_page %}
+            <article class="surface admin-user-card">
+                <div class="admin-user-head">
+                    <div>
+                        <h3>{{ member.get_full_name|default:member.username }}</h3>
+                        <p>@{{ member.username }} · {{ member.email|default:"No email set" }}</p>
+                    </div>
+                    <span class="status {% if member.is_active %}open{% else %}closing{% endif %}">
+                        {% if member.is_active %}Active{% else %}Blocked{% endif %}
+                    </span>
+                </div>
+
+                <div class="admin-meta-grid">
+                    <div>
+                        <span>Role</span>
+                        <strong>{% if member.is_staff %}Admin{% else %}User{% endif %}</strong>
+                    </div>
+                    <div>
+                        <span>Joined</span>
+                        <strong>{{ member.date_joined|date:"M d, Y" }}</strong>
+                    </div>
+                    <div>
+                        <span>Events</span>
+                        <strong>{{ member.created_events_count }}</strong>
+                    </div>
+                    <div>
+                        <span>Registrations</span>
+                        <strong>{{ member.registrations_count }}</strong>
+                    </div>
+                </div>
+
+                <div class="admin-inline-form">
+                    <form method="POST" action="{% url 'eventManagement:toggle_user_status' member.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-secondary btn-small" {% if member.pk == user.pk %}disabled{% endif %} style="{% if not member.is_active %}border-color:rgba(34,197,94,.35);color:#22c55e;{% else %}border-color:rgba(239,68,68,.35);color:#ef4444;{% endif %}">
+                            <i data-lucide="{% if member.is_active %}user-x{% else %}user-check{% endif %}"></i>
+                            {% if member.is_active %}Block User{% else %}Unblock User{% endif %}
+                        </button>
+                    </form>
+
+                    <form method="POST" action="{% url 'eventManagement:update_user_password' member.pk %}" class="admin-inline-form" style="flex:1 1 100%;">
+                        {% csrf_token %}
+                        <input type="password" name="new_password" minlength="8" placeholder="Set a new password">
+                        <button type="submit" class="btn-primary btn-small">
+                            <i data-lucide="key-round"></i> Update Password
+                        </button>
+                    </form>
+                </div>
+            </article>
+            {% empty %}
+            <article class="surface" style="padding:1.5rem;text-align:center;">
+                <p class="text-soft" style="margin:0;">No users matched the current search.</p>
+            </article>
+            {% endfor %}
+        </div>
+
+        {% if users_page.paginator.num_pages > 1 %}
+        <div class="pagination-bar">
+            <p>Page {{ users_page.number }} of {{ users_page.paginator.num_pages }}</p>
+            <div class="pagination-actions">
+                {% if users_page.has_previous %}
+                <a href="?{{ user_pagination_query }}{% if user_pagination_query %}&{% endif %}users_page={{ users_page.previous_page_number }}" class="btn-secondary btn-small">
+                    <i data-lucide="arrow-left"></i> Previous
+                </a>
+                {% endif %}
+                {% if users_page.has_next %}
+                <a href="?{{ user_pagination_query }}{% if user_pagination_query %}&{% endif %}users_page={{ users_page.next_page_number }}" class="btn-primary btn-small">
+                    Next <i data-lucide="arrow-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </article>
+
+    <!-- Platform Events -->
+    <div class="section-head reveal" style="margin-top:2rem;">
+        <h2><i data-lucide="calendar"></i> Platform Events</h2>
+    </div>
+
+    <div class="admin-toolbar reveal">
+        <div>
+            <p style="margin:0;color:var(--text-muted);font-size:.9rem;">All current and archived events are manageable from here.</p>
+        </div>
+        <form method="GET" class="admin-search">
+            {% if user_search %}<input type="hidden" name="user_q" value="{{ user_search }}">{% endif %}
+            <input type="text" name="event_q" value="{{ event_search }}" placeholder="Search events by title or organizer...">
+            <button type="submit" class="btn-secondary btn-small"><i data-lucide="search"></i> Search</button>
+        </form>
+    </div>
+
+    <div class="card-grid reveal" style="margin-bottom:2.5rem;">
+        {% for event in managed_events_page %}
+        <article class="surface" style="padding:1.25rem;">
+            <div class="admin-event-head">
+                <div>
+                    <h3>{{ event.title }}</h3>
+                    <p>
+                        {{ event.event_start|date:"M d" }}–{{ event.event_end|date:"M d, Y" }}
+                    </p>
+                    <div class="admin-event-owner">
+                        <span>Organizer: {{ event.created_by.get_full_name|default:event.created_by.username }}</span>
+                        <span>·</span>
+                        <span>{{ event.created_by.email|default:"No email" }}</span>
+                    </div>
+                </div>
+                <span class="status {% if event.is_deleted %}closed{% elif event.status == 'registration_open' or event.status == 'ongoing' %}open{% elif event.status == 'completed' %}closed{% else %}closing{% endif %}">
+                    {% if event.is_deleted %}Archived{% else %}{{ event.get_status_display }}{% endif %}
                 </span>
             </div>
 
@@ -177,9 +505,15 @@
 
             <!-- Primary actions row -->
             <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+                {% if not event.is_deleted %}
                 <a href="{% url 'events:event_detail' event.pk %}" class="btn-secondary btn-small">
                     <i data-lucide="eye"></i> View
                 </a>
+                {% else %}
+                <span class="btn-secondary btn-small" style="opacity:.6;cursor:not-allowed;">
+                    <i data-lucide="eye-off"></i> Hidden
+                </span>
+                {% endif %}
                 <a href="{% url 'eventManagement:edit_event' event.pk %}" class="btn-secondary btn-small">
                     <i data-lucide="edit-2"></i> Edit
                 </a>
@@ -226,6 +560,7 @@
                 {% endif %}
 
                 {# Status update form #}
+                {% if not event.is_deleted %}
                 <form method="POST" action="{% url 'eventManagement:update_event_status' event.pk %}" style="display:inline;">
                     {% csrf_token %}
                     <select name="new_status" onchange="this.form.submit()"
@@ -252,15 +587,17 @@
                         {% endif %}
                     </select>
                 </form>
+                {% endif %}
 
-                {# Delete (soft) #}
                 <form method="POST" action="{% url 'eventManagement:delete_event' event.pk %}"
-                      onsubmit="return confirm('Archive &quot;{{ event.title }}&quot;? This cannot be undone easily.');"
+                      onsubmit="return confirm('{% if event.is_deleted %}Restore{% else %}Archive{% endif %} &quot;{{ event.title }}&quot;?');"
                       style="display:inline;">
                     {% csrf_token %}
-                    <input type="hidden" name="confirm" value="yes">
-                    <button type="submit" class="btn-secondary btn-small" style="color:var(--danger);" title="Archive event">
-                        <i data-lucide="archive"></i>
+                    <input type="hidden" name="action" value="{% if event.is_deleted %}restore{% else %}archive{% endif %}">
+                    {% if not event.is_deleted %}<input type="hidden" name="confirm" value="yes">{% endif %}
+                    <button type="submit" class="btn-secondary btn-small" style="{% if event.is_deleted %}border-color:rgba(34,197,94,.35);color:#22c55e;{% else %}color:var(--danger);{% endif %}" title="{% if event.is_deleted %}Restore event{% else %}Archive event{% endif %}">
+                        <i data-lucide="{% if event.is_deleted %}history{% else %}archive{% endif %}"></i>
+                        {% if event.is_deleted %}Restore{% else %}Archive{% endif %}
                     </button>
                 </form>
             </div>
@@ -269,15 +606,32 @@
         {% empty %}
         <article class="surface" style="padding:1.5rem;text-align:center;grid-column:1/-1;">
             <i data-lucide="calendar-x" style="width:32px;height:32px;color:var(--muted);margin-bottom:.5rem;display:block;margin-left:auto;margin-right:auto;"></i>
-            <p class="text-soft">You haven't created any events yet.</p>
+            <p class="text-soft">No events matched the current search.</p>
             <a href="{% url 'eventManagement:create_event' %}" class="btn-primary" style="margin-top:.75rem;">
-                <i data-lucide="plus"></i> Create Your First Event
+                <i data-lucide="plus"></i> Create Event
             </a>
         </article>
         {% endfor %}
     </div>
 
-    <!-- Analytics placeholder -->
+    {% if managed_events_page.paginator.num_pages > 1 %}
+    <div class="pagination-bar reveal" style="margin-bottom:2.5rem;">
+        <p>Page {{ managed_events_page.number }} of {{ managed_events_page.paginator.num_pages }}</p>
+        <div class="pagination-actions">
+            {% if managed_events_page.has_previous %}
+            <a href="?{{ event_pagination_query }}{% if event_pagination_query %}&{% endif %}events_page={{ managed_events_page.previous_page_number }}" class="btn-secondary btn-small">
+                <i data-lucide="arrow-left"></i> Previous
+            </a>
+            {% endif %}
+            {% if managed_events_page.has_next %}
+            <a href="?{{ event_pagination_query }}{% if event_pagination_query %}&{% endif %}events_page={{ managed_events_page.next_page_number }}" class="btn-primary btn-small">
+                Next <i data-lucide="arrow-right"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="two-col">
         <article class="surface reveal">
             <h2><i data-lucide="megaphone"></i> Broadcast Announcement</h2>
@@ -287,7 +641,7 @@
                 <div class="form-group">
                     <select id="announce-event-id" name="event_id" required class="form-input">
                         <option value="">Select event…</option>
-                        {% for event in my_events %}
+                        {% for event in announcement_events %}
                         <option value="{{ event.pk }}">{{ event.title }}</option>
                         {% endfor %}
                     </select>

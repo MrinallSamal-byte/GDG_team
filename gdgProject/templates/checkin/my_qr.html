@@ -30,6 +30,49 @@
 }
 .checkin-status.done   { background: var(--green-subtle); color: var(--green); }
 .checkin-status.pending { background: var(--surface-2); color: var(--text-muted); }
+.qr-details-card {
+    text-align: left;
+    padding: 1.1rem 1.15rem;
+}
+.info-grid {
+    display: grid;
+    gap: .75rem;
+    margin: 0;
+}
+.info-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: .85rem;
+    align-items: start;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid var(--border);
+}
+.info-row:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+.info-grid dt {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.info-grid dd {
+    margin: 0;
+    color: var(--text);
+    font-size: .96rem;
+    font-weight: 600;
+    line-height: 1.5;
+    word-break: break-word;
+}
+@media (max-width: 520px) {
+    .info-row {
+        grid-template-columns: 1fr;
+        gap: .25rem;
+    }
+}
 </style>
 {% endblock %}
 
@@ -56,13 +99,25 @@
              width="220" height="220">
     </div>
 
-    <article class="surface reveal" style="margin-bottom:1.25rem;">
+    <article class="surface reveal qr-details-card" style="margin-bottom:1.25rem;">
         <h2 style="font-size:1rem;"><i data-lucide="receipt-text"></i> Your Details</h2>
         <dl class="info-grid">
-            <dt>Name</dt><dd>{{ request.user.get_full_name|default:request.user.username }}</dd>
-            <dt>Registration ID</dt><dd>{{ registration.registration_id }}</dd>
-            <dt>Event</dt><dd>{{ event.title }}</dd>
-            <dt>Date</dt><dd>{{ event.event_start|date:"N j, Y" }}</dd>
+            <div class="info-row">
+                <dt>Name</dt>
+                <dd>{{ request.user.get_full_name|default:request.user.username }}</dd>
+            </div>
+            <div class="info-row">
+                <dt>Registration ID</dt>
+                <dd>{{ registration.registration_id }}</dd>
+            </div>
+            <div class="info-row">
+                <dt>Event</dt>
+                <dd>{{ event.title }}</dd>
+            </div>
+            <div class="info-row">
+                <dt>Date</dt>
+                <dd>{{ event.event_start|date:"N j, Y" }}</dd>
+            </div>
         </dl>
     </article>
 

@@ -5,9 +5,16 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.sessions.models import Session
+from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_http_methods, require_POST
 from events.models import (
@@ -22,7 +29,10 @@ from events.models import (
     ParticipationType,
 )
 
+from .models import EventCreationRequest, EventRequestStatus
+
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 def _aware(dt):
@@ -33,10 +43,275 @@ def _aware(dt):
     return make_aware(dt) if is_naive(dt) else dt
 
 
+def _event_request_context(*, form_data=None):
+    return {
+        "categories": EventCategory.choices,
+        "modes": EventMode.choices,
+        "participation_types": ParticipationType.choices,
+        "form_data": form_data or {},
+    }
+
+
+def _parse_event_request_payload(post):
+    title = post.get("title", "").strip()
+    category = post.get("category", "").strip()
+    mode = post.get("mode", "").strip()
+    participation_type = post.get("participation_type", "individual").strip()
+    start_date = post.get("start_date", "").strip()
+    end_date = post.get("end_date", "").strip()
+    reg_start = post.get("reg_start_date", "").strip()
+    reg_end = post.get("reg_end_date", "").strip()
+    description = post.get("description", "").strip()
+    venue = post.get("venue", "").strip()
+    platform_link = post.get("platform_link", "").strip()
+    max_participants = post.get("max_participants", "100").strip()
+    min_team_size = post.get("min_team_size", "1").strip()
+    max_team_size = post.get("max_team_size", "1").strip()
+    registration_fee = post.get("registration_fee", "0").strip()
+    rules = post.get("rules", "").strip()
+    contact_info = post.get("contact_info", "").strip()
+
+    errors = []
+    if not title:
+        errors.append("Event title is required.")
+    if category not in EventCategory.values:
+        errors.append("Please select a valid category.")
+    if mode not in EventMode.values:
+        errors.append("Please select a valid event mode.")
+    if participation_type not in ParticipationType.values:
+        errors.append("Please select a valid participation type.")
+    if not start_date:
+        errors.append("Start date is required.")
+    if not end_date:
+        errors.append("End date is required.")
+    if not reg_start:
+        errors.append("Registration start date is required.")
+    if not reg_end:
+        errors.append("Registration end date is required.")
+    if not description:
+        errors.append("Event description is required.")
+
+    event_start = _aware(parse_datetime(start_date)) if start_date else None
+    event_end = _aware(parse_datetime(end_date)) if end_date else None
+    reg_start_dt = _aware(parse_datetime(reg_start)) if reg_start else None
+    reg_end_dt = _aware(parse_datetime(reg_end)) if reg_end else None
+
+    if event_start is None and start_date:
+        errors.append("Enter a valid start date and time.")
+    if event_end is None and end_date:
+        errors.append("Enter a valid end date and time.")
+    if reg_start_dt is None and reg_start:
+        errors.append("Enter a valid registration start date and time.")
+    if reg_end_dt is None and reg_end:
+        errors.append("Enter a valid registration end date and time.")
+
+    if event_start and event_end and event_start > event_end:
+        errors.append("Event end date must be on or after the start date.")
+    if reg_start_dt and reg_end_dt and reg_start_dt > reg_end_dt:
+        errors.append("Registration end date must be on or after the registration start date.")
+    if reg_end_dt and event_start and reg_end_dt > event_start:
+        errors.append("Registration must close before the event starts.")
+
+    try:
+        capacity = int(max_participants) if max_participants else 100
+    except ValueError:
+        capacity = None
+        errors.append("Enter a valid participant capacity.")
+
+    try:
+        min_ts = int(min_team_size) if min_team_size else 1
+    except ValueError:
+        min_ts = None
+        errors.append("Enter a valid minimum team size.")
+
+    try:
+        max_ts = int(max_team_size) if max_team_size else 1
+    except ValueError:
+        max_ts = None
+        errors.append("Enter a valid maximum team size.")
+
+    try:
+        fee = float(registration_fee) if registration_fee else 0
+    except ValueError:
+        fee = None
+        errors.append("Enter a valid registration fee.")
+
+    if capacity is not None and capacity < 1:
+        errors.append("Participant capacity must be at least 1.")
+    if min_ts is not None and min_ts < 1:
+        errors.append("Minimum team size must be at least 1.")
+    if max_ts is not None and max_ts < 1:
+        errors.append("Maximum team size must be at least 1.")
+    if min_ts is not None and max_ts is not None and min_ts > max_ts:
+        errors.append("Maximum team size must be greater than or equal to minimum.")
+    if fee is not None and fee < 0:
+        errors.append("Registration fee cannot be negative.")
+
+    payload = {
+        "title": title,
+        "description": description,
+        "category": category,
+        "mode": mode,
+        "participation_type": participation_type,
+        "registration_start": reg_start_dt,
+        "registration_end": reg_end_dt,
+        "event_start": event_start,
+        "event_end": event_end,
+        "venue": venue,
+        "platform_link": platform_link,
+        "capacity": capacity or 100,
+        "min_team_size": min_ts or 1,
+        "max_team_size": max_ts or 1,
+        "registration_fee": fee or 0,
+        "rules": rules,
+        "contact_info": contact_info,
+    }
+    return payload, errors
+
+
+def _resolve_event_schedule_status(
+    *,
+    registration_start,
+    registration_end,
+    event_start,
+    event_end,
+) -> str:
+    now = timezone.now()
+    if event_end <= now:
+        return EventStatus.COMPLETED
+    if event_start <= now <= event_end:
+        return EventStatus.ONGOING
+    if registration_start <= now <= registration_end:
+        return EventStatus.REGISTRATION_OPEN
+    if registration_end < now < event_start:
+        return EventStatus.REGISTRATION_CLOSED
+    return EventStatus.PUBLISHED
+
+
+def _resolve_request_event_status(event_request: EventCreationRequest) -> str:
+    return _resolve_event_schedule_status(
+        registration_start=event_request.registration_start,
+        registration_end=event_request.registration_end,
+        event_start=event_request.event_start,
+        event_end=event_request.event_end,
+    )
+
+
+def _resolve_event_status(event: Event) -> str:
+    return _resolve_event_schedule_status(
+        registration_start=event.registration_start,
+        registration_end=event.registration_end,
+        event_start=event.event_start,
+        event_end=event.event_end,
+    )
+
+
+def _revoke_user_sessions(user):
+    active_sessions = Session.objects.filter(expire_date__gte=timezone.now())
+    for session in active_sessions.iterator():
+        with suppress(Exception):
+            if session.get_decoded().get("_auth_user_id") == str(user.pk):
+                session.delete()
+
+
+@login_required
+def creator_dashboard(request):
+    if request.user.is_staff:
+        return redirect("eventManagement:organizer_dashboard")
+
+    event_requests = (
+        EventCreationRequest.objects.filter(requested_by=request.user)
+        .select_related("reviewed_by", "created_event")
+        .order_by("-created_at")
+    )
+
+    counts = {
+        "total": event_requests.count(),
+        "pending": event_requests.filter(status=EventRequestStatus.PENDING).count(),
+        "approved": event_requests.filter(status=EventRequestStatus.APPROVED).count(),
+        "rejected": event_requests.filter(status=EventRequestStatus.REJECTED).count(),
+    }
+
+    return render(
+        request,
+        "eventManagement/creator_dashboard.html",
+        {
+            "event_requests": event_requests,
+            "counts": counts,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def request_event(request):
+    if request.user.is_staff:
+        return redirect("eventManagement:create_event")
+
+    if request.method == "POST":
+        payload, errors = _parse_event_request_payload(request.POST)
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+            return render(
+                request,
+                "eventManagement/request_event.html",
+                _event_request_context(form_data=request.POST),
+            )
+
+        event_request = EventCreationRequest.objects.create(
+            requested_by=request.user,
+            **payload,
+        )
+
+        from notification.models import Notification
+
+        staff_ids = list(
+            User.objects.filter(is_staff=True, is_active=True)
+            .exclude(pk=request.user.pk)
+            .values_list("pk", flat=True)
+        )
+        if staff_ids:
+            Notification.objects.bulk_create(
+                [
+                    Notification(
+                        user_id=staff_id,
+                        type="event_request",
+                        title=f"New event request: {event_request.title}",
+                        body=(
+                            f"{request.user.get_full_name() or request.user.username} "
+                            "submitted an event request for review."
+                        ),
+                        actor=request.user,
+                    )
+                    for staff_id in staff_ids
+                ],
+                ignore_conflicts=True,
+            )
+
+        logger.info(
+            "Event request submitted: %s (id=%d) by user %s",
+            event_request.title,
+            event_request.pk,
+            request.user.pk,
+        )
+        messages.success(
+            request,
+            "Your event request has been submitted. An admin will review it shortly.",
+        )
+        return redirect("eventManagement:creator_dashboard")
+
+    return render(
+        request,
+        "eventManagement/request_event.html",
+        _event_request_context(),
+    )
+
+
 @staff_member_required
 def organizer_dashboard(request):
-    my_events = (
-        Event.all_objects.filter(created_by=request.user)
+    managed_events = (
+        Event.all_objects.select_related("created_by")
         .annotate(
             registration_count=Count(
                 "registrations",
@@ -46,8 +321,16 @@ def organizer_dashboard(request):
         .order_by("-created_at")
     )
 
-    total_registrations = sum(e.registration_count for e in my_events)
-    active_events = my_events.filter(
+    total_registrations = (
+        managed_events.aggregate(
+            total=Count(
+                "registrations",
+                filter=Q(registrations__status__in=["confirmed", "submitted"]),
+            )
+        )["total"]
+        or 0
+    )
+    active_events = managed_events.filter(
         status__in=[
             EventStatus.PUBLISHED,
             EventStatus.REGISTRATION_OPEN,
@@ -56,33 +339,30 @@ def organizer_dashboard(request):
         is_deleted=False,
     ).count()
 
-    # Compute team-vs-solo breakdown across all organiser events
     from registration.models import Registration
 
-    event_ids = list(my_events.values_list("pk", flat=True))
     confirmed_statuses = ["confirmed", "submitted"]
     team_count = Registration.objects.filter(
-        event_id__in=event_ids,
+        event__is_deleted=False,
         status__in=confirmed_statuses,
         team__isnull=False,
     ).count()
     solo_count = Registration.objects.filter(
-        event_id__in=event_ids,
+        event__is_deleted=False,
         status__in=confirmed_statuses,
         team__isnull=True,
     ).count()
-    team_vs_solo = (
-        f"{team_count}T / {solo_count}S" if (team_count + solo_count) > 0 else None
-    )
+    team_vs_solo = f"{team_count}T / {solo_count}S" if (team_count + solo_count) > 0 else None
 
-    # Compute top skill/stack from participant profiles
     from users.models import UserProfile
 
     reg_user_ids = list(
         Registration.objects.filter(
-            event_id__in=event_ids,
+            event__is_deleted=False,
             status__in=confirmed_statuses,
-        ).values_list("user_id", flat=True)
+        )
+        .values_list("user_id", flat=True)
+        .distinct()
     )
     skill_counts: dict = {}
     for skills_str in UserProfile.objects.filter(user_id__in=reg_user_ids).values_list(
@@ -95,6 +375,68 @@ def organizer_dashboard(request):
                     skill_counts[skill] = skill_counts.get(skill, 0) + 1
     top_stack = max(skill_counts, key=skill_counts.get) if skill_counts else None
 
+    pending_event_requests = (
+        EventCreationRequest.objects.filter(status=EventRequestStatus.PENDING)
+        .select_related("requested_by")
+        .order_by("created_at")[:12]
+    )
+    reviewed_event_requests = (
+        EventCreationRequest.objects.exclude(status=EventRequestStatus.PENDING)
+        .select_related("requested_by", "reviewed_by", "created_event")
+        .order_by("-reviewed_at", "-updated_at")[:8]
+    )
+
+    user_search = request.GET.get("user_q", "").strip()
+    event_search = request.GET.get("event_q", "").strip()
+
+    platform_users = User.objects.select_related("profile").annotate(
+        created_events_count=Count(
+            "created_events",
+            filter=Q(created_events__is_deleted=False),
+            distinct=True,
+        ),
+        registrations_count=Count(
+            "registrations",
+            filter=Q(registrations__status__in=confirmed_statuses),
+            distinct=True,
+        ),
+    )
+    if user_search:
+        platform_users = platform_users.filter(
+            Q(username__icontains=user_search)
+            | Q(email__icontains=user_search)
+            | Q(first_name__icontains=user_search)
+            | Q(last_name__icontains=user_search)
+            | Q(profile__college__icontains=user_search)
+            | Q(profile__branch__icontains=user_search)
+        )
+    platform_users = platform_users.order_by(
+        "-is_staff",
+        "-is_active",
+        "-date_joined",
+        "username",
+    )
+
+    if event_search:
+        managed_events = managed_events.filter(
+            Q(title__icontains=event_search)
+            | Q(description__icontains=event_search)
+            | Q(created_by__username__icontains=event_search)
+            | Q(created_by__email__icontains=event_search)
+            | Q(created_by__first_name__icontains=event_search)
+            | Q(created_by__last_name__icontains=event_search)
+        )
+
+    users_page = Paginator(platform_users, 12).get_page(request.GET.get("users_page") or 1)
+    managed_events_page = Paginator(managed_events, 12).get_page(
+        request.GET.get("events_page") or 1
+    )
+
+    user_pagination_params = request.GET.copy()
+    user_pagination_params.pop("users_page", None)
+    event_pagination_params = request.GET.copy()
+    event_pagination_params.pop("events_page", None)
+
     return render(
         request,
         "eventManagement/organizer_dashboard.html",
@@ -105,7 +447,25 @@ def organizer_dashboard(request):
                 "team_vs_solo": team_vs_solo,
                 "top_stack": top_stack,
             },
-            "my_events": my_events,
+            "admin_metrics": {
+                "total_users": User.objects.count(),
+                "blocked_users": User.objects.filter(is_active=False).count(),
+                "pending_requests": EventCreationRequest.objects.filter(
+                    status=EventRequestStatus.PENDING
+                ).count(),
+                "archived_events": Event.all_objects.filter(is_deleted=True).count(),
+            },
+            "pending_event_requests": pending_event_requests,
+            "reviewed_event_requests": reviewed_event_requests,
+            "users_page": users_page,
+            "managed_events_page": managed_events_page,
+            "user_search": user_search,
+            "event_search": event_search,
+            "user_pagination_query": user_pagination_params.urlencode(),
+            "event_pagination_query": event_pagination_params.urlencode(),
+            "announcement_events": Event.all_objects.filter(is_deleted=False).order_by("title")[
+                :80
+            ],
         },
     )
 
@@ -123,9 +483,7 @@ def create_event(request):
         reg_end = request.POST.get("reg_end_date", "").strip()
         description = request.POST.get("description", "").strip()
         venue = request.POST.get("venue", "").strip()
-        participation_type = request.POST.get(
-            "participation_type", "individual"
-        ).strip()
+        participation_type = request.POST.get("participation_type", "individual").strip()
         max_participants = request.POST.get("max_participants", "100").strip()
         min_team_size = request.POST.get("min_team_size", "1").strip()
         max_team_size = request.POST.get("max_team_size", "1").strip()
@@ -242,9 +600,7 @@ def create_event(request):
             rname = rname.strip()
             if not rname:
                 continue
-            rstart_raw = (
-                round_start_dates[i].strip() if i < len(round_start_dates) else ""
-            )
+            rstart_raw = round_start_dates[i].strip() if i < len(round_start_dates) else ""
             rend_raw = round_end_dates[i].strip() if i < len(round_end_dates) else ""
             rdesc = round_descs[i].strip() if i < len(round_descs) else ""
 
@@ -277,9 +633,7 @@ def create_event(request):
                 if name:
                     EventSponsor.objects.create(event=event, name=name)
 
-        logger.info(
-            "Event created: %s (id=%d) by user %s", title, event.pk, request.user.pk
-        )
+        logger.info("Event created: %s (id=%d) by user %s", title, event.pk, request.user.pk)
         messages.success(request, f'"{title}" has been created successfully!')
         return redirect("eventManagement:organizer_dashboard")
 
@@ -292,6 +646,182 @@ def create_event(request):
             "participation_types": ParticipationType.choices,
         },
     )
+
+
+@staff_member_required
+@require_POST
+def review_event_request(request, request_id):
+    event_request = get_object_or_404(
+        EventCreationRequest.objects.select_related("requested_by", "created_event"),
+        pk=request_id,
+    )
+
+    if event_request.status != EventRequestStatus.PENDING:
+        messages.info(request, "This event request has already been reviewed.")
+        return redirect("eventManagement:organizer_dashboard")
+
+    action = request.POST.get("action", "").strip()
+    review_note = request.POST.get("review_note", "").strip()
+
+    from notification.models import Notification
+
+    if action == "approve":
+        with transaction.atomic():
+            created_event = Event.objects.create(
+                title=event_request.title,
+                description=event_request.description,
+                category=event_request.category,
+                mode=event_request.mode,
+                participation_type=event_request.participation_type,
+                status=_resolve_request_event_status(event_request),
+                event_start=event_request.event_start,
+                event_end=event_request.event_end,
+                registration_start=event_request.registration_start,
+                registration_end=event_request.registration_end,
+                venue=event_request.venue,
+                platform_link=event_request.platform_link,
+                capacity=event_request.capacity,
+                min_team_size=event_request.min_team_size,
+                max_team_size=event_request.max_team_size,
+                registration_fee=event_request.registration_fee,
+                rules=event_request.rules,
+                contact_info=(
+                    event_request.contact_info
+                    or event_request.requested_by.email
+                    or "Contact the CampusArena admin team for assistance."
+                ),
+                created_by=request.user,
+            )
+
+            event_request.status = EventRequestStatus.APPROVED
+            event_request.review_note = review_note
+            event_request.reviewed_by = request.user
+            event_request.reviewed_at = timezone.now()
+            event_request.created_event = created_event
+            event_request.save(
+                update_fields=[
+                    "status",
+                    "review_note",
+                    "reviewed_by",
+                    "reviewed_at",
+                    "created_event",
+                    "updated_at",
+                ]
+            )
+
+        Notification.objects.create(
+            user=event_request.requested_by,
+            type="request_approved",
+            title=f"Event approved: {event_request.title}",
+            body=("Your event request was approved and is now visible on CampusArena."),
+            actor=request.user,
+            target=created_event,
+        )
+        logger.info(
+            "Event request approved: request=%d event=%d by user %s",
+            event_request.pk,
+            created_event.pk,
+            request.user.pk,
+        )
+        messages.success(
+            request,
+            f'"{event_request.title}" has been approved and published on the website.',
+        )
+        return redirect("eventManagement:organizer_dashboard")
+
+    if action == "reject":
+        event_request.status = EventRequestStatus.REJECTED
+        event_request.review_note = review_note
+        event_request.reviewed_by = request.user
+        event_request.reviewed_at = timezone.now()
+        event_request.save(
+            update_fields=[
+                "status",
+                "review_note",
+                "reviewed_by",
+                "reviewed_at",
+                "updated_at",
+            ]
+        )
+        Notification.objects.create(
+            user=event_request.requested_by,
+            type="request_declined",
+            title=f"Event request declined: {event_request.title}",
+            body=review_note or "Your event request was declined by the admin team.",
+            actor=request.user,
+            target=event_request,
+        )
+        logger.info(
+            "Event request rejected: request=%d by user %s",
+            event_request.pk,
+            request.user.pk,
+        )
+        messages.success(request, f'"{event_request.title}" has been declined.')
+        return redirect("eventManagement:organizer_dashboard")
+
+    messages.error(request, "Invalid review action.")
+    return redirect("eventManagement:organizer_dashboard")
+
+
+@staff_member_required
+@require_POST
+def toggle_user_status(request, user_id):
+    target_user = get_object_or_404(User, pk=user_id)
+
+    if target_user.pk == request.user.pk:
+        messages.error(request, "You cannot block your own admin account.")
+        return redirect("eventManagement:organizer_dashboard")
+
+    if (
+        target_user.is_staff
+        and target_user.is_active
+        and not User.objects.filter(is_staff=True, is_active=True)
+        .exclude(pk=target_user.pk)
+        .exists()
+    ):
+        messages.error(request, "At least one active admin account must remain.")
+        return redirect("eventManagement:organizer_dashboard")
+
+    target_user.is_active = not target_user.is_active
+    target_user.save(update_fields=["is_active"])
+
+    if not target_user.is_active:
+        _revoke_user_sessions(target_user)
+
+    status_label = "unblocked" if target_user.is_active else "blocked"
+    messages.success(
+        request,
+        f"{target_user.get_full_name() or target_user.username} has been {status_label}.",
+    )
+    return redirect("eventManagement:organizer_dashboard")
+
+
+@staff_member_required
+@require_POST
+def update_user_password(request, user_id):
+    target_user = get_object_or_404(User, pk=user_id)
+    new_password = request.POST.get("new_password", "").strip()
+
+    if not new_password:
+        messages.error(request, "Enter a new password before saving.")
+        return redirect("eventManagement:organizer_dashboard")
+
+    try:
+        validate_password(new_password, user=target_user)
+    except ValidationError as exc:
+        for message in exc.messages:
+            messages.error(request, message)
+        return redirect("eventManagement:organizer_dashboard")
+
+    target_user.set_password(new_password)
+    target_user.save(update_fields=["password"])
+    _revoke_user_sessions(target_user)
+
+    messages.success(
+        request,
+        f"Password updated for {target_user.get_full_name() or target_user.username}.",
+    )
+    return redirect("eventManagement:organizer_dashboard")
 
 
 _VALID_TRANSITIONS = {
@@ -323,10 +853,6 @@ def edit_event(request, event_id):
     event = Event.all_objects.filter(pk=event_id).first()
     if event is None:
         messages.error(request, "Event not found.")
-        return redirect("eventManagement:organizer_dashboard")
-
-    if event.created_by != request.user and not request.user.is_superuser:
-        messages.error(request, "You can only edit your own events.")
         return redirect("eventManagement:organizer_dashboard")
 
     if event.status in (
@@ -376,21 +902,15 @@ def edit_event(request, event_id):
     if mode and mode not in EventMode.values:
         errors.append("Please select a valid event mode.")
 
-    event_start = (
-        _aware(parse_datetime(start_date)) if start_date else event.event_start
-    )
+    event_start = _aware(parse_datetime(start_date)) if start_date else event.event_start
     event_end = _aware(parse_datetime(end_date)) if end_date else event.event_end
-    reg_start_dt = (
-        _aware(parse_datetime(reg_start)) if reg_start else event.registration_start
-    )
+    reg_start_dt = _aware(parse_datetime(reg_start)) if reg_start else event.registration_start
     reg_end_dt = _aware(parse_datetime(reg_end)) if reg_end else event.registration_end
 
     if event_start and event_end and event_start > event_end:
         errors.append("Event end date must be on or after the start date.")
     if reg_start_dt and reg_end_dt and reg_start_dt > reg_end_dt:
-        errors.append(
-            "Registration end date must be on or after the registration start date."
-        )
+        errors.append("Registration end date must be on or after the registration start date.")
     if reg_end_dt and event_start and reg_end_dt > event_start:
         errors.append("Registration must close before the event starts.")
 
@@ -440,9 +960,7 @@ def edit_event(request, event_id):
         event.banner = banner
 
     event.save()
-    logger.info(
-        "Event updated: %s (id=%d) by user %s", event.title, event.pk, request.user.pk
-    )
+    logger.info("Event updated: %s (id=%d) by user %s", event.title, event.pk, request.user.pk)
     messages.success(request, f'"{event.title}" has been updated.')
     return redirect("eventManagement:organizer_dashboard")
 
@@ -455,17 +973,33 @@ def delete_event(request, event_id):
         messages.error(request, "Event not found.")
         return redirect("eventManagement:organizer_dashboard")
 
-    if event.created_by != request.user and not request.user.is_superuser:
-        messages.error(request, "You can only delete your own events.")
+    action = request.POST.get("action", "archive").strip()
+    if action not in {"archive", "restore"}:
+        messages.error(request, "Invalid event moderation action.")
         return redirect("eventManagement:organizer_dashboard")
 
-    if request.POST.get("confirm") != "yes":
+    if action == "archive" and request.POST.get("confirm") != "yes":
         messages.warning(request, "Deletion not confirmed.")
         return redirect("eventManagement:organizer_dashboard")
 
-    event.delete()
+    if action == "restore":
+        event.is_deleted = False
+        event.status = _resolve_event_status(event)
+        event.save(update_fields=["is_deleted", "status", "updated_at"])
+        logger.info(
+            "Event restored: %s (id=%d) by user %s",
+            event.title,
+            event_id,
+            request.user.pk,
+        )
+        messages.success(request, f'"{event.title}" is live on the website again.')
+        return redirect("eventManagement:organizer_dashboard")
+
+    event.is_deleted = True
+    event.status = EventStatus.ARCHIVED
+    event.save(update_fields=["is_deleted", "status", "updated_at"])
     logger.info(
-        "Event soft-deleted: %s (id=%d) by user %s",
+        "Event archived: %s (id=%d) by user %s",
         event.title,
         event_id,
         request.user.pk,
@@ -477,11 +1011,9 @@ def delete_event(request, event_id):
 @staff_member_required
 @require_POST
 def update_event_status(request, event_id):
-    event = Event.all_objects.filter(
-        pk=event_id, is_deleted=False, created_by=request.user
-    ).first()
+    event = Event.all_objects.filter(pk=event_id, is_deleted=False).first()
     if event is None:
-        messages.error(request, "Event not found or permission denied.")
+        messages.error(request, "Event not found.")
         return redirect("eventManagement:organizer_dashboard")
 
     new_status = request.POST.get("new_status", "").strip()
@@ -506,9 +1038,7 @@ def update_event_status(request, event_id):
         new_status,
         request.user.pk,
     )
-    messages.success(
-        request, f'"{event.title}" status updated to {EventStatus(new_status).label}.'
-    )
+    messages.success(request, f'"{event.title}" status updated to {EventStatus(new_status).label}.')
     return redirect("eventManagement:organizer_dashboard")
 
 
@@ -518,11 +1048,9 @@ def create_announcement(request, event_id):
     from notification.models import Notification
     from registration.models import Registration
 
-    event = Event.all_objects.filter(
-        pk=event_id, is_deleted=False, created_by=request.user
-    ).first()
+    event = Event.all_objects.filter(pk=event_id, is_deleted=False).first()
     if event is None:
-        messages.error(request, "Event not found or permission denied.")
+        messages.error(request, "Event not found.")
         return redirect("eventManagement:organizer_dashboard")
 
     title = request.POST.get("title", "").strip()
@@ -535,9 +1063,9 @@ def create_announcement(request, event_id):
     EventAnnouncement.objects.create(event=event, title=title, content=content)
 
     registrant_user_ids = list(
-        Registration.objects.filter(
-            event=event, status__in=["confirmed", "submitted"]
-        ).values_list("user_id", flat=True)
+        Registration.objects.filter(event=event, status__in=["confirmed", "submitted"]).values_list(
+            "user_id", flat=True
+        )
     )
 
     if registrant_user_ids:
@@ -578,10 +1106,6 @@ def update_registration_status(request, reg_id):
         messages.error(request, "Registration not found.")
         return redirect("eventManagement:organizer_dashboard")
 
-    if reg.event.created_by != request.user and not request.user.is_superuser:
-        messages.error(request, "Permission denied.")
-        return redirect("eventManagement:organizer_dashboard")
-
     new_status = request.POST.get("status", "").strip()
     if new_status not in RegistrationStatus.values:
         messages.error(request, "Invalid registration status.")
@@ -589,9 +1113,7 @@ def update_registration_status(request, reg_id):
 
     reg.status = new_status
     reg.save(update_fields=["status", "updated_at"])
-    messages.success(
-        request, f"Registration {reg.registration_id} updated to {new_status}."
-    )
+    messages.success(request, f"Registration {reg.registration_id} updated to {new_status}.")
     return redirect("eventManagement:organizer_dashboard")
 
 
@@ -602,11 +1124,9 @@ def export_registrations(request, event_id):
     from django.http import StreamingHttpResponse
     from registration.models import Registration
 
-    event = Event.all_objects.filter(
-        pk=event_id, created_by=request.user, is_deleted=False
-    ).first()
+    event = Event.all_objects.filter(pk=event_id, is_deleted=False).first()
     if event is None:
-        messages.error(request, "Event not found or permission denied.")
+        messages.error(request, "Event not found.")
         return redirect("eventManagement:organizer_dashboard")
 
     registrations = (
@@ -676,7 +1196,7 @@ def clone_event(request, event_id):
     Copies: all event fields, rounds, FAQs, judges, sponsors.
     Does NOT copy: registrations, teams, announcements.
     """
-    source = get_object_or_404(Event.all_objects, pk=event_id, created_by=request.user)
+    source = get_object_or_404(Event.all_objects, pk=event_id)
 
     with transaction.atomic():
         cloned = Event.objects.create(

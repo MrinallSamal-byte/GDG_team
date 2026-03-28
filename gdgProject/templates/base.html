@@ -52,6 +52,12 @@
                 </a>
                 {% endif %}
 
+                {% if user.is_authenticated and not user.is_staff %}
+                <a href="{% url 'eventManagement:creator_dashboard' %}">
+                    <i data-lucide="plus-square"></i> Creator Hub
+                </a>
+                {% endif %}
+
                 {% if user.is_staff %}
                 <a href="{% url 'eventManagement:organizer_dashboard' %}">
                     <i data-lucide="settings-2"></i> Organizer
@@ -167,6 +173,12 @@
         </a>
         {% endif %}
 
+        {% if user.is_authenticated and not user.is_staff %}
+        <a href="{% url 'eventManagement:creator_dashboard' %}">
+            <i data-lucide="plus-square"></i> Creator Hub
+        </a>
+        {% endif %}
+
         {% if user.is_staff %}
         <a href="{% url 'eventManagement:organizer_dashboard' %}">
             <i data-lucide="settings-2"></i> Organizer
@@ -230,7 +242,11 @@
                     <h4>Platform</h4>
                     <a href="{% url 'events:home' %}">Browse Events</a>
                     <a href="{% url 'dashboard:user_dashboard' %}">Dashboard</a>
+                    {% if user.is_authenticated and not user.is_staff %}
+                    <a href="{% url 'eventManagement:creator_dashboard' %}">Creator Hub</a>
+                    {% else %}
                     <a href="{% url 'eventManagement:organizer_dashboard' %}">Organize</a>
+                    {% endif %}
                 </div>
 
                 <div class="footer-col">

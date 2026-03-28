@@ -108,14 +108,6 @@ def scan_qr(request, token):
             return JsonResponse({"ok": False, "error": "Invalid QR code."}, status=404)
         return render(request, "checkin/scan_result.html", {"valid": False})
 
-    if checkin.event.created_by != request.user and not request.user.is_superuser:
-        if _wants_json(request):
-            return JsonResponse(
-                {"ok": False, "error": "Permission denied."}, status=403
-            )
-        messages.error(request, "You are not the organiser of this event.")
-        return redirect("eventManagement:organizer_dashboard")
-
     if _wants_json(request):
         return JsonResponse(
             {
@@ -149,14 +141,6 @@ def confirm_checkin(request, token):
         CheckIn.objects.select_related("event", "user"),
         token=token,
     )
-
-    if checkin.event.created_by != request.user and not request.user.is_superuser:
-        if _wants_json(request):
-            return JsonResponse(
-                {"ok": False, "error": "Permission denied."}, status=403
-            )
-        messages.error(request, "Permission denied.")
-        return redirect("eventManagement:organizer_dashboard")
 
     if checkin.checked_in:
         name = checkin.user.get_full_name() or checkin.user.username
@@ -200,7 +184,6 @@ def checkin_dashboard(request, event_id):
     event = get_object_or_404(
         Event.all_objects,
         pk=event_id,
-        created_by=request.user,
     )
 
     checkins = (
@@ -234,7 +217,7 @@ def bulk_generate_qr(request, event_id):
     Idempotently create CheckIn records for all confirmed registrations.
     Safe to call multiple times.
     """
-    event = get_object_or_404(Event.all_objects, pk=event_id, created_by=request.user)
+    event = get_object_or_404(Event.all_objects, pk=event_id)
 
     # Registrations that don't yet have a check-in record
     registrations = Registration.objects.filter(

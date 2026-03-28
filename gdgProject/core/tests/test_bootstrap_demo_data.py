@@ -1,3 +1,6 @@
+import os
+from unittest.mock import patch
+
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.test import TestCase
@@ -63,12 +66,33 @@ class BootstrapDemoDataCommandTest(TestCase):
         call_command("bootstrap_demo_data", verbosity=0)
 
         self.assertGreater(
-            Event.objects.filter(status__in=[
-                EventStatus.PUBLISHED,
-                EventStatus.REGISTRATION_OPEN,
-                EventStatus.REGISTRATION_CLOSED,
-                EventStatus.ONGOING,
-                EventStatus.COMPLETED,
-            ]).count(),
+            Event.objects.filter(
+                status__in=[
+                    EventStatus.PUBLISHED,
+                    EventStatus.REGISTRATION_OPEN,
+                    EventStatus.REGISTRATION_CLOSED,
+                    EventStatus.ONGOING,
+                    EventStatus.COMPLETED,
+                ]
+            ).count(),
             0,
         )
+
+    def test_bootstrap_can_create_configured_admin_user(self):
+        with patch.dict(
+            os.environ,
+            {
+                "BOOTSTRAP_ADMIN_EMAIL": "admin234@gmail.com",
+                "BOOTSTRAP_ADMIN_PASSWORD": "Mrinall@1123",
+                "BOOTSTRAP_ADMIN_NAME": "Campus Arena Admin",
+            },
+            clear=False,
+        ):
+            call_command("bootstrap_demo_data", verbosity=0)
+
+        admin_user = User.objects.get(email="admin234@gmail.com")
+        self.assertTrue(admin_user.is_staff)
+        self.assertTrue(admin_user.is_superuser)
+        self.assertTrue(admin_user.is_active)
+        self.assertTrue(admin_user.check_password("Mrinall@1123"))
+        self.assertEqual(admin_user.first_name, "Campus")

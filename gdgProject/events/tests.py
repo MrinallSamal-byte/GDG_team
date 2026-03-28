@@ -46,6 +46,31 @@ class EventsViewTest(TestCase):
         resp = self.client.get(reverse("events:home"))
         self.assertContains(resp, "Browse All Events")
 
+    def test_home_paginates_at_sixteen_events_per_page(self):
+        now = timezone.now()
+        for index in range(20):
+            Event.objects.create(
+                title=f"Event {index:02d}",
+                slug=f"event-{index:02d}",
+                description="Paginated event",
+                status=EventStatus.REGISTRATION_OPEN,
+                registration_start=now - timezone.timedelta(days=1),
+                registration_end=now + timezone.timedelta(days=10),
+                event_start=now + timezone.timedelta(days=20 + index),
+                event_end=now + timezone.timedelta(days=21 + index),
+                created_by=self.user,
+            )
+
+        resp = self.client.get(reverse("events:home"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.context["event_page"].paginator.per_page, 16)
+        self.assertTrue(resp.context["event_page"].has_next())
+
+        next_resp = self.client.get(reverse("events:home"), {"page": 2})
+        self.assertEqual(next_resp.status_code, 200)
+        self.assertEqual(next_resp.context["event_page"].number, 2)
+        self.assertNotContains(next_resp, "Next 16 Events")
+
     def test_event_detail_renders(self):
         resp = self.client.get(reverse("events:event_detail", args=[self.event.pk]))
         self.assertEqual(resp.status_code, 200)

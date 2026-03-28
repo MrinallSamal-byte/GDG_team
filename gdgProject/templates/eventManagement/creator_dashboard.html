@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}CampusArena | Creator Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+.creator-shell{display:grid;gap:1.5rem;padding:2.5rem 0 3rem}
+.creator-hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(260px,.8fr);gap:1rem;border:1px solid var(--border);background:var(--surface)}
+.creator-hero-copy{padding:1.75rem}
+.creator-eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--primary);margin-bottom:.8rem}
+.creator-hero h1{margin:0 0 .65rem;font-size:2rem;letter-spacing:-.04em}
+.creator-hero p{margin:0;color:var(--muted);line-height:1.7}
+.creator-hero-side{padding:1.75rem;border-left:1px solid var(--border);display:grid;gap:.9rem;background:linear-gradient(180deg,rgba(255,0,0,.06),transparent)}
+.creator-metric{padding:.9rem 1rem;border:1px solid var(--border);background:var(--bg)}
+.creator-metric span{display:block;font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.creator-metric strong{display:block;margin-top:.3rem;font-size:1.5rem}
+.creator-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem}
+.creator-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.82rem 1rem;border:1px solid var(--primary);background:var(--primary);color:#fff;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.78rem;text-decoration:none}
+.creator-btn--ghost{background:transparent;color:var(--text);border-color:var(--border)}
+.creator-card{border:1px solid var(--border);background:var(--surface)}
+.creator-card-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1rem 1.25rem;border-bottom:1px solid var(--border)}
+.creator-card-head h2{margin:0;font-size:1rem;letter-spacing:.02em}
+.creator-list{display:grid;gap:0}
+.creator-item{padding:1.1rem 1.25rem;border-bottom:1px solid var(--border)}
+.creator-item:last-child{border-bottom:none}
+.creator-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:.55rem}
+.creator-item h3{margin:0;font-size:1rem}
+.creator-meta{display:flex;flex-wrap:wrap;gap:.45rem;color:var(--muted);font-size:.8rem}
+.creator-pill{display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .55rem;border:1px solid var(--border);font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.creator-pill--pending{color:var(--warn);border-color:rgba(255,179,0,.28);background:var(--warn-soft)}
+.creator-pill--approved{color:var(--ok);border-color:rgba(0,230,118,.28);background:var(--ok-soft)}
+.creator-pill--rejected{color:var(--danger);border-color:rgba(255,82,82,.28);background:var(--danger-soft)}
+.creator-note{margin-top:.8rem;padding:.8rem .9rem;border:1px solid var(--border);background:var(--bg);font-size:.84rem;color:var(--muted);line-height:1.6}
+.creator-empty{padding:2rem 1.25rem;color:var(--muted);text-align:center}
+@media(max-width:860px){
+  .creator-hero{grid-template-columns:1fr}
+  .creator-hero-side{border-left:none;border-top:1px solid var(--border)}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% include 'includes/_n_page.html' %}
+<section class="creator-shell">
+    <div class="creator-hero">
+        <div class="creator-hero-copy">
+            <div class="creator-eyebrow">Creator Hub</div>
+            <h1>Request a new event for CampusArena.</h1>
+            <p>Tell the admin team about your workshop, hackathon, contest, or meetup. Once approved, your event goes live on the website and attendees can start discovering it.</p>
+            <div class="creator-actions">
+                <a href="{% url 'eventManagement:request_event' %}" class="creator-btn"><i data-lucide="plus"></i> Request New Event</a>
+                <a href="{% url 'events:home' %}" class="creator-btn creator-btn--ghost"><i data-lucide="compass"></i> Browse Live Events</a>
+            </div>
+        </div>
+        <div class="creator-hero-side">
+            <div class="creator-metric">
+                <span>Total Requests</span>
+                <strong>{{ counts.total }}</strong>
+            </div>
+            <div class="creator-metric">
+                <span>Pending Review</span>
+                <strong>{{ counts.pending }}</strong>
+            </div>
+            <div class="creator-metric">
+                <span>Approved</span>
+                <strong>{{ counts.approved }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="creator-card">
+        <div class="creator-card-head">
+            <h2>My Event Requests</h2>
+            <a href="{% url 'eventManagement:request_event' %}" class="creator-btn creator-btn--ghost" style="padding:.6rem .8rem;font-size:.72rem;">New Request</a>
+        </div>
+        <div class="creator-list">
+            {% for event_request in event_requests %}
+            <article class="creator-item">
+                <div class="creator-item-top">
+                    <div>
+                        <h3>{{ event_request.title }}</h3>
+                        <div class="creator-meta">
+                            <span>{{ event_request.get_category_display }}</span>
+                            <span>{{ event_request.get_mode_display }}</span>
+                            <span>{{ event_request.event_start|date:"d M Y, H:i" }}</span>
+                        </div>
+                    </div>
+                    <span class="creator-pill {% if event_request.status == 'pending' %}creator-pill--pending{% elif event_request.status == 'approved' %}creator-pill--approved{% else %}creator-pill--rejected{% endif %}">
+                        {{ event_request.get_status_display }}
+                    </span>
+                </div>
+                <p style="margin:0;color:var(--muted);line-height:1.65;">{{ event_request.description|truncatechars:180 }}</p>
+                {% if event_request.review_note %}
+                <div class="creator-note">
+                    <strong style="display:block;color:var(--text);margin-bottom:.35rem;">Admin Note</strong>
+                    {{ event_request.review_note }}
+                </div>
+                {% endif %}
+                {% if event_request.created_event %}
+                <div class="creator-actions" style="margin-top:1rem;">
+                    <a href="{% url 'events:event_detail' event_request.created_event.pk %}" class="creator-btn creator-btn--ghost" style="padding:.62rem .8rem;font-size:.72rem;">
+                        <i data-lucide="external-link"></i> View Live Event
+                    </a>
+                </div>
+                {% endif %}
+            </article>
+            {% empty %}
+            <div class="creator-empty">
+                No event requests yet. Use <strong>Request New Event</strong> to send your first one for review.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

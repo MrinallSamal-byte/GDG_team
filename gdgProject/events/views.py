@@ -2,6 +2,7 @@ import logging
 
 from django.contrib import messages
 from django.core.mail import send_mail
+from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -54,9 +55,7 @@ def _build_event_queryset(params):
             status__in=[EventStatus.REGISTRATION_CLOSED, EventStatus.COMPLETED]
         )
     if search:
-        grid_qs = grid_qs.filter(
-            Q(title__icontains=search) | Q(description__icontains=search)
-        )
+        grid_qs = grid_qs.filter(Q(title__icontains=search) | Q(description__icontains=search))
 
     if sort == "deadline":
         grid_qs = grid_qs.order_by("registration_end")
@@ -93,9 +92,7 @@ def events_api(request):
                 ),
                 "registered_count": ev.registered_count,
                 "capacity": ev.capacity,
-                "fill_pct": (
-                    round(ev.registered_count / ev.capacity * 100) if ev.capacity else 0
-                ),
+                "fill_pct": (round(ev.registered_count / ev.capacity * 100) if ev.capacity else 0),
                 "prize_pool": str(int(ev.prize_pool)) if ev.prize_pool else "",
             }
         )
@@ -110,7 +107,9 @@ def home(request):
     sort = request.GET.get("sort", "newest")
 
     grid_qs, base_qs = _build_event_queryset(request.GET)
-    event_grid = grid_qs[:24]
+    event_page = Paginator(grid_qs, 16).get_page(request.GET.get("page") or 1)
+    pagination_params = request.GET.copy()
+    pagination_params.pop("page", None)
 
     featured_events = base_qs.filter(is_featured=True).order_by("-event_start")[:6]
     if not featured_events.exists():
@@ -121,11 +120,12 @@ def home(request):
         "events/home.html",
         {
             "featured_events": featured_events,
-            "event_grid": event_grid,
+            "event_page": event_page,
             "q": search,
             "active_category": category,
             "active_sort": sort,
             "categories": EventCategory.choices,
+            "pagination_query": pagination_params.urlencode(),
         },
     )
 
@@ -144,9 +144,9 @@ def event_detail(request, event_id):
 
     rounds = event.rounds.all().order_by("order")
 
-    participants = event.registrations.filter(
-        status__in=["confirmed", "submitted"]
-    ).select_related("user", "user__profile")[:50]
+    participants = event.registrations.filter(status__in=["confirmed", "submitted"]).select_related(
+        "user", "user__profile"
+    )[:50]
 
     teams_open = (
         event.teams.filter(status="open", is_deleted=False)
@@ -207,9 +207,7 @@ def contact_organizer(request, event_id):
 
     organizer_email = event.created_by.email
     if not organizer_email:
-        messages.info(
-            request, "Organizer contact email is not available for this event yet."
-        )
+        messages.info(request, "Organizer contact email is not available for this event yet.")
         return redirect("events:event_detail", event_id=event.pk)
 
     sender_name = "Anonymous user"
@@ -232,12 +230,8 @@ def contact_organizer(request, event_id):
             fail_silently=False,
         )
     except Exception:
-        logger.exception(
-            "Failed to send organizer contact email for event %s", event.pk
-        )
-        messages.error(
-            request, "We could not send your message right now. Please try again later."
-        )
+        logger.exception("Failed to send organizer contact email for event %s", event.pk)
+        messages.error(request, "We could not send your message right now. Please try again later.")
         return redirect("events:event_detail", event_id=event.pk)
 
     messages.success(request, "Your message has been sent to the organizers.")
