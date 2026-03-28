@@ -67,6 +67,12 @@ class DashboardViewsTest(TestCase):
         self.assertContains(resp, "#leetcode")
         self.assertContains(resp, "#portfolio")
 
+    def test_edit_profile_renders(self):
+        resp = self.client.get(reverse("dashboard:edit_profile"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Edit Profile")
+        self.assertContains(resp, "Save Changes")
+
     def test_my_events(self):
         resp = self.client.get(reverse("dashboard:my_events"))
         self.assertEqual(resp.status_code, 200)

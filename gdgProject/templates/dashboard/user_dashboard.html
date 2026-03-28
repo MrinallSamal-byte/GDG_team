@@ -52,7 +52,7 @@
                     <span class="n-name">Overview</span>
                 </div>
             </div>
-            <a href="{% url 'events:home' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;">
+            <a href="{% url 'events:events_page' %}" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);text-decoration:none;">
                 <i data-lucide="compass" style="width:13px;height:13px;"></i> Browse Events
             </a>
         </div>
@@ -93,7 +93,7 @@
                 </div>
                 {% empty %}
                 <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem;">
-                    No events yet. <a href="{% url 'events:home' %}" style="color:var(--primary);">Browse events</a>
+                    No events yet. <a href="{% url 'events:events_page' %}" style="color:var(--primary);">Browse events</a>
                 </div>
                 {% endfor %}
             </div>

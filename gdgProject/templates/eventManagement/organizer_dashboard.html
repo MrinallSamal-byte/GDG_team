@@ -189,7 +189,7 @@
 
 <!-- Mobile Top Nav -->
 <div class="mobile-top-nav mobile-only">
-    <a href="{% url 'events:home' %}" class="brand mobile-brand">
+    <a href="{% url 'events:events_page' %}" class="brand mobile-brand">
         <i data-lucide="trophy" style="width:20px;height:20px;"></i> CampusArena
     </a>
     <div class="mobile-actions">
@@ -235,7 +235,7 @@
 
 <!-- Mobile Bottom Nav -->
 <div class="mobile-bottom-nav mobile-only">
-    <a href="{% url 'events:home' %}" class="bottom-nav-item"><i data-lucide="home"></i> Events</a>
+    <a href="{% url 'events:events_page' %}" class="bottom-nav-item"><i data-lucide="home"></i> Events</a>
     <a href="{% url 'eventManagement:organizer_dashboard' %}" class="bottom-nav-item active"><i data-lucide="settings-2"></i> Organizer</a>
 </div>
 
@@ -699,7 +699,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var navCenter = document.querySelector('.nav-center');
     if (navCenter) {
-        navCenter.innerHTML = '<a href="{% url "events:home" %}"><i data-lucide="compass"></i> Events</a><a href="{% url "eventManagement:organizer_dashboard" %}" class="active"><i data-lucide="layout-dashboard"></i> Organizer</a>';
+        navCenter.innerHTML = '<a href="{% url "events:events_page" %}"><i data-lucide="compass"></i> Events</a><a href="{% url "eventManagement:organizer_dashboard" %}" class="active"><i data-lucide="layout-dashboard"></i> Organizer</a>';
         if (window.lucide) lucide.createIcons();
     }
 

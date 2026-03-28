@@ -42,7 +42,7 @@
             <!-- DESKTOP NAV -->
             <nav class="nav-center">
 
-                <a href="{% url 'events:home' %}">
+                <a href="{% url 'events:events_page' %}">
                     <i data-lucide="compass"></i> Events
                 </a>
 
@@ -163,7 +163,7 @@
             </button>
         </div>
 
-        <a href="{% url 'events:home' %}">
+        <a href="{% url 'events:events_page' %}">
             <i data-lucide="compass"></i> Events
         </a>
 
@@ -240,7 +240,7 @@
 
                 <div class="footer-col">
                     <h4>Platform</h4>
-                    <a href="{% url 'events:home' %}">Browse Events</a>
+                    <a href="{% url 'events:events_page' %}">Browse Events</a>
                     <a href="{% url 'dashboard:user_dashboard' %}">Dashboard</a>
                     {% if user.is_authenticated and not user.is_staff %}
                     <a href="{% url 'eventManagement:creator_dashboard' %}">Creator Hub</a>

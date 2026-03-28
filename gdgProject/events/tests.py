@@ -71,6 +71,13 @@ class EventsViewTest(TestCase):
         self.assertEqual(next_resp.context["event_page"].number, 2)
         self.assertNotContains(next_resp, "Next 16 Events")
 
+    def test_dedicated_events_page_renders(self):
+        resp = self.client.get(reverse("events:events_page"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "All Public Events")
+        self.assertContains(resp, "Browse every live event from one dedicated page")
+        self.assertContains(resp, "HackFest 2026")
+
     def test_event_detail_renders(self):
         resp = self.client.get(reverse("events:event_detail", args=[self.event.pk]))
         self.assertEqual(resp.status_code, 200)

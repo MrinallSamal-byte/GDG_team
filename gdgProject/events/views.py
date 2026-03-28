@@ -67,6 +67,32 @@ def _build_event_queryset(params):
     return grid_qs, base_qs
 
 
+def _event_listing_context(request):
+    search = request.GET.get("q", "")
+    category = request.GET.get("category", "")
+    mode = request.GET.get("mode", "")
+    status_filter = request.GET.get("status", "")
+    sort = request.GET.get("sort", "newest")
+
+    grid_qs, base_qs = _build_event_queryset(request.GET)
+    event_page = Paginator(grid_qs, 16).get_page(request.GET.get("page") or 1)
+    pagination_params = request.GET.copy()
+    pagination_params.pop("page", None)
+
+    return {
+        "grid_qs": grid_qs,
+        "base_qs": base_qs,
+        "event_page": event_page,
+        "q": search,
+        "active_category": category,
+        "active_mode": mode,
+        "active_status": status_filter,
+        "active_sort": sort,
+        "categories": EventCategory.choices,
+        "pagination_query": pagination_params.urlencode(),
+    }
+
+
 def events_api(request):
     """Return filtered events as JSON for AJAX requests."""
     grid_qs, _ = _build_event_queryset(request.GET)
@@ -102,32 +128,29 @@ def events_api(request):
 
 def home(request):
     """Event listing page with filtering and featured carousel."""
-    search = request.GET.get("q", "")
-    category = request.GET.get("category", "")
-    sort = request.GET.get("sort", "newest")
+    context = _event_listing_context(request)
 
-    grid_qs, base_qs = _build_event_queryset(request.GET)
-    event_page = Paginator(grid_qs, 16).get_page(request.GET.get("page") or 1)
-    pagination_params = request.GET.copy()
-    pagination_params.pop("page", None)
-
-    featured_events = base_qs.filter(is_featured=True).order_by("-event_start")[:6]
+    featured_events = context["base_qs"].filter(is_featured=True).order_by("-event_start")[:6]
     if not featured_events.exists():
-        featured_events = base_qs.order_by("-event_start")[:3]
+        featured_events = context["base_qs"].order_by("-event_start")[:3]
 
+    context.update({"featured_events": featured_events})
     return render(
         request,
         "events/home.html",
-        {
-            "featured_events": featured_events,
-            "event_page": event_page,
-            "q": search,
-            "active_category": category,
-            "active_sort": sort,
-            "categories": EventCategory.choices,
-            "pagination_query": pagination_params.urlencode(),
-        },
+        context,
     )
+
+
+def events_page(request):
+    """Dedicated page for browsing all live events."""
+    context = _event_listing_context(request)
+    context.update(
+        {
+            "total_events": context["grid_qs"].count(),
+        }
+    )
+    return render(request, "events/events_page.html", context)
 
 
 def event_detail(request, event_id):

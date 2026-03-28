@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block title %}CampusArena | All Events{% endblock %}
+
+{% block extra_css %}
+<style>
+.events-shell{padding:2.5rem 0 3rem;display:grid;gap:1.5rem}
+.events-hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,.75fr);gap:1rem}
+.events-hero-card,.events-filter-card,.events-grid-card{border:1px solid var(--border);background:var(--surface)}
+.events-hero-card{padding:1.5rem}
+.events-eyebrow{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--primary);margin-bottom:.75rem}
+.events-hero-card h1{margin:0 0 .6rem;font-size:2.2rem;letter-spacing:-.05em}
+.events-hero-card p{margin:0;color:var(--muted);line-height:1.7;max-width:56ch}
+.events-metrics{display:grid;gap:.8rem;padding:1.5rem;background:linear-gradient(180deg,rgba(255,0,0,.06),transparent)}
+.events-metric{padding:.95rem 1rem;border:1px solid var(--border);background:var(--bg)}
+.events-metric span{display:block;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.events-metric strong{display:block;margin-top:.3rem;font-size:1.45rem}
+.events-filter-card{padding:1.15rem}
+.events-filter-grid{display:grid;grid-template-columns:2fr repeat(4,minmax(0,1fr)) auto auto;gap:.75rem;align-items:end}
+.events-field label{display:block;margin-bottom:.35rem;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.events-field input,.events-field select{width:100%;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:.78rem .9rem;font-family:var(--font);font-size:.9rem}
+.events-grid-card{padding:1rem}
+.events-grid-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;padding:.4rem .25rem 1rem}
+.events-grid-head h2{margin:0;font-size:1.1rem}
+.events-grid-head p{margin:0;color:var(--muted);font-size:.84rem}
+.events-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}
+.event-card{border:1px solid var(--border);background:var(--bg);padding:1.15rem;display:grid;gap:.8rem}
+.event-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+.event-card h3{margin:0;font-size:1.05rem;line-height:1.35}
+.event-card-copy{margin:0;color:var(--muted);font-size:.88rem;line-height:1.65}
+.event-meta{display:flex;flex-wrap:wrap;gap:.45rem}
+.event-meta span{display:inline-flex;align-items:center;gap:.35rem;padding:.28rem .6rem;border:1px solid var(--border);font-size:.74rem;font-weight:600;color:var(--muted)}
+.event-meta i{width:12px;height:12px}
+.event-progress{display:grid;gap:.35rem}
+.event-progress-bar{height:6px;background:var(--surface);border-radius:999px;overflow:hidden}
+.event-progress-fill{height:100%;background:var(--primary)}
+.event-progress-label{display:flex;justify-content:space-between;gap:1rem;font-size:.72rem;color:var(--muted)}
+.event-card-footer{display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap}
+.events-status{display:inline-flex;align-items:center;gap:.4rem;padding:.28rem .6rem;border:1px solid var(--border);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.events-status.open{color:var(--ok);border-color:rgba(0,230,118,.25);background:var(--ok-soft)}
+.events-status.closed{color:var(--muted);border-color:var(--border)}
+.events-status.other{color:var(--warn);border-color:rgba(255,179,0,.25);background:var(--warn-soft)}
+.events-actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.events-pager{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;padding-top:.8rem}
+.events-pager p{margin:0;color:var(--muted);font-size:.8rem}
+.events-empty{padding:2.5rem 1rem;text-align:center;color:var(--muted)}
+@media(max-width:1180px){.events-filter-grid{grid-template-columns:1fr 1fr 1fr;}.events-field--search{grid-column:1/-1}}
+@media(max-width:860px){.events-hero{grid-template-columns:1fr}.events-filter-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.events-filter-grid{grid-template-columns:1fr}.events-shell{padding-top:1.5rem}.events-hero-card h1{font-size:1.8rem}}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="events-shell">
+    <div class="events-hero">
+        <article class="events-hero-card">
+            <div class="events-eyebrow">Events Directory</div>
+            <h1>Browse every live event from one dedicated page.</h1>
+            <p>Use filters to move through hackathons, workshops, quizzes, and competitions without bouncing back to the homepage. Everything public stays here in one searchable listing.</p>
+        </article>
+        <aside class="events-metrics events-hero-card">
+            <div class="events-metric">
+                <span>Matching Events</span>
+                <strong>{{ total_events }}</strong>
+            </div>
+            <div class="events-metric">
+                <span>Current Page</span>
+                <strong>{{ event_page.number }}/{{ event_page.paginator.num_pages }}</strong>
+            </div>
+        </aside>
+    </div>
+
+    <form method="GET" class="events-filter-card">
+        <div class="events-filter-grid">
+            <div class="events-field events-field--search">
+                <label for="events-q">Search</label>
+                <input id="events-q" type="text" name="q" value="{{ q }}" placeholder="Search by title or description">
+            </div>
+            <div class="events-field">
+                <label for="events-category">Category</label>
+                <select id="events-category" name="category">
+                    <option value="">All categories</option>
+                    {% for value, label in categories %}
+                    <option value="{{ value }}" {% if active_category == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="events-field">
+                <label for="events-mode">Mode</label>
+                <select id="events-mode" name="mode">
+                    <option value="">All modes</option>
+                    <option value="online" {% if active_mode == 'online' %}selected{% endif %}>Online</option>
+                    <option value="offline" {% if active_mode == 'offline' %}selected{% endif %}>Offline</option>
+                    <option value="hybrid" {% if active_mode == 'hybrid' %}selected{% endif %}>Hybrid</option>
+                </select>
+            </div>
+            <div class="events-field">
+                <label for="events-status">Status</label>
+                <select id="events-status" name="status">
+                    <option value="">All statuses</option>
+                    <option value="open" {% if active_status == 'open' %}selected{% endif %}>Registration Open</option>
+                    <option value="closed" {% if active_status == 'closed' %}selected{% endif %}>Closed / Completed</option>
+                </select>
+            </div>
+            <div class="events-field">
+                <label for="events-sort">Sort</label>
+                <select id="events-sort" name="sort">
+                    <option value="newest" {% if active_sort == 'newest' %}selected{% endif %}>Newest</option>
+                    <option value="deadline" {% if active_sort == 'deadline' %}selected{% endif %}>Deadline</option>
+                    <option value="popular" {% if active_sort == 'popular' %}selected{% endif %}>Popular</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-primary"><i data-lucide="search"></i> Apply</button>
+            <a href="{% url 'events:events_page' %}" class="btn-secondary"><i data-lucide="rotate-ccw"></i> Reset</a>
+        </div>
+    </form>
+
+    <div class="events-grid-card">
+        <div class="events-grid-head">
+            <div>
+                <h2>All Public Events</h2>
+                <p>{{ total_events }} result{{ total_events|pluralize }} across all visible categories.</p>
+            </div>
+            <a href="{% url 'events:home' %}" class="btn-secondary"><i data-lucide="house"></i> Back Home</a>
+        </div>
+
+        <div class="events-grid">
+            {% for event in event_page %}
+            <article class="event-card">
+                <div class="event-card-top">
+                    <div>
+                        <div class="events-eyebrow" style="margin-bottom:.45rem;">{{ event.get_category_display }}</div>
+                        <h3>{{ event.title }}</h3>
+                    </div>
+                    <span class="events-status {% if event.status == 'registration_open' %}open{% elif event.status == 'registration_closed' or event.status == 'completed' %}closed{% else %}other{% endif %}">
+                        {{ event.get_status_display }}
+                    </span>
+                </div>
+
+                <p class="event-card-copy">{{ event.description|truncatechars:160 }}</p>
+
+                <div class="event-meta">
+                    <span><i data-lucide="calendar-days"></i>{{ event.event_start|date:"d M Y" }}</span>
+                    <span><i data-lucide="radio"></i>{{ event.get_mode_display }}</span>
+                    <span><i data-lucide="users"></i>{{ event.get_participation_type_display }}</span>
+                </div>
+
+                <div class="event-progress">
+                    {% widthratio event.registered_count event.capacity 100 as fill_pct %}
+                    <div class="event-progress-bar">
+                        <div class="event-progress-fill" style="width:{{ fill_pct }}%"></div>
+                    </div>
+                    <div class="event-progress-label">
+                        <span>{{ event.registered_count }} / {{ event.capacity }} registered</span>
+                        {% if event.prize_pool %}<span>₹{{ event.prize_pool|floatformat:0 }}</span>{% endif %}
+                    </div>
+                </div>
+
+                <div class="event-card-footer">
+                    <div class="events-actions">
+                        <a href="{% url 'events:event_detail' event.pk %}" class="btn-primary btn-small"><i data-lucide="arrow-right"></i> View Event</a>
+                    </div>
+                </div>
+            </article>
+            {% empty %}
+            <div class="events-empty" style="grid-column:1/-1;">
+                No events matched the current filters.
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if event_page.paginator.num_pages > 1 %}
+        <div class="events-pager">
+            <p>Page {{ event_page.number }} of {{ event_page.paginator.num_pages }}</p>
+            <div class="events-actions">
+                {% if event_page.has_previous %}
+                <a href="?{{ pagination_query }}{% if pagination_query %}&{% endif %}page={{ event_page.previous_page_number }}" class="btn-secondary btn-small">
+                    <i data-lucide="arrow-left"></i> Previous
+                </a>
+                {% endif %}
+                {% if event_page.has_next %}
+                <a href="?{{ pagination_query }}{% if pagination_query %}&{% endif %}page={{ event_page.next_page_number }}" class="btn-primary btn-small">
+                    Next <i data-lucide="arrow-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

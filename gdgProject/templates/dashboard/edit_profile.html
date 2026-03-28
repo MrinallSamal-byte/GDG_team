@@ -54,7 +54,6 @@
                         <label>Year</label>
                         <select class="n-i" name="year">
                             <option value="">Select year</option>
-                            {% for y in "1,2,3,4,5,6"|split:"," %}{% endfor %}
                             <option value="1" {% if profile.year == 1 %}selected{% endif %}>Year 1</option>
                             <option value="2" {% if profile.year == 2 %}selected{% endif %}>Year 2</option>
                             <option value="3" {% if profile.year == 3 %}selected{% endif %}>Year 3</option>
@@ -81,8 +80,6 @@
             <div class="n-card n-reveal" style="margin-top:1px;">
                 <div class="n-card-head"><i data-lucide="cpu"></i> Skills</div>
                 <div style="display:flex;flex-wrap:wrap;gap:.35rem;" id="sk-chips">
-                    {% for skill in "React,Python,Django,Figma,Flutter,AWS,Node.js,TensorFlow,Docker,MongoDB"|split:"," %}{% endfor %}
-                    {% for s in "React,Python,Django,Figma,Flutter,AWS,Node.js,TensorFlow,Docker,MongoDB" %}{% endfor %}
                     <button type="button" class="n-sk {% if 'React' in profile.skills|default:'' %}on{% endif %}" data-s="React">React</button>
                     <button type="button" class="n-sk {% if 'Python' in profile.skills|default:'' %}on{% endif %}" data-s="Python">Python</button>
                     <button type="button" class="n-sk {% if 'Django' in profile.skills|default:'' %}on{% endif %}" data-s="Django">Django</button>

@@ -490,7 +490,7 @@
     {% endif %}
     <div style="display:flex;flex-direction:column;gap:.15rem;">
         {% for label, url in nm_links %}{% endfor %}
-        <a href="{% url 'events:home' %}" style="display:flex;align-items:center;gap:.65rem;padding:.65rem .5rem;color:var(--muted);font-size:.88rem;font-weight:500;border-bottom:1px solid var(--border-soft);"><i data-lucide="compass" style="width:16px;height:16px;color:var(--primary);"></i> Browse Events</a>
+        <a href="{% url 'events:events_page' %}" style="display:flex;align-items:center;gap:.65rem;padding:.65rem .5rem;color:var(--muted);font-size:.88rem;font-weight:500;border-bottom:1px solid var(--border-soft);"><i data-lucide="compass" style="width:16px;height:16px;color:var(--primary);"></i> Browse Events</a>
         {% if user.is_authenticated %}
         <a href="{% url 'dashboard:user_dashboard' %}" style="display:flex;align-items:center;gap:.65rem;padding:.65rem .5rem;color:var(--muted);font-size:.88rem;font-weight:500;border-bottom:1px solid var(--border-soft);"><i data-lucide="layout-dashboard" style="width:16px;height:16px;color:var(--primary);"></i> Dashboard</a>
         <a href="{% url 'dashboard:my_profile' %}" style="display:flex;align-items:center;gap:.65rem;padding:.65rem .5rem;color:var(--muted);font-size:.88rem;font-weight:500;border-bottom:1px solid var(--border-soft);"><i data-lucide="user" style="width:16px;height:16px;color:var(--primary);"></i> My Profile</a>
@@ -508,7 +508,7 @@
 
 <!-- Mobile bottom nav -->
 <nav class="n-mobile-bottom" style="display:none;">
-    <a href="{% url 'events:home' %}" class="n-bottom-item active"><i data-lucide="home"></i>Events</a>
+    <a href="{% url 'events:events_page' %}" class="n-bottom-item"><i data-lucide="compass"></i>Events</a>
     {% if user.is_authenticated %}
     <a href="{% url 'dashboard:user_dashboard' %}" class="n-bottom-item"><i data-lucide="grid-2x2"></i>Dash</a>
     <a href="{% url 'dashboard:my_profile' %}" class="n-bottom-item"><i data-lucide="user"></i>Profile</a>
