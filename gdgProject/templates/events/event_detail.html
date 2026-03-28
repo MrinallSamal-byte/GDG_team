@@ -3,11 +3,11 @@
 {% block extra_css %}
 <style>
 .n-ev-detail{display:grid;grid-template-columns:1fr 280px;gap:0;border:1px solid var(--border);margin-bottom:1.5rem}
-.n-ev-main{border-right:1px solid var(--border);padding:1.5rem}
-.n-ev-aside{padding:1.25rem;display:flex;flex-direction:column;gap:.75rem}
+.n-ev-main{border-right:1px solid var(--border);padding:1.5rem;min-width:0}
+.n-ev-aside{padding:1.25rem;display:flex;flex-direction:column;gap:.75rem;min-width:0}
 .n-tab-bar{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
 .n-tab-bar::-webkit-scrollbar{display:none}
-.n-tab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:.65rem 1rem;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;cursor:pointer;font-family:var(--font);transition:all .15s}
+.n-tab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:.65rem 1rem;font-size:.9rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;cursor:pointer;font-family:var(--font);transition:all .15s;flex-shrink:0}
 .n-tab:hover{color:var(--text)}
 .n-tab.on{color:var(--primary);border-bottom-color:var(--primary)}
 .n-panel{display:none;padding:1.25rem 0}
@@ -26,7 +26,18 @@
 .n-tl-item.done::before{background:var(--primary);border-color:var(--primary)}
 .n-prize-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border)}
 .n-prize-cell{padding:1.25rem;text-align:center;background:var(--surface)}
-@media(max-width:900px){.n-ev-detail{grid-template-columns:1fr}.n-ev-aside{border-top:1px solid var(--border)}}
+.n-ppl-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)}
+@media(max-width:900px){.n-ev-detail{grid-template-columns:1fr}.n-ev-main{border-right:none;border-bottom:1px solid var(--border)}.n-ev-aside{border-top:none}}
+@media(max-width:600px){
+    .n-ev-main{padding:1.25rem 1rem;}
+    .n-ev-aside{padding:1.25rem 1rem;}
+    .n-tab{padding:.8rem 1.25rem;font-size:.95rem;}
+    .n-cd-unit{padding:.8rem .5rem;}
+    .n-cd-unit strong{font-size:1.5rem;}
+    .n-cd-unit span{font-size:.75rem;}
+    .n-prize-grid{grid-template-columns:1fr;}
+    .n-ppl-grid{grid-template-columns:1fr;}
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -35,17 +46,17 @@
 <!-- Header -->
 <div style="padding:1.5rem 0 1rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem;" class="n-reveal">
     <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem;">
-        <span style="font-family:var(--font-mono);font-size:.65rem;font-weight:700;color:var(--primary);">{{ event.get_category_display|upper }}</span>
-        <span style="font-size:.65rem;color:var(--muted-soft);">·</span>
-        <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);">{{ event.get_mode_display|upper }}</span>
+        <span style="font-family:var(--font-mono);font-size:.8rem;font-weight:700;color:var(--primary);">{{ event.get_category_display|upper }}</span>
+        <span style="font-size:.8rem;color:var(--muted-soft);">·</span>
+        <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--muted);">{{ event.get_mode_display|upper }}</span>
     </div>
     <h1 style="font-size:clamp(1.4rem,3vw,2rem);font-weight:800;letter-spacing:-.03em;margin:0 0 .5rem;">{{ event.title }}</h1>
-    <p style="color:var(--muted);font-size:.9rem;max-width:600px;line-height:1.6;margin-bottom:.85rem;">{{ event.description|truncatewords:40 }}</p>
+    <p style="color:var(--muted);font-size:1.05rem;max-width:600px;line-height:1.6;margin-bottom:.85rem;">{{ event.description|truncatewords:40 }}</p>
     <div style="display:flex;flex-wrap:wrap;gap:.4rem;">
-        <span style="font-size:.72rem;color:var(--muted);padding:.22rem .6rem;border:1px solid var(--border);font-family:var(--font-mono);display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="calendar" style="width:11px;height:11px;color:var(--primary);"></i>{{ event.event_start|date:"M d" }}–{{ event.event_end|date:"M d, Y" }}</span>
-        <span style="font-size:.72rem;color:var(--muted);padding:.22rem .6rem;border:1px solid var(--border);font-family:var(--font-mono);display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="users" style="width:11px;height:11px;color:var(--primary);"></i>{{ event.registered_count }}/{{ event.capacity }}</span>
-        <span style="font-size:.72rem;color:var(--muted);padding:.22rem .6rem;border:1px solid var(--border);font-family:var(--font-mono);display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="clock" style="width:11px;height:11px;color:var(--primary);"></i>Reg ends {{ event.registration_end|date:"M d, Y" }}</span>
-        {% if event.prize_pool %}<span style="font-size:.72rem;color:var(--warn);padding:.22rem .6rem;border:1px solid rgba(255,179,0,.25);background:var(--warn-soft);font-family:var(--font-mono);font-weight:700;display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="trophy" style="width:11px;height:11px;"></i>₹{{ event.prize_pool|floatformat:0 }}</span>{% endif %}
+        <span style="font-size:.95rem;color:var(--muted);padding:.22rem .6rem;border:1px solid var(--border);font-family:var(--font-mono);display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="calendar" style="width:11px;height:11px;color:var(--primary);"></i>{{ event.event_start|date:"M d" }}–{{ event.event_end|date:"M d, Y" }}</span>
+        <span style="font-size:.95rem;color:var(--muted);padding:.22rem .6rem;border:1px solid var(--border);font-family:var(--font-mono);display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="users" style="width:11px;height:11px;color:var(--primary);"></i>{{ event.registered_count }}/{{ event.capacity }}</span>
+        <span style="font-size:.95rem;color:var(--muted);padding:.22rem .6rem;border:1px solid var(--border);font-family:var(--font-mono);display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="clock" style="width:11px;height:11px;color:var(--primary);"></i>Reg ends {{ event.registration_end|date:"M d, Y" }}</span>
+        {% if event.prize_pool %}<span style="font-size:.95rem;color:var(--warn);padding:.22rem .6rem;border:1px solid rgba(255,179,0,.25);background:var(--warn-soft);font-family:var(--font-mono);font-weight:700;display:inline-flex;align-items:center;gap:.3rem;"><i data-lucide="trophy" style="width:11px;height:11px;"></i>₹{{ event.prize_pool|floatformat:0 }}</span>{% endif %}
     </div>
 </div>
 
@@ -66,10 +77,10 @@
         <!-- About -->
         <div id="p-about" class="n-panel on">
             <p style="color:var(--text-soft);line-height:1.75;font-size:.92rem;">{{ event.description }}</p>
-            {% if event.eligibility %}<p style="margin-top:.75rem;font-size:.88rem;color:var(--muted);"><strong style="color:var(--text);">Eligibility:</strong> {{ event.eligibility }}</p>{% endif %}
-            {% if event.rules %}<p style="margin-top:.5rem;font-size:.88rem;color:var(--muted);"><strong style="color:var(--text);">Rules:</strong> {{ event.rules }}</p>{% endif %}
-            {% if event.participation_type != 'individual' %}<p style="margin-top:.5rem;font-size:.88rem;color:var(--muted);"><strong style="color:var(--text);">Team Size:</strong> {{ event.min_team_size }}–{{ event.max_team_size }} members</p>{% endif %}
-            {% if event.registration_fee %}<p style="margin-top:.5rem;font-size:.88rem;color:var(--muted);"><strong style="color:var(--text);">Fee:</strong> ₹{{ event.registration_fee|floatformat:0 }}</p>{% endif %}
+            {% if event.eligibility %}<p style="margin-top:.75rem;font-size:1rem;color:var(--muted);"><strong style="color:var(--text);">Eligibility:</strong> {{ event.eligibility }}</p>{% endif %}
+            {% if event.rules %}<p style="margin-top:.5rem;font-size:1rem;color:var(--muted);"><strong style="color:var(--text);">Rules:</strong> {{ event.rules }}</p>{% endif %}
+            {% if event.participation_type != 'individual' %}<p style="margin-top:.5rem;font-size:1rem;color:var(--muted);"><strong style="color:var(--text);">Team Size:</strong> {{ event.min_team_size }}–{{ event.max_team_size }} members</p>{% endif %}
+            {% if event.registration_fee %}<p style="margin-top:.5rem;font-size:1rem;color:var(--muted);"><strong style="color:var(--text);">Fee:</strong> ₹{{ event.registration_fee|floatformat:0 }}</p>{% endif %}
         </div>
 
         <!-- Timeline -->
@@ -77,11 +88,11 @@
             <div class="n-tl">
                 {% for r in rounds %}
                 <div class="n-tl-item {% if r.status == 'completed' %}done{% endif %}">
-                    <strong style="font-size:.9rem;">{{ r.name }}</strong>
-                    <div style="font-size:.78rem;color:var(--muted);font-family:var(--font-mono);margin-top:.15rem;">{{ r.start_date|date:"M d" }} → {{ r.end_date|date:"M d" }} · {{ r.get_status_display }}</div>
-                    {% if r.description %}<p style="font-size:.82rem;color:var(--muted);margin-top:.2rem;">{{ r.description }}</p>{% endif %}
+                    <strong style="font-size:1.05rem;">{{ r.name }}</strong>
+                    <div style="font-size:.9rem;color:var(--muted);font-family:var(--font-mono);margin-top:.15rem;">{{ r.start_date|date:"M d" }} → {{ r.end_date|date:"M d" }} · {{ r.get_status_display }}</div>
+                    {% if r.description %}<p style="font-size:.95rem;color:var(--muted);margin-top:.2rem;">{{ r.description }}</p>{% endif %}
                 </div>
-                {% empty %}<p style="color:var(--muted);font-size:.85rem;">Timeline coming soon.</p>{% endfor %}
+                {% empty %}<p style="color:var(--muted);font-size:.95rem;">Timeline coming soon.</p>{% endfor %}
             </div>
         </div>
 
@@ -89,67 +100,80 @@
         <div id="p-prizes" class="n-panel">
             {% if event.prize_1st or event.prize_2nd or event.prize_3rd %}
             <div class="n-prize-grid" style="margin-bottom:.85rem;">
-                {% if event.prize_1st %}<div class="n-prize-cell"><div style="font-size:1.4rem;margin-bottom:.35rem;">🥇</div><div style="font-size:.88rem;font-weight:700;margin-bottom:.2rem;">1st Place</div><div style="font-size:.82rem;color:var(--muted);">{{ event.prize_1st }}</div></div>{% endif %}
-                {% if event.prize_2nd %}<div class="n-prize-cell"><div style="font-size:1.4rem;margin-bottom:.35rem;">🥈</div><div style="font-size:.88rem;font-weight:700;margin-bottom:.2rem;">2nd Place</div><div style="font-size:.82rem;color:var(--muted);">{{ event.prize_2nd }}</div></div>{% endif %}
-                {% if event.prize_3rd %}<div class="n-prize-cell"><div style="font-size:1.4rem;margin-bottom:.35rem;">🥉</div><div style="font-size:.88rem;font-weight:700;margin-bottom:.2rem;">3rd Place</div><div style="font-size:.82rem;color:var(--muted);">{{ event.prize_3rd }}</div></div>{% endif %}
+                {% if event.prize_1st %}<div class="n-prize-cell"><div style="font-size:1.4rem;margin-bottom:.35rem;">🥇</div><div style="font-size:1rem;font-weight:700;margin-bottom:.2rem;">1st Place</div><div style="font-size:.95rem;color:var(--muted);">{{ event.prize_1st }}</div></div>{% endif %}
+                {% if event.prize_2nd %}<div class="n-prize-cell"><div style="font-size:1.4rem;margin-bottom:.35rem;">🥈</div><div style="font-size:1rem;font-weight:700;margin-bottom:.2rem;">2nd Place</div><div style="font-size:.95rem;color:var(--muted);">{{ event.prize_2nd }}</div></div>{% endif %}
+                {% if event.prize_3rd %}<div class="n-prize-cell"><div style="font-size:1.4rem;margin-bottom:.35rem;">🥉</div><div style="font-size:1rem;font-weight:700;margin-bottom:.2rem;">3rd Place</div><div style="font-size:.95rem;color:var(--muted);">{{ event.prize_3rd }}</div></div>{% endif %}
             </div>
             {% endif %}
-            {% if event.prize_special %}<p style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem;">⭐ Special: {{ event.prize_special }}</p>{% endif %}
-            <p style="font-size:.82rem;color:var(--muted);">{% if event.participation_certificate and event.merit_certificate %}Participation + Merit certificates for all.{% elif event.participation_certificate %}Participation certificates for all.{% elif event.merit_certificate %}Merit certificates for top performers.{% else %}No certificates for this event.{% endif %}</p>
+            {% if event.prize_special %}<p style="font-size:.95rem;color:var(--muted);margin-bottom:.5rem;">⭐ Special: {{ event.prize_special }}</p>{% endif %}
+            <p style="font-size:.95rem;color:var(--muted);">{% if event.participation_certificate and event.merit_certificate %}Participation + Merit certificates for all.{% elif event.participation_certificate %}Participation certificates for all.{% elif event.merit_certificate %}Merit certificates for top performers.{% else %}No certificates for this event.{% endif %}</p>
         </div>
 
         <!-- People -->
         <div id="p-people" class="n-panel">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);">
+            <div class="n-ppl-grid">
                 <div style="background:var(--surface);padding:.75rem 1rem;">
-                    <div style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">Registered</div>
+                    <div style="font-size:.9rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">Registered</div>
                     {% for reg in participants %}
                     <div style="display:flex;align-items:center;gap:.5rem;padding:.45rem 0;border-bottom:1px solid var(--border-soft);">
-                        <div style="width:26px;height:26px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;font-family:var(--font-mono);flex-shrink:0;">{{ reg.user.get_full_name|first|upper }}</div>
-                        <div><div style="font-size:.82rem;font-weight:600;">{{ reg.user.get_full_name|default:reg.user.username }}</div>{% if reg.user.profile.college %}<div style="font-size:.72rem;color:var(--muted);">{{ reg.user.profile.college }}</div>{% endif %}</div>
+                        <div style="width:26px;height:26px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;font-family:var(--font-mono);flex-shrink:0;overflow:hidden;">
+                            {% if reg.user.profile.profile_picture %}<img src="{{ reg.user.profile.profile_picture.url }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ reg.user.get_full_name|first|upper }}{% endif %}
+                        </div>
+                        <div><div style="font-size:.95rem;font-weight:600;">{{ reg.user.get_full_name|default:reg.user.username }}</div>{% if reg.user.profile.college %}<div style="font-size:.95rem;color:var(--muted);">{{ reg.user.profile.college }}</div>{% endif %}</div>
                     </div>
-                    {% empty %}<p style="color:var(--muted);font-size:.82rem;">No participants yet.</p>{% endfor %}
+                    {% empty %}<p style="color:var(--muted);font-size:.95rem;">No participants yet.</p>{% endfor %}
                 </div>
-                <div style="background:var(--surface);padding:.75rem 1rem;border-left:1px solid var(--border);">
-                    <div style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">Open Teams</div>
+                <div style="background:var(--surface);padding:.75rem 1rem;">
+                    <div style="font-size:.9rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;">Open Teams</div>
                     {% for team in teams_open %}
-                    <div style="padding:.55rem 0;border-bottom:1px solid var(--border-soft);">
-                        <div style="font-size:.85rem;font-weight:600;">{{ team.name }}</div>
-                        <div style="font-size:.72rem;color:var(--muted);font-family:var(--font-mono);">{{ team.current_members }}/{{ event.max_team_size }} members</div>
-                        <form method="POST" action="{% url 'registration:register_event' event.id %}" style="display:inline;">
-                            {% csrf_token %}<input type="hidden" name="type" value="join_team"><input type="hidden" name="team_id" value="{{ team.id }}">
-                            <button type="submit" style="margin-top:.35rem;padding:.25rem .6rem;background:var(--primary);color:#fff;border:none;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:var(--font);">Request Join</button>
-                        </form>
+                    <div style="padding:.55rem 0;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <div style="font-size:.95rem;font-weight:600;">{{ team.name }}</div>
+                            <div style="font-size:.85rem;color:var(--muted);font-family:var(--font-mono);">{{ team.current_members }}/{{ event.max_team_size }} members</div>
+                        </div>
+                        <div style="display:flex;gap:.4rem;align-items:center;">
+                            <button type="button" onclick="openTeamModal('team-modal-{{ team.id }}')" style="padding:.35rem .65rem;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:var(--radius-md);font-size:.72rem;font-weight:600;font-family:var(--font);cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor='var(--text)'" onmouseout="this.style.borderColor='var(--border)'">View Details</button>
+                            {% if team.id in user_team_ids %}
+                                <span style="padding:.35rem .65rem;background:var(--surface-3);color:var(--muted);border:1px solid var(--border);border-radius:var(--radius-md);font-size:.72rem;font-weight:700;font-family:var(--font);display:inline-flex;align-items:center;gap:.25rem;">
+                                    <i data-lucide="check" style="width:11px;height:11px;color:var(--primary);"></i> Joined
+                                </span>
+                            {% else %}
+                                <form method="POST" action="{% url 'registration:register_event' event.id %}" style="margin:0;">
+                                    {% csrf_token %}<input type="hidden" name="type" value="join_team"><input type="hidden" name="team_id" value="{{ team.id }}">
+                                    <button type="submit" style="padding:.35rem .65rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-md);font-size:.72rem;font-weight:700;font-family:var(--font);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='var(--primary-2)'" onmouseout="this.style.background='var(--primary)'">Join</button>
+                                </form>
+                            {% endif %}
+                        </div>
                     </div>
-                    {% empty %}<p style="color:var(--muted);font-size:.82rem;">No open teams.</p>{% endfor %}
+                    {% empty %}<p style="color:var(--muted);font-size:.95rem;">No open teams.</p>{% endfor %}
                 </div>
             </div>
         </div>
 
         <!-- Judges -->
         <div id="p-judges" class="n-panel">
-            {% if judges %}<div style="margin-bottom:1rem;">{% for j in judges %}<div style="display:flex;align-items:center;gap:.65rem;padding:.55rem 0;border-bottom:1px solid var(--border-soft);"><div style="width:30px;height:30px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;font-family:var(--font-mono);flex-shrink:0;">{{ j.name|first|upper }}</div><div><div style="font-size:.88rem;font-weight:600;">{{ j.name }}</div>{% if j.designation %}<div style="font-size:.75rem;color:var(--muted);">{{ j.designation }}</div>{% endif %}</div></div>{% endfor %}</div>{% else %}<p style="color:var(--muted);font-size:.85rem;margin-bottom:.75rem;">Judges to be announced.</p>{% endif %}
-            {% if sponsors %}{% for s in sponsors %}<div style="display:flex;align-items:center;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--border-soft);"><div><strong style="font-size:.85rem;">{{ s.name }}</strong><span style="font-size:.75rem;color:var(--muted);margin-left:.5rem;">{{ s.get_sponsor_type_display }}</span></div>{% if s.website_url %}<a href="{{ s.website_url }}" target="_blank" style="font-size:.72rem;color:var(--primary);font-weight:700;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;">Visit ↗</a>{% endif %}</div>{% endfor %}{% endif %}
+            {% if judges %}<div style="margin-bottom:1rem;">{% for j in judges %}<div style="display:flex;align-items:center;gap:.65rem;padding:.55rem 0;border-bottom:1px solid var(--border-soft);"><div style="width:30px;height:30px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700;font-family:var(--font-mono);flex-shrink:0;">{{ j.name|first|upper }}</div><div><div style="font-size:1rem;font-weight:600;">{{ j.name }}</div>{% if j.designation %}<div style="font-size:.9rem;color:var(--muted);">{{ j.designation }}</div>{% endif %}</div></div>{% endfor %}</div>{% else %}<p style="color:var(--muted);font-size:.95rem;margin-bottom:.75rem;">Judges to be announced.</p>{% endif %}
+            {% if sponsors %}{% for s in sponsors %}<div style="display:flex;align-items:center;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--border-soft);"><div><strong style="font-size:.95rem;">{{ s.name }}</strong><span style="font-size:.9rem;color:var(--muted);margin-left:.5rem;">{{ s.get_sponsor_type_display }}</span></div>{% if s.website_url %}<a href="{{ s.website_url }}" target="_blank" style="font-size:.95rem;color:var(--primary);font-weight:700;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;">Visit ↗</a>{% endif %}</div>{% endfor %}{% endif %}
         </div>
 
         <!-- FAQ -->
         <div id="p-faq" class="n-panel">
             {% for faq in event.faqs %}
             <div style="border-bottom:1px solid var(--border);">
-                <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';this.querySelector('.arr').style.transform=this.nextElementSibling.style.display==='block'?'rotate(180deg)':''" style="width:100%;background:none;border:none;padding:.8rem 0;text-align:left;font-family:var(--font);font-size:.88rem;font-weight:600;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+                <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';this.querySelector('.arr').style.transform=this.nextElementSibling.style.display==='block'?'rotate(180deg)':''" style="width:100%;background:none;border:none;padding:.8rem 0;text-align:left;font-family:var(--font);font-size:1rem;font-weight:600;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
                     {{ faq.q }}<i data-lucide="chevron-down" class="arr" style="width:15px;height:15px;color:var(--muted);flex-shrink:0;transition:transform .2s;"></i>
                 </button>
-                <div style="display:none;padding-bottom:.85rem;color:var(--muted);font-size:.85rem;line-height:1.65;">{{ faq.a }}</div>
+                <div style="display:none;padding-bottom:.85rem;color:var(--muted);font-size:.95rem;line-height:1.65;">{{ faq.a }}</div>
             </div>
-            {% empty %}<p style="color:var(--muted);font-size:.85rem;">No FAQs yet.</p>{% endfor %}
+            {% empty %}<p style="color:var(--muted);font-size:.95rem;">No FAQs yet.</p>{% endfor %}
         </div>
 
         <!-- Contact -->
         <div id="p-contact" class="n-panel">
-            {% if event.contact_info %}<p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem;">{{ event.contact_info }}</p>{% endif %}
+            {% if event.contact_info %}<p style="color:var(--muted);font-size:.95rem;margin-bottom:1rem;">{{ event.contact_info }}</p>{% endif %}
             <div style="display:flex;border:1px solid var(--border);transition:border-color .15s;" onfocusin="this.style.borderColor='var(--primary)'" onfocusout="this.style.borderColor='var(--border)'">
-                <input type="text" id="contact-msg" placeholder="Ask the organizers a question..." style="flex:1;border:none;background:var(--surface);color:var(--text);font-family:var(--font);font-size:.88rem;padding:.72rem 1rem;outline:none;">
-                <button data-action="contact-organizer" style="background:var(--primary);color:#fff;border:none;padding:.72rem 1.1rem;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:var(--font);white-space:nowrap;"><i data-lucide="send" style="width:13px;height:13px;display:inline;"></i> Send</button>
+                <input type="text" id="contact-msg" placeholder="Ask the organizers a question..." style="flex:1;border:none;background:var(--surface);color:var(--text);font-family:var(--font);font-size:1rem;padding:.72rem 1rem;outline:none;">
+                <button data-action="contact-organizer" style="background:var(--primary);color:#fff;border:none;padding:.72rem 1.1rem;font-size:.9rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:var(--font);white-space:nowrap;"><i data-lucide="send" style="width:13px;height:13px;display:inline;"></i> Send</button>
             </div>
         </div>
     </div>
@@ -165,7 +189,7 @@
             <i data-lucide="pen-line" style="width:13px;height:13px;"></i> Register Now
         </a>
         {% if event.participation_type != 'individual' %}
-        <div style="font-size:.68rem;color:var(--muted);text-align:center;margin-top:.5rem;font-family:var(--font-mono);">
+        <div style="font-size:.8rem;color:var(--muted);text-align:center;margin-top:.5rem;font-family:var(--font-mono);">
             Team size: {{ event.min_team_size }}–{{ event.max_team_size }} members
         </div>
         {% endif %}
@@ -178,7 +202,7 @@
 
         <!-- Progress -->
         <div>
-            <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);font-family:var(--font-mono);margin-bottom:.4rem;">
+            <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);font-family:var(--font-mono);margin-bottom:.4rem;">
                 <span>{{ event.registered_count }} registered</span><span>{{ event.capacity }} max</span>
             </div>
             {% widthratio event.registered_count event.capacity 100 as fill_pct %}
@@ -187,7 +211,7 @@
 
         <!-- Countdown -->
         <div>
-            <div style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;">Registration Closes</div>
+            <div style="font-size:.9rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;">Registration Closes</div>
             <div class="n-countdown" data-deadline="{{ event.registration_end|date:'c' }}">
                 <div class="n-cd-unit"><strong data-days>--</strong><span>Days</span></div>
                 <div class="n-cd-unit"><strong data-hours>--</strong><span>Hrs</span></div>
@@ -198,17 +222,17 @@
 
         <!-- Quick info -->
         <div style="border:1px solid var(--border);">
-            <div style="padding:.65rem .85rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.72rem;color:var(--muted);">Category</span><span style="font-size:.72rem;font-weight:600;font-family:var(--font-mono);">{{ event.get_category_display }}</span></div>
-            <div style="padding:.65rem .85rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.72rem;color:var(--muted);">Mode</span><span style="font-size:.72rem;font-weight:600;font-family:var(--font-mono);">{{ event.get_mode_display }}</span></div>
-            <div style="padding:.65rem .85rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.72rem;color:var(--muted);">Type</span><span style="font-size:.72rem;font-weight:600;font-family:var(--font-mono);">{{ event.get_participation_type_display }}</span></div>
+            <div style="padding:.65rem .85rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.95rem;color:var(--muted);">Category</span><span style="font-size:.95rem;font-weight:600;font-family:var(--font-mono);">{{ event.get_category_display }}</span></div>
+            <div style="padding:.65rem .85rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.95rem;color:var(--muted);">Mode</span><span style="font-size:.95rem;font-weight:600;font-family:var(--font-mono);">{{ event.get_mode_display }}</span></div>
+            <div style="padding:.65rem .85rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.95rem;color:var(--muted);">Type</span><span style="font-size:.95rem;font-weight:600;font-family:var(--font-mono);">{{ event.get_participation_type_display }}</span></div>
             {% if event.participation_type != 'individual' %}
-            <div style="padding:.65rem .85rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.72rem;color:var(--muted);">Team Size</span><span style="font-size:.72rem;font-weight:600;font-family:var(--font-mono);">{{ event.min_team_size }}–{{ event.max_team_size }}</span></div>
+            <div style="padding:.65rem .85rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:.95rem;color:var(--muted);">Team Size</span><span style="font-size:.95rem;font-weight:600;font-family:var(--font-mono);">{{ event.min_team_size }}–{{ event.max_team_size }}</span></div>
             {% endif %}
-            <div style="padding:.65rem .85rem;display:flex;justify-content:space-between;"><span style="font-size:.72rem;color:var(--muted);">Fee</span><span style="font-size:.72rem;font-weight:600;font-family:var(--font-mono);">{% if event.registration_fee %}₹{{ event.registration_fee|floatformat:0 }}{% else %}Free{% endif %}</span></div>
+            <div style="padding:.65rem .85rem;display:flex;justify-content:space-between;"><span style="font-size:.95rem;color:var(--muted);">Fee</span><span style="font-size:.95rem;font-weight:600;font-family:var(--font-mono);">{% if event.registration_fee %}₹{{ event.registration_fee|floatformat:0 }}{% else %}Free{% endif %}</span></div>
         </div>
 
         {% if is_registered %}
-        <a href="{% url 'checkin:my_qr' event.id %}" style="display:flex;align-items:center;justify-content:center;gap:.35rem;padding:.6rem;border:1px solid var(--border);font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--text);transition:all .15s;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+        <a href="{% url 'checkin:my_qr' event.id %}" style="display:flex;align-items:center;justify-content:center;gap:.35rem;padding:.6rem;border:1px solid var(--border);font-size:.9rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--text);transition:all .15s;" onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
             <i data-lucide="qr-code" style="width:13px;height:13px;"></i> My QR Code
         </a>
         {% endif %}
@@ -216,7 +240,60 @@
 </div>
 {% endblock %}
 {% block extra_js %}
+
+<!-- Team Modals -->
+{% for team in teams_open %}
+<div id="team-modal-{{ team.id }}" class="modal-overlay" onclick="if(event.target===this||event.target.closest('.modal-close')) this.classList.remove('open')">
+    <div class="modal" style="width:min(480px,92%);padding:1.5rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">
+            <h3 style="margin:0;font-size:1.1rem;font-weight:800;">{{ team.name }}</h3>
+            <button type="button" class="modal-close" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:.2rem;border-radius:var(--radius-sm);transition:all .15s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+        </div>
+        
+        <div style="margin-bottom:1.25rem;">
+            <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;">Looking For</div>
+            <div style="padding:.75rem;background:var(--surface-2);border-radius:var(--radius-md);border:1px solid var(--border);color:var(--text-soft);font-size:.9rem;line-height:1.5;">
+                {{ team.looking_for|default:"No specific roles mentioned. Open to all!" }}
+            </div>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+            <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;">Current Roster ({{ team.current_members }}/{{ event.max_team_size }})</div>
+            <div style="display:flex;flex-direction:column;gap:.5rem;max-height:220px;overflow-y:auto;">
+                {% for membership in team.memberships.all %}
+                <div style="display:flex;align-items:center;gap:.6rem;padding:.6rem .75rem;background:var(--surface);border-radius:var(--radius-md);border:1px solid var(--border-soft);">
+                    <div style="width:34px;height:34px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;font-family:var(--font-mono);flex-shrink:0;overflow:hidden;">
+                        {% if membership.user.profile.profile_picture %}<img src="{{ membership.user.profile.profile_picture.url }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ membership.user.first_name|first|upper|default:membership.user.username|first|upper }}{% endif %}
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:.92rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            {{ membership.user.get_full_name|default:membership.user.username }}
+                            {% if membership.user == team.leader %} <span style="font-size:.7rem;color:var(--primary);font-weight:700;vertical-align:middle;margin-left:.2rem;">(LEADER)</span>{% endif %}
+                        </div>
+                        <div style="font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            {{ membership.get_role_display }}{% if membership.skills %} • {{ membership.skills }}{% endif %}
+                        </div>
+                    </div>
+                    <a href="{% url 'users:public_profile' membership.user.username %}" style="padding:.25rem .5rem; font-size:.65rem; font-weight:700; color:var(--text); background:transparent; border:1px solid var(--border); border-radius:var(--radius-sm); text-decoration:none; text-transform:uppercase; transition:all .15s; flex-shrink:0;" onmouseover="this.style.borderColor='var(--text)'" onmouseout="this.style.borderColor='var(--border)'">Profile</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'registration:register_event' event.id %}" style="margin:0;">
+            {% csrf_token %}<input type="hidden" name="type" value="join_team"><input type="hidden" name="team_id" value="{{ team.id }}">
+            <button type="submit" style="width:100%;padding:.85rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-md);font-size:.9rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:transform .1s, background .15s;" onmouseover="this.style.background='var(--primary-2)'" onmouseout="this.style.background='var(--primary)'" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">Request to Join</button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
 <script>
+function openTeamModal(id) {
+    document.getElementById(id).classList.add('open');
+    if(window.lucide) lucide.createIcons();
+}
+
 // Tab switching
 document.querySelectorAll('.n-tab').forEach(btn=>{
     btn.addEventListener('click',()=>{

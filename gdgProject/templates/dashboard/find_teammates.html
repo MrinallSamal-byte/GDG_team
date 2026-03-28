@@ -14,6 +14,25 @@
     position: relative;
     overflow: hidden;
 }
+/* ── Dropdown Menu ────────────────────────────────────────────────── */
+.ft-dropdown {
+    display: none; position: fixed;
+    background: var(--surface); border: 1px solid var(--border-hover); padding: .35rem;
+    z-index: 9999; box-shadow: var(--shadow-lg); min-width: 190px;
+    flex-direction: column; gap: .15rem; border-radius: var(--radius-lg);
+}
+.ft-dropdown-item {
+    text-align: left; width: 100%; padding: .45rem .75rem;
+    background: transparent; border: none; color: var(--text-soft); font-size: .82rem;
+    font-weight: 500; cursor: pointer; font-family: var(--font);
+    transition: background .15s, color .15s; border-radius: var(--radius-sm);
+    display: flex; justify-content: space-between; align-items: center;
+}
+.ft-dropdown-item:hover { background: var(--surface-3); color: var(--text); }
+.ft-dropdown-item.active { background: var(--primary-glow); color: var(--primary); font-weight: 600; }
+.ft-dropdown-item.active::after {
+    content: ''; display: block; width: 5px; height: 5px; border-radius: 50%; background: var(--primary);
+}
 .ft-card::before {
     content: '';
     position: absolute;
@@ -25,7 +44,8 @@
 }
 .ft-card:hover { background: var(--surface-2); border-color: var(--border-hover); }
 .ft-card:hover::before { transform: scaleY(1); }
-.ft-card.ft-open { border-color: rgba(255,0,0,.2); background: var(--primary-glow); }
+/* .ft-card.ft-open { border-color: rgba(255,0,0,.2); background: var(--primary-glow); } */
+.ft-card.ft-open { border-color: var(--border-hover); }
 .ft-card.ft-open::before { transform: scaleY(1); }
 
 .ft-summary {
@@ -143,9 +163,6 @@
                     <span class="n-name">Find Teammates</span>
                 </div>
             </div>
-            <span style="font-size:.72rem;color:var(--muted);font-family:var(--font-mono);">
-                {{ looking_users|length }} student{{ looking_users|length|pluralize }} looking
-            </span>
         </div>
 
         <div class="n-reveal" style="margin-bottom:1.25rem;">
@@ -155,9 +172,16 @@
         </div>
 
         <!-- Search / filter toolbar -->
-        <div class="ft-toolbar n-reveal n-d1">
-            <input class="ft-search" type="search" id="ft-search-input" placeholder="Search by name, branch, or skill…" oninput="ftFilter()">
-            <span class="ft-count" id="ft-count">{{ looking_users|length }} shown</span>
+        <div class="ft-toolbar n-reveal n-d1" style="width:100%; position:relative; z-index:200;">
+            <div style="display:flex;width:100%;gap:.65rem;align-items:center;flex-wrap:wrap;">
+                <input class="ft-search" type="search" id="ft-search-input" placeholder="Search by name, branch, or skill…" oninput="ftFilter()">
+                
+                <div style="position:relative;height:100%;" id="ft-filter-container">
+                    <button id="ft-filter-btn" class="n-btn-outline" style="padding:.5rem .85rem;font-size:.85rem;height:100%;display:flex;align-items:center;gap:.35rem;cursor:pointer;border-radius:var(--radius-sm);">
+                        <i data-lucide="filter" style="width:14px;height:14px;"></i> Filters
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Cards list -->
@@ -167,12 +191,12 @@
             {% with u=reg.user p=reg.user.profile %}
             <article class="ft-card"
                 data-name="{{ u.get_full_name|lower }} {{ u.username|lower }}"
-                data-meta="{{ p.branch|default:''|lower }} {{ p.skills|default:''|lower }}"
+                data-meta="{{ p.branch|default:''|lower }} {{ p.skills|default:''|lower }} {{ reg.preferred_role|default:''|lower }}"
                 onclick="ftToggle(this)">
 
                 <div class="ft-summary">
                     <div class="ft-summary-left">
-                        <div class="ft-avatar">{{ u.first_name|first|upper|default:"?" }}</div>
+                        <div class="ft-avatar" style="overflow:hidden;">{% if p.profile_picture %}<img src="{{ p.profile_picture.url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">{% else %}{{ u.first_name|first|upper|default:"?" }}{% endif %}</div>
                         <div>
                             <div class="ft-info-name">{{ u.get_full_name|default:u.username }}</div>
                             <div class="ft-info-meta">
@@ -232,6 +256,9 @@
                                 <a href="{% url 'events:event_detail' reg.event.pk %}" class="ft-btn">
                                     <i data-lucide="calendar"></i> View Event
                                 </a>
+                                <a href="{% url 'users:public_profile' u.username %}" class="ft-btn" style="border-color:var(--primary);color:var(--primary);">
+                                    <i data-lucide="user"></i> View Profile
+                                </a>
                             </div>
 
                         </div>
@@ -260,10 +287,69 @@
 
     </div>
 </div>
+
+<!-- Render dropdown at root to escape clipping context -->
+<div id="ft-filters" class="ft-dropdown">
+    <div style="font-size:.65rem;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;padding:.3rem .75rem .2rem;">Role Filters</div>
+    <button type="button" class="ft-dropdown-item active" data-filter="">All Roles</button>
+    <button type="button" class="ft-dropdown-item" data-filter="frontend">Frontend</button>
+    <button type="button" class="ft-dropdown-item" data-filter="backend">Backend</button>
+    <button type="button" class="ft-dropdown-item" data-filter="design">UI/UX Design</button>
+    <button type="button" class="ft-dropdown-item" data-filter="app">App Dev</button>
+    <button type="button" class="ft-dropdown-item" data-filter="ai">AI / ML</button>
+    <button type="button" class="ft-dropdown-item" data-filter="security">Cybersec</button>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+let activeFilter = "";
+
+document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('ft-filter-btn');
+    var dropdown = document.getElementById('ft-filters');
+    
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (dropdown.style.display === 'flex') {
+            dropdown.style.display = 'none';
+        } else {
+            var rect = btn.getBoundingClientRect();
+            dropdown.style.top = (rect.bottom + 8) + 'px';
+            dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+            dropdown.style.display = 'flex';
+        }
+    });
+
+    document.querySelectorAll('#ft-filters .ft-dropdown-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#ft-filters .ft-dropdown-item').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            activeFilter = btn.dataset.filter || "";
+            ftFilter();
+            dropdown.style.display = 'none'; // Auto close dropdown on selection
+        });
+    });
+    
+    // Close dropdown on outside click or scroll
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#ft-filters') && !e.target.closest('#ft-filter-btn')) {
+            if (dropdown && dropdown.style.display === 'flex') {
+                dropdown.style.display = 'none';
+            }
+        }
+    });
+    
+    var dashContent = document.querySelector('.n-dash-content');
+    if (dashContent) {
+        dashContent.addEventListener('scroll', function() {
+            if (dropdown && dropdown.style.display === 'flex') {
+                dropdown.style.display = 'none';
+            }
+        }, { passive: true });
+    }
+});
+
 function ftToggle(card) {
     var isOpen = card.classList.contains('ft-open');
     document.querySelectorAll('.ft-card.ft-open').forEach(function(c){ c.classList.remove('ft-open'); });
@@ -283,18 +369,27 @@ function ftFilter() {
     var q = document.getElementById('ft-search-input').value.toLowerCase().trim();
     var cards = Array.from(document.querySelectorAll('#ft-list .ft-card'));
     var shown = 0;
+    
     cards.forEach(function(c) {
         var name = c.dataset.name || '';
         var meta = c.dataset.meta || '';
-        var match = !q || name.indexOf(q) !== -1 || meta.indexOf(q) !== -1;
+        
+        var matchQ = !q || name.indexOf(q) !== -1 || meta.indexOf(q) !== -1;
+        var matchFilter = !activeFilter || meta.indexOf(activeFilter.toLowerCase()) !== -1;
+        
+        var match = matchQ && matchFilter;
         c.style.display = match ? '' : 'none';
         if (match) shown++;
     });
+    
     var countEl = document.getElementById('ft-count');
     if (countEl) countEl.textContent = shown + ' shown';
+    
     var noRes = document.getElementById('ft-no-results');
-    if (noRes) noRes.style.display = (shown === 0 && q) ? '' : 'none';
-    document.getElementById('ft-list').style.display = (shown === 0 && q) ? 'none' : '';
+    if (noRes) noRes.style.display = (shown === 0 && (q || activeFilter)) ? '' : 'none';
+    
+    var listEl = document.getElementById('ft-list');
+    if (listEl) listEl.style.display = (shown === 0 && (q || activeFilter)) ? 'none' : '';
 }
 </script>
 {% endblock %}

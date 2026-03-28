@@ -48,8 +48,12 @@
 
     <!-- Profile mini-card -->
     <div style="padding-bottom:1rem;margin-bottom:.5rem;border-bottom:1px solid var(--border);flex-shrink:0;">
-        <div style="width:40px;height:40px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;font-family:var(--font-mono);color:var(--text);margin-bottom:.4rem;">
-            {{ user.first_name|first|default:"U"|upper }}
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;font-family:var(--font-mono);color:var(--text);margin-bottom:.4rem;overflow:hidden;flex-shrink:0;">
+            {% if user.profile.profile_picture %}
+                <img src="{{ user.profile.profile_picture.url }}" alt="Profile" style="width:100%;height:100%;object-fit:cover;">
+            {% else %}
+                {{ user.first_name|first|default:"U"|upper }}
+            {% endif %}
         </div>
         <div style="font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ user.get_full_name|default:user.username }}</div>
         <div style="font-size:.7rem;color:var(--muted);font-family:var(--font-mono);">

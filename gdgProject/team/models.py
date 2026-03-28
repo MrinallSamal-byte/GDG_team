@@ -62,6 +62,18 @@ class Team(models.Model):
         default=TeamStatus.OPEN,
         db_index=True,
     )
+    looking_for = models.CharField(
+        max_length=500,
+        blank=True,
+        default="",
+        help_text=_("Roles or skills the team is looking for"),
+    )
+    description = models.TextField(
+        max_length=1500,
+        blank=True,
+        default="",
+        help_text=_("Short description of what the team is building"),
+    )
     is_deleted = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

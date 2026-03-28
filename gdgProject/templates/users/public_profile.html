@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}CampusArena | {{ profile.name }}{% endblock %}
+
+{% block extra_css %}
+{% include 'includes/_dash_layout.html' %}
+<style>
+/* Profile header */
+.n-profile-head {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 1.25rem; background: var(--surface);
+    border: 1px solid var(--border); margin-bottom: 1px; flex-wrap: wrap;
+}
+.n-av-lg {
+    width: 56px; height: 56px; border-radius: 50%; background: var(--surface-3);
+    border: 1px solid var(--border); display: flex; align-items: center;
+    justify-content: center; font-size: 1.2rem; font-weight: 700;
+    font-family: var(--font-mono); color: var(--text); flex-shrink: 0; overflow: hidden;
+}
+.n-av-lg img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Profile stats strip */
+.n-profile-stats {
+    display: flex; gap: 1.5rem; text-align: center;
+    border-left: 1px solid var(--border); padding-left: 1.5rem;
+    flex-shrink: 0;
+}
+@media (max-width: 768px) {
+    .n-profile-head   { flex-direction: column; }
+    .n-profile-stats  { border-left: none; padding-left: 0;
+                        border-top: 1px solid var(--border); padding-top: .85rem;
+                        width: 100%; justify-content: space-around; gap: 1rem; }
+}
+@media (max-width: 480px) {
+    .n-av-lg          { width: 48px; height: 48px; font-size: 1rem; }
+}
+
+/* Info grid */
+.n-info-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--border); overflow: hidden; margin-bottom: 1px;
+}
+.n-info-cell {
+    padding: .9rem 1.1rem; border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border); background: var(--surface);
+}
+.n-info-cell:nth-child(2n) { border-right: none; }
+.n-info-cell .k {
+    font-size: .62rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: .28rem;
+}
+.n-info-cell .v { font-size: .88rem; font-weight: 500; color: var(--text); word-break: break-all; }
+.n-info-cell .v a { color: var(--primary); text-decoration: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% include 'includes/_n_page.html' %}
+<div class="n-dash" style="display:block; max-width:1000px; margin:0 auto; padding:2rem 1rem;">
+    
+    <div style="margin-bottom:2rem;">
+        <a href="javascript:history.back()" style="display:inline-flex;align-items:center;gap:.35rem;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);text-decoration:none;">
+            <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to Event
+        </a>
+    </div>
+
+    <div class="n-head n-reveal" style="justify-content:center;">
+        <div class="n-head-l" style="text-align:center;">
+            <span class="n-name" style="font-size:1.5rem;">User Profile</span>
+        </div>
+    </div>
+
+    <!-- Profile header -->
+    <div class="n-profile-head n-reveal" style="border-top-left-radius:var(--radius-lg); border-top-right-radius:var(--radius-lg);">
+        <div class="n-av-lg">
+            {% if profile.profile_picture_url %}
+                <img src="{{ profile.profile_picture_url }}" alt="Profile photo">
+            {% else %}
+                {{ profile.name|first|upper }}
+            {% endif %}
+        </div>
+        <div style="flex:1;min-width:0;">
+            <div style="font-size:1.15rem;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ profile.name }}</div>
+            <div style="font-size:.8rem;color:var(--muted);margin-top:.2rem;font-family:var(--font-mono);">
+                {{ profile.branch }}{% if profile.year %} · {{ profile.year }}{% endif %}
+            </div>
+            <div style="font-size:.8rem;color:var(--muted-soft);">{{ profile.college }}</div>
+        </div>
+        <div class="n-profile-stats">
+            <div>
+                <div style="font-family:var(--font-mono);font-size:1.3rem;font-weight:700;">{{ stats.events_joined }}</div>
+                <div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;">Events</div>
+            </div>
+            <div>
+                <div style="font-family:var(--font-mono);font-size:1.3rem;font-weight:700;">{{ stats.teams }}</div>
+                <div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;">Teams</div>
+            </div>
+            <div>
+                <div style="font-family:var(--font-mono);font-size:1.3rem;font-weight:700;">{{ stats.certificates }}</div>
+                <div style="font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;">Certs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info grid -->
+    <div class="n-info-grid n-reveal n-d1">
+        <div class="n-info-cell"><div class="k">Email</div><div class="v">{{ profile.email }}</div></div>
+        <div class="n-info-cell"><div class="k">Phone</div><div class="v">{{ profile.phone }}</div></div>
+        <div class="n-info-cell"><div class="k">GitHub</div><div class="v">{% if profile.github %}<a href="{{ profile.github }}" target="_blank" rel="noopener">#github</a>{% else %}<span style="color:var(--muted-soft);">—</span>{% endif %}</div></div>
+        <div class="n-info-cell"><div class="k">LinkedIn</div><div class="v">{% if profile.linkedin %}<a href="{{ profile.linkedin }}" target="_blank" rel="noopener">#linkedin</a>{% else %}<span style="color:var(--muted-soft);">—</span>{% endif %}</div></div>
+        <div class="n-info-cell"><div class="k">LeetCode</div><div class="v">{% if profile.leetcode %}<a href="{{ profile.leetcode }}" target="_blank" rel="noopener">#leetcode</a>{% else %}<span style="color:var(--muted-soft);">—</span>{% endif %}</div></div>
+        <div class="n-info-cell"><div class="k">Portfolio</div><div class="v">{% if profile.portfolio %}<a href="{{ profile.portfolio }}" target="_blank" rel="noopener">#portfolio</a>{% else %}<span style="color:var(--muted-soft);">—</span>{% endif %}</div></div>
+        <div class="n-info-cell"><div class="k">College</div><div class="v">{{ profile.college }}</div></div>
+    </div>
+
+    <!-- Bio -->
+    <div style="background:var(--surface);border:1px solid var(--border);padding:1.1rem;margin-bottom:1px;" class="n-reveal n-d2">
+        <div style="font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.55rem;display:flex;align-items:center;gap:.45rem;">
+            <i data-lucide="file-text" style="width:12px;height:12px;color:var(--primary);"></i> Bio
+        </div>
+        <p style="font-size:.9rem;color:var(--text-soft);line-height:1.7;">{{ profile.bio }}</p>
+    </div>
+
+    <!-- Skills -->
+    <div style="background:var(--surface);border:1px solid var(--border);padding:1.1rem; border-bottom-left-radius:var(--radius-lg); border-bottom-right-radius:var(--radius-lg);" class="n-reveal n-d3">
+        <div style="font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.65rem;display:flex;align-items:center;gap:.45rem;">
+            <i data-lucide="cpu" style="width:12px;height:12px;color:var(--primary);"></i> Skills
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:.35rem;">
+            {% for skill in profile.skills %}
+            <span style="padding:.25rem .6rem;border:1px solid rgba(255,0,0,.25);background:var(--primary-glow);color:var(--primary);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:var(--font-mono);">{{ skill }}</span>
+            {% empty %}
+            <span style="color:var(--muted);font-size:.85rem;">No skills added yet.</span>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

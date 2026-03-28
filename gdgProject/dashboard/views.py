@@ -223,6 +223,12 @@ def pending_requests(request):
             "id": jr.pk,
             "team_id": jr.team_id,
             "from": jr.user.get_full_name() or jr.user.username,
+            "username": jr.user.username,
+            "profile_picture_url": (
+                jr.user.profile.profile_picture.url
+                if hasattr(jr.user, "profile") and jr.user.profile.profile_picture
+                else None
+            ),
             "college": (
                 getattr(jr.user.profile, "college", "")
                 if hasattr(jr.user, "profile")
@@ -359,9 +365,6 @@ def edit_profile(request):
         profile.college = request.POST.get("college", "").strip()
         profile.branch = request.POST.get("branch", "").strip()
 
-        if "profile_photo" in request.FILES:
-            profile.profile_picture = request.FILES["profile_photo"]
-
         year_val = request.POST.get("year", "").strip()
         if year_val:
             try:
@@ -379,13 +382,18 @@ def edit_profile(request):
 
         profile.skills = request.POST.get("skills", "").strip()
 
+        # Phase 1 – save text fields only (no photo yet, so file pointer stays fresh)
         try:
-            profile.save()
+            profile.save(update_fields=[
+                "phone", "github", "linkedin", "leetcode", "portfolio",
+                "bio", "college", "branch", "year", "skills",
+            ])
         except Exception:
-            logger.exception("Failed to save profile details for user %s", request.user.pk)
+            logger.exception("Failed to save profile for user %s", request.user.pk)
             messages.error(request, "We couldn't save your profile right now. Please try again.")
             return render(request, "dashboard/edit_profile.html", _edit_profile_context(profile))
 
+        # Phase 2 – save photo separately so the file pointer is never consumed twice
         uploaded_photo = request.FILES.get("profile_photo")
         if uploaded_photo:
             try:
@@ -397,9 +405,7 @@ def edit_profile(request):
                 )
                 return redirect("dashboard:edit_profile")
             except Exception:
-                logger.exception(
-                    "Failed to upload profile photo for user %s", request.user.pk
-                )
+                logger.exception("Failed to upload profile photo for user %s", request.user.pk)
                 messages.error(
                     request,
                     "Profile details were saved, but we couldn't upload the photo right now. Try a smaller image or try again.",

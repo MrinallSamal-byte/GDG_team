@@ -8,6 +8,7 @@
 /* ── Design Tokens ──────────────────────────────────────────────────────── */
 :root {
     /* Nothing Phone palette — always dark-first */
+    --bg-gradient:   radial-gradient(circle at top center, #1a1a1a 0%, #000000 100%);
     --bg:            #000000;
     --bg-soft:       #080808;
     --surface:       #0d0d0d;
@@ -65,6 +66,7 @@
 
 /* Light theme — Nothing OS has a light mode that's very clean */
 [data-theme='light'] {
+    --bg-gradient:   radial-gradient(circle at top center, #ffffff 0%, #f5f5f5 100%);
     --bg:            #f5f5f5;
     --bg-soft:       #eeeeee;
     --surface:       #ffffff;
@@ -89,13 +91,16 @@
 
 /* ── Reset ──────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
 
 body {
+    overflow-x: hidden;
     margin: 0;
     font-family: var(--font);
     color: var(--text);
-    background: var(--bg);
+    background-color: var(--bg);
+    background-image: var(--bg-gradient);
+    background-attachment: fixed;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -1018,7 +1023,7 @@ html.vt-active, html.vt-active *, html.vt-active *::before, html.vt-active *::af
 
 /* ── Mobile (max 680px) ─────────────────────────────────────────────────── */
 @media (max-width: 680px) {
-    .nav-wrap           { min-height: 56px; }
+    .nav-wrap           { min-height: 60px; }
     /* Compact header: hide theme label text, collapse user name */
     #theme-label        { display: none; }
     .theme-toggle       { padding: .3rem .4rem; gap: .2rem; }
@@ -1033,8 +1038,8 @@ html.vt-active, html.vt-active *, html.vt-active *::before, html.vt-active *::af
     .main-content       { padding: 1.5rem 0 3rem; }
     .site-footer        { padding-bottom: 2rem; padding-top: 2rem; }
     /* Typography scale-down */
-    h1                  { font-size: clamp(1.6rem, 6vw, 2.5rem); }
-    h2                  { font-size: clamp(1.2rem, 5vw, 1.8rem); }
+    h1                  { font-size: clamp(1.8rem, 8vw, 2.5rem); }
+    h2                  { font-size: clamp(1.4rem, 6vw, 1.8rem); }
     /* Countdown wrap */
     .countdown          { grid-template-columns: repeat(4,1fr); }
     .countdown-unit strong { font-size: 1.1rem; }
@@ -1067,8 +1072,8 @@ html.vt-active, html.vt-active *, html.vt-active *::before, html.vt-active *::af
 /* ── Small phones (max 480px) ───────────────────────────────────────────── */
 @media (max-width: 480px) {
     .container          { width: 96%; }
-    .brand              { font-size: .95rem; }
-    .nav-wrap           { min-height: 52px; }
+    .brand              { font-size: 1.15rem; }
+    .nav-wrap           { min-height: 60px; }
     /* Hero text */
     .hero h1            { font-size: clamp(1.5rem, 9vw, 2.2rem); }
     /* Countdown — keep 4 cols but more compact */
@@ -1090,7 +1095,7 @@ html.vt-active, html.vt-active *, html.vt-active *::before, html.vt-active *::af
     .stats-row strong   { font-size: 1rem; }
     .stats-row span     { font-size: .65rem; }
     /* Auth form tighter */
-    .auth-form          { padding: 1.25rem 1rem; }
+    .auth-form          { padding: 1.5rem; }
     /* Modal full-width */
     .modal              { width: 96%; border-radius: var(--radius-lg); padding: 1rem; }
     /* Toast full-width */
@@ -1110,5 +1115,5 @@ html.vt-active, html.vt-active *, html.vt-active *::before, html.vt-active *::af
     /* Section title smaller */
     .section-title      { font-size: 1.15rem; }
     /* Form labels */
-    label               { font-size: .82rem; }
+    label               { font-size: .95rem; }
 }

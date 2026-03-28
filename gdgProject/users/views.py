@@ -583,3 +583,46 @@ def change_password(request):
         return redirect("dashboard:settings")
 
     return render(request, "users/change_password.html")
+
+
+def public_profile(request, username):
+    """Public read-only profile view matching dashboard design."""
+    from django.shortcuts import get_object_or_404, render
+    from django.contrib.auth import get_user_model
+    from users.models import UserProfile
+    from registration.models import Registration
+    from team.models import TeamMembership
+    from certificates.models import Certificate
+
+    User = get_user_model()
+    profile_user = get_object_or_404(User, username=username)
+    profile, _ = UserProfile.objects.get_or_create(user=profile_user)
+
+    cert_count = Certificate.objects.filter(user=profile_user).count()
+
+    profile_data = {
+        "name": profile_user.get_full_name() or profile_user.username,
+        "email": profile_user.email,
+        "phone": profile.phone or "Not set",
+        "college": profile.college or "Not set",
+        "branch": profile.branch or "Not set",
+        "year": profile.year_display or "Not set",
+        "github": profile.github or "",
+        "linkedin": profile.linkedin or "",
+        "leetcode": profile.leetcode or "",
+        "portfolio": profile.portfolio or "",
+        "bio": profile.bio or "No bio available.",
+        "skills": profile.skills_list or [],
+        "profile_picture_url": profile.profile_picture.url if profile.profile_picture else None,
+    }
+
+    stats = {
+        "events_joined": Registration.objects.filter(user=profile_user).count(),
+        "teams": TeamMembership.objects.filter(user=profile_user, team__is_deleted=False).count(),
+        "certificates": cert_count,
+    }
+
+    return render(request, "users/public_profile.html", {
+        "profile": profile_data,
+        "stats": stats,
+    })

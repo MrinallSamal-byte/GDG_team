@@ -173,7 +173,8 @@ def event_detail(request, event_id):
 
     teams_open = (
         event.teams.filter(status="open", is_deleted=False)
-        .select_related("leader")
+        .select_related("leader", "leader__profile")
+        .prefetch_related("memberships__user", "memberships__user__profile")
         .annotate(current_members=Count("memberships"))
     )
 
@@ -183,9 +184,16 @@ def event_detail(request, event_id):
 
     is_registered = False
     user_registration = None
+    user_team_ids = set()
     if request.user.is_authenticated:
         user_registration = event.registrations.filter(user=request.user).first()
         is_registered = user_registration is not None
+        from team.models import TeamMembership
+        user_team_ids = set(
+            TeamMembership.objects.filter(
+                user=request.user, team__event=event, team__is_deleted=False
+            ).values_list("team_id", flat=True)
+        )
 
     looking_for_team_regs = event.registrations.filter(
         looking_for_team=True,
@@ -206,6 +214,7 @@ def event_detail(request, event_id):
             "is_registered": is_registered,
             "user_registration": user_registration,
             "looking_for_team_regs": looking_for_team_regs,
+            "user_team_ids": user_team_ids,
         },
     )
 

@@ -88,8 +88,12 @@
                 <div class="user-menu">
 
                     <button class="user-menu-toggle" id="user-menu-btn">
-                        <div class="avatar">
-                            {{ user.first_name|first|default:"U" }}
+                        <div class="avatar" style="overflow:hidden;">
+                            {% if user.profile.profile_picture %}
+                                <img src="{{ user.profile.profile_picture.url }}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">
+                            {% else %}
+                                {{ user.first_name|first|default:"U" }}
+                            {% endif %}
                         </div>
 
                         <span>

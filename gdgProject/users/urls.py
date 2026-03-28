@@ -16,4 +16,5 @@ urlpatterns = [
     ),
     path("verify-email/", views.email_verification_view, name="verify_email"),
     path("change-password/", views.change_password, name="change_password"),
+    path("profile/<str:username>/", views.public_profile, name="public_profile"),
 ]
