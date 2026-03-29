@@ -829,13 +829,85 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const grid         = document.getElementById('events-grid');
+    let grid           = document.getElementById('events-grid');
     const catBtns      = document.querySelectorAll('#category-filters .n-chip');
     const sortSelect   = document.getElementById('sort-select');
     const searchInput  = document.getElementById('event-search');
+    const searchForm   = document.querySelector('.n-search');
+    let pagination     = document.querySelector('.n-pagination');
     let activeCategory = "{{ active_category|escapejs }}";
 
-    function navigateListing(nextCategory, nextSort) {
+    function setGridProgress() {
+        document.querySelectorAll('#events-grid [data-progress]').forEach(el => {
+            el.style.width = el.dataset.progress + '%';
+        });
+    }
+
+    function syncFilterUi() {
+        catBtns.forEach(btn => {
+            const isActive = (btn.dataset.category || '') === activeCategory;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+    }
+
+    async function updateListing(url) {
+        if (!grid) return;
+
+        grid.style.opacity = '.55';
+        grid.style.pointerEvents = 'none';
+        sortSelect?.setAttribute('disabled', 'disabled');
+        catBtns.forEach(btn => btn.setAttribute('disabled', 'disabled'));
+
+        try {
+            const response = await fetch(url.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Listing request failed with ${response.status}`);
+            }
+
+            const html = await response.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const nextGrid = doc.getElementById('events-grid');
+            const nextPagination = doc.querySelector('.n-pagination');
+
+            if (!nextGrid) {
+                throw new Error('Missing events grid in response');
+            }
+
+            grid.replaceWith(nextGrid);
+            grid = nextGrid;
+
+            if (pagination && nextPagination) {
+                pagination.replaceWith(nextPagination);
+                pagination = nextPagination;
+            } else if (pagination) {
+                pagination.remove();
+                pagination = null;
+            } else if (nextPagination) {
+                grid.parentElement?.appendChild(nextPagination);
+                pagination = nextPagination;
+            }
+
+            history.replaceState({}, '', url.toString());
+            setGridProgress();
+            bindPaginationLinks();
+            if (window.lucide) lucide.createIcons();
+        } catch (err) {
+            console.error(err);
+            window.location.assign(url.toString());
+            return;
+        } finally {
+            grid.style.opacity = '';
+            grid.style.pointerEvents = '';
+            sortSelect?.removeAttribute('disabled');
+            catBtns.forEach(btn => btn.removeAttribute('disabled'));
+        }
+    }
+
+    function buildListingUrl({ category = activeCategory, sort = sortSelect ? sortSelect.value : 'newest', page = '' } = {}) {
         const url = new URL(window.location.href);
         const params = url.searchParams;
         const query = searchInput ? searchInput.value.trim() : '';
@@ -843,34 +915,64 @@ document.addEventListener('DOMContentLoaded', () => {
         if (query) params.set('q', query);
         else params.delete('q');
 
-        if (nextCategory) params.set('category', nextCategory);
+        if (category) params.set('category', category);
         else params.delete('category');
 
-        if (nextSort && nextSort !== 'newest') params.set('sort', nextSort);
+        if (sort && sort !== 'newest') params.set('sort', sort);
         else params.delete('sort');
 
-        params.delete('page');
+        if (page) params.set('page', page);
+        else params.delete('page');
+
         url.search = params.toString();
-        window.location.assign(url.toString());
+        url.hash = 'events-section';
+        return url;
+    }
+
+    function bindPaginationLinks() {
+        pagination?.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                const href = new URL(link.href, window.location.origin);
+                activeCategory = href.searchParams.get('category') || '';
+                if (sortSelect) {
+                    sortSelect.value = href.searchParams.get('sort') || 'newest';
+                }
+                if (searchInput) {
+                    searchInput.value = href.searchParams.get('q') || '';
+                }
+                syncFilterUi();
+                updateListing(href);
+            });
+        });
     }
 
     /* ── Category chip clicks ─────────────────────────────────── */
     catBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             activeCategory = btn.dataset.category || '';
-            navigateListing(activeCategory, sortSelect ? sortSelect.value : 'newest');
+            syncFilterUi();
+            updateListing(buildListingUrl());
         });
     });
 
     /* ── Sort dropdown ─────────────────────────────────────────── */
     if (sortSelect) {
         sortSelect.addEventListener('change', () => {
-            navigateListing(activeCategory, sortSelect.value);
+            updateListing(buildListingUrl());
         });
     }
 
+    /* ── Search submit ─────────────────────────────────────────── */
+    searchForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        updateListing(buildListingUrl());
+    });
+
     /* ── Data-progress initialization ──────────────────────────── */
-    document.querySelectorAll('[data-progress]').forEach(el => el.style.width = el.dataset.progress + '%');
+    setGridProgress();
+    syncFilterUi();
+    bindPaginationLinks();
 
     /* ── Lucide icons ──────────────────────────────────────────── */
     if (window.lucide) lucide.createIcons();
