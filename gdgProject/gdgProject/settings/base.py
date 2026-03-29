@@ -199,6 +199,16 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = config("MEDIA_URL", default="/media/")
 MEDIA_ROOT = Path(config("MEDIA_ROOT", default=str(BASE_DIR / "media")))
+PROFILE_PHOTO_MAX_SIZE = config(
+    "PROFILE_PHOTO_MAX_SIZE",
+    default=5 * 1024 * 1024,
+    cast=int,
+)
+DATA_UPLOAD_MAX_MEMORY_SIZE = config(
+    "DATA_UPLOAD_MAX_MEMORY_SIZE",
+    default=PROFILE_PHOTO_MAX_SIZE + (1024 * 1024),
+    cast=int,
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

@@ -129,6 +129,32 @@ class DashboardViewsTest(TestCase):
         profile = UserProfile.objects.get(user=self.user)
         self.assertTrue(profile.profile_picture.name.startswith("profiles/avatars/"))
 
+    def test_edit_profile_rejects_invalid_photo_file(self):
+        photo = SimpleUploadedFile(
+            "avatar.png",
+            b"not really an image",
+            content_type="image/png",
+        )
+        resp = self.client.post(
+            reverse("dashboard:edit_profile"),
+            {
+                "phone": "555",
+                "college": "MIT",
+                "branch": "CSE",
+                "year": "3",
+                "github": "https://github.com/dash",
+                "linkedin": "https://linkedin.com/in/dash",
+                "leetcode": "https://leetcode.com/u/dash",
+                "portfolio": "https://dash.dev",
+                "bio": "Bio",
+                "skills": "Django",
+                "profile_photo": photo,
+            },
+            follow=True,
+        )
+        self.assertRedirects(resp, reverse("dashboard:edit_profile"))
+        self.assertContains(resp, "Profile photo must be a valid image file.")
+
     def test_edit_profile_photo_failure_keeps_text_changes(self):
         photo = SimpleUploadedFile(
             "avatar.gif",
@@ -159,7 +185,7 @@ class DashboardViewsTest(TestCase):
         self.assertEqual(profile.college, "IIIT")
         self.assertEqual(profile.branch, "ECE")
         self.assertEqual(profile.skills, "MongoDB")
-        self.assertContains(resp, "Profile details were saved, but we")
+        self.assertContains(resp, "The server could not store the uploaded file.")
 
     def test_my_events(self):
         resp = self.client.get(reverse("dashboard:my_events"))

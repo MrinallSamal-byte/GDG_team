@@ -1,9 +1,12 @@
 import logging
 from collections import defaultdict
 
+from PIL import Image, UnidentifiedImageError
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
+from django.core.exceptions import RequestDataTooBig, ValidationError
+from django.db import DatabaseError
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
@@ -24,8 +27,29 @@ def _edit_profile_context(profile):
     return {"profile": profile, "current_page": "profile"}
 
 
+def _profile_photo_debug_context(profile, uploaded_file):
+    return {
+        "user_id": profile.user_id,
+        "filename": getattr(uploaded_file, "name", ""),
+        "content_type": getattr(uploaded_file, "content_type", ""),
+        "size": getattr(uploaded_file, "size", 0),
+        "storage_backend": profile.profile_picture.storage.__class__.__name__,
+        "media_root": str(getattr(settings, "MEDIA_ROOT", "")),
+    }
+
+
+def _profile_photo_failure_message(exc):
+    if isinstance(exc, DatabaseError):
+        return "The photo upload reached the database save step, but the profile record could not be updated."
+    if isinstance(exc, PermissionError):
+        return "The server could not write the uploaded file to profile-photo storage."
+    if isinstance(exc, OSError):
+        return "The server could not store the uploaded file."
+    return "The server could not finish processing the uploaded file."
+
+
 def _save_profile_photo(profile, uploaded_file):
-    max_size = 5 * 1024 * 1024
+    max_size = getattr(settings, "PROFILE_PHOTO_MAX_SIZE", 5 * 1024 * 1024)
     if getattr(uploaded_file, "size", 0) > max_size:
         raise ValidationError("Profile photo must be 5 MB or smaller.")
 
@@ -33,7 +57,28 @@ def _save_profile_photo(profile, uploaded_file):
     if content_type and not content_type.startswith("image/"):
         raise ValidationError("Profile photo must be a valid image file.")
 
-    profile.profile_picture.save(uploaded_file.name, uploaded_file, save=True)
+    try:
+        if hasattr(uploaded_file, "open"):
+            uploaded_file.open()
+        Image.open(uploaded_file).verify()
+    except (UnidentifiedImageError, OSError) as exc:
+        raise ValidationError("Profile photo must be a valid image file.") from exc
+    finally:
+        try:
+            uploaded_file.seek(0)
+        except Exception:
+            logger.debug(
+                "Could not rewind uploaded profile photo before saving",
+                extra=_profile_photo_debug_context(profile, uploaded_file),
+            )
+
+    logger.info(
+        "Saving profile photo",
+        extra=_profile_photo_debug_context(profile, uploaded_file),
+    )
+
+    profile.profile_picture = uploaded_file
+    profile.save(update_fields=["profile_picture", "updated_at"])
 
 
 @login_required
@@ -356,33 +401,45 @@ def edit_profile(request):
     profile = _get_profile(request.user)
 
     if request.method == "POST":
-        profile.phone = request.POST.get("phone", "").strip()
-        profile.github = request.POST.get("github", "").strip()
-        profile.linkedin = request.POST.get("linkedin", "").strip()
-        profile.leetcode = request.POST.get("leetcode", "").strip()
-        profile.portfolio = request.POST.get("portfolio", "").strip()
-        profile.bio = request.POST.get("bio", "").strip()
-        profile.college = request.POST.get("college", "").strip()
-        profile.branch = request.POST.get("branch", "").strip()
+        try:
+            profile.phone = request.POST.get("phone", "").strip()
+            profile.github = request.POST.get("github", "").strip()
+            profile.linkedin = request.POST.get("linkedin", "").strip()
+            profile.leetcode = request.POST.get("leetcode", "").strip()
+            profile.portfolio = request.POST.get("portfolio", "").strip()
+            profile.bio = request.POST.get("bio", "").strip()
+            profile.college = request.POST.get("college", "").strip()
+            profile.branch = request.POST.get("branch", "").strip()
 
-        year_val = request.POST.get("year", "").strip()
-        if year_val:
-            try:
-                year_int = int(year_val)
-                if 1 <= year_int <= 6:
-                    profile.year = year_int
-                else:
-                    messages.error(request, "Year must be between 1 and 6.")
+            year_val = request.POST.get("year", "").strip()
+            if year_val:
+                try:
+                    year_int = int(year_val)
+                    if 1 <= year_int <= 6:
+                        profile.year = year_int
+                    else:
+                        messages.error(request, "Year must be between 1 and 6.")
+                        return render(request, "dashboard/edit_profile.html", _edit_profile_context(profile))
+                except ValueError:
+                    messages.error(request, "Year must be a number.")
                     return render(request, "dashboard/edit_profile.html", _edit_profile_context(profile))
-            except ValueError:
-                messages.error(request, "Year must be a number.")
-                return render(request, "dashboard/edit_profile.html", _edit_profile_context(profile))
-        else:
-            profile.year = None
+            else:
+                profile.year = None
 
-        profile.skills = request.POST.get("skills", "").strip()
+            profile.skills = request.POST.get("skills", "").strip()
+            uploaded_photo = request.FILES.get("profile_photo")
+        except RequestDataTooBig:
+            logger.warning(
+                "Rejected oversized profile update request",
+                extra={"user_id": request.user.pk, "path": request.path},
+            )
+            messages.error(
+                request,
+                "The upload request was too large. Keep the profile photo under 5 MB and try again.",
+            )
+            return redirect("dashboard:edit_profile")
 
-        # Phase 1 – save text fields only (no photo yet, so file pointer stays fresh)
+        # Phase 1 – save text fields only so non-photo changes still persist
         try:
             profile.save(update_fields=[
                 "phone", "github", "linkedin", "leetcode", "portfolio",
@@ -393,22 +450,30 @@ def edit_profile(request):
             messages.error(request, "We couldn't save your profile right now. Please try again.")
             return render(request, "dashboard/edit_profile.html", _edit_profile_context(profile))
 
-        # Phase 2 – save photo separately so the file pointer is never consumed twice
-        uploaded_photo = request.FILES.get("profile_photo")
+        # Phase 2 – save the photo with the same model-save path that worked before
         if uploaded_photo:
             try:
                 _save_profile_photo(profile, uploaded_photo)
             except ValidationError as exc:
+                logger.warning(
+                    "Rejected invalid profile photo upload",
+                    extra=_profile_photo_debug_context(profile, uploaded_photo),
+                )
                 messages.error(
                     request,
                     f"Profile details were saved, but the photo was not updated. {exc.messages[0]}",
                 )
                 return redirect("dashboard:edit_profile")
-            except Exception:
-                logger.exception("Failed to upload profile photo for user %s", request.user.pk)
+            except Exception as exc:
+                logger.exception(
+                    "Failed to upload profile photo for user %s",
+                    request.user.pk,
+                    extra=_profile_photo_debug_context(profile, uploaded_photo),
+                )
                 messages.error(
                     request,
-                    "Profile details were saved, but we couldn't upload the photo right now. Try a smaller image or try again.",
+                    "Profile details were saved, but the photo was not updated. "
+                    f"{_profile_photo_failure_message(exc)}",
                 )
                 return redirect("dashboard:edit_profile")
 
