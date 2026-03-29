@@ -289,6 +289,7 @@ def forgot_password_view(request):
 
         user = User.objects.filter(email__iexact=email).first()
         if user is not None:
+            logger.info("Password reset requested for existing user_id=%d", user.pk)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             reset_url = _absolute_auth_url(
@@ -310,6 +311,8 @@ def forgot_password_view(request):
             if not delivery.sent:
                 messages.error(request, delivery.error_message)
                 return redirect("users:forgot_password")
+        else:
+            logger.info("Password reset requested for unknown email address")
 
         messages.success(
             request,
