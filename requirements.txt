@@ -53,6 +53,11 @@ qrcode[pil]>=7.4          # shared with [E11] QR check-in
 # ── [E6] OAuth (Google + GitHub) ──────────────────────────────────────────────
 django-allauth>=0.61
 
+# ── Cryptographic dependencies (required by allauth Google token verification) ──
+PyJWT>=2.8
+cryptography>=41.0
+cffi>=1.16
+
 # ── Development / Testing ──────────────────────────────────────────────────────
 coverage>=7.4
 factory-boy>=3.3
