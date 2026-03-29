@@ -8,7 +8,7 @@ from django.urls import reverse
 
 from .adapters import CampusArenaSocialAccountAdapter
 from .models import UserProfile
-from .services import EmailDeliveryResult
+from .services import EmailDeliveryResult, send_plaintext_email
 
 
 class UserProfileModelTest(TestCase):
@@ -58,6 +58,28 @@ class UserProfileModelTest(TestCase):
 
     def test_leetcode_field(self):
         self.assertEqual(self.profile.leetcode, "https://leetcode.com/u/testuser")
+
+
+class EmailDeliveryServiceTest(TestCase):
+    @override_settings(
+        RESEND_API_KEY="re_test_key",
+        DEFAULT_FROM_EMAIL="onboarding@resend.dev",
+    )
+    def test_send_plaintext_email_uses_resend_when_configured(self):
+        mocked_response = mock.MagicMock()
+        mocked_response.__enter__.return_value = SimpleNamespace(status=202)
+        mocked_response.__exit__.return_value = False
+
+        with mock.patch("users.services.request.urlopen", return_value=mocked_response) as urlopen:
+            delivery = send_plaintext_email(
+                subject="CampusArena test",
+                body="Hello from CampusArena",
+                recipients=["student@example.com"],
+                log_context="test-resend",
+            )
+
+        self.assertTrue(delivery.sent)
+        urlopen.assert_called_once()
 
 
 class LoginViewTest(TestCase):

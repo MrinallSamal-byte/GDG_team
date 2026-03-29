@@ -258,6 +258,8 @@ EMAIL_BACKEND = config(
 )
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@campusarena.dev")
 EMAIL_TIMEOUT = config("EMAIL_TIMEOUT", default=10, cast=int)
+RESEND_API_KEY = config("RESEND_API_KEY", default="").strip()
+RESEND_API_URL = config("RESEND_API_URL", default="https://api.resend.com/emails").strip()
 
 # ─── Cache ───────────────────────────────────────────────────────────────────
 CACHES = {

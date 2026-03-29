@@ -862,6 +862,8 @@ EMAIL_PORT=587
 EMAIL_HOST_USER=your@email.com
 EMAIL_HOST_PASSWORD=your-app-password
 DEFAULT_FROM_EMAIL=noreply@campusarena.dev
+RESEND_API_KEY=
+RESEND_API_URL=https://api.resend.com/emails
 
 RAZORPAY_KEY_ID=rzp_live_...
 RAZORPAY_KEY_SECRET=...
@@ -873,6 +875,8 @@ GOOGLE_CLIENT_SECRET=...
 GITHUB_CLIENT_ID=...
 GITHUB_CLIENT_SECRET=...
 ```
+
+On Render, prefer `RESEND_API_KEY` for production email delivery. The app will use Resend over HTTPS when that key is present, and fall back to SMTP otherwise.
 
 ---
 
