@@ -35,6 +35,10 @@ def _expand_render_postgres_host(host: str) -> str:
     if not host or not _RENDER_SHORT_PG_HOST.match(host):
         return host
 
+    # If running on Render, keep the short hostname to connect via the private network
+    if os.environ.get("RENDER") == "true":
+        return host
+
     env_cache_key = f"RESOLVED_HOST_{host.replace('-', '_')}"
     cached_val = os.environ.get(env_cache_key)
     if cached_val:

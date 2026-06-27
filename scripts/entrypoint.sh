@@ -16,7 +16,7 @@ echo "────────────────────────�
 # resolver, so the short hostname is unresolvable. We probe each Render
 # region's public domain via socket, rewrite DATABASE_URL in-place with the
 # first hostname that resolves, and add sslmode=require for the TLS handshake.
-if [[ "${DATABASE_URL:-}" == *"@dpg-"* ]]; then
+if [[ "${RENDER:-}" != "true" ]] && [[ "${DATABASE_URL:-}" == *"@dpg-"* ]]; then
     _new_db_url="$(python3 - <<'PYEOF'
 import os, re, socket, sys
 from urllib.parse import urlparse
