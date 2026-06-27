@@ -21,6 +21,8 @@ services:
         fromDatabase:
           name: campusarena-db
           property: connectionString
+      - key: RENDER_POSTGRES_REGION
+        value: singapore
       - key: REDIS_URL
         fromService:
           type: keyvalue

@@ -7,10 +7,34 @@ settings from ``base.py``. These helpers keep that logic explicit and testable.
 
 from __future__ import annotations
 
+import os
+import re
 from copy import deepcopy
 
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
+
+_RENDER_SHORT_PG_HOST = re.compile(r"^dpg-[a-z0-9]+-[a-z0-9]+$")
+
+
+def _expand_render_postgres_host(host: str) -> str:
+    """
+    Render Docker services cannot resolve Render's short internal Postgres
+    hostname (e.g. ``dpg-xxx-a``) via DNS because Docker containers run in
+    a separate network namespace that doesn't have Render's private DNS
+    resolver injected.
+
+    When ``RENDER_POSTGRES_REGION`` is set (e.g. ``singapore``), expand the
+    short hostname to the full external form that public DNS can resolve:
+
+        dpg-xxx-a  →  dpg-xxx-a.<region>-postgres.render.com
+    """
+    if not _RENDER_SHORT_PG_HOST.match(host):
+        return host
+    region = _clean(os.environ.get("RENDER_POSTGRES_REGION", ""))
+    if not region:
+        return host
+    return f"{host}.{region}-postgres.render.com"
 
 PLACEHOLDER_MYSQL_DEFAULTS = {
     "ENGINE": "django.db.backends.mysql",
@@ -58,6 +82,12 @@ def _database_from_url(database_url: str) -> dict:
         conn_health_checks=True,
     )
     db_config["ATOMIC_REQUESTS"] = True
+    if db_config.get("ENGINE") == "django.db.backends.postgresql":
+        original_host = db_config.get("HOST", "")
+        expanded_host = _expand_render_postgres_host(original_host)
+        if expanded_host != original_host:
+            db_config["HOST"] = expanded_host
+            db_config.setdefault("OPTIONS", {})["sslmode"] = "require"
     return db_config
 
 
@@ -70,12 +100,14 @@ def _database_from_pg_env(env: dict) -> dict | None:
     if not (host and name and user):
         return None
 
+    expanded_host = _expand_render_postgres_host(host)
+
     db_config = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": name,
         "USER": user,
         "PASSWORD": _clean(env.get("PGPASSWORD")),
-        "HOST": host,
+        "HOST": expanded_host,
         "PORT": _clean(env.get("PGPORT")) or "5432",
         "ATOMIC_REQUESTS": True,
         "CONN_MAX_AGE": 600,
@@ -85,6 +117,8 @@ def _database_from_pg_env(env: dict) -> dict | None:
     sslmode = _clean(env.get("PGSSLMODE"))
     if sslmode:
         db_config["OPTIONS"] = {"sslmode": sslmode}
+    elif expanded_host != host:
+        db_config["OPTIONS"] = {"sslmode": "require"}
 
     return db_config
 
