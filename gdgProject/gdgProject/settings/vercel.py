@@ -88,14 +88,15 @@ if _database_url:
         conn_health_checks=True,
         ssl_require=True,
     )
-    from ._prod_db import _expand_render_postgres_host
+    from ._prod_db import _expand_render_postgres_host, _verify_and_fallback_database
     if db_config.get("HOST"):
         original_host = db_config["HOST"]
         expanded_host = _expand_render_postgres_host(original_host)
         if expanded_host != original_host:
             db_config["HOST"] = expanded_host
             db_config.setdefault("OPTIONS", {})["sslmode"] = "require"
-    DATABASES["default"] = db_config
+    DATABASES["default"] = _verify_and_fallback_database(db_config)
+
 
 
 # ── Cache — Upstash Redis (HTTP mode, works with serverless) ─────────────────

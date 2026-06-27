@@ -74,44 +74,12 @@ PYEOF
     unset _new_db_url
 fi
 
-# Check if the database is reachable before running migrations
-_db_reachable="false"
-if [ -n "${DATABASE_URL:-}" ]; then
-    echo "[entrypoint] Checking database connection..."
-    if python3 - <<'PYEOF'
-import os, socket, sys
-from urllib.parse import urlparse
+echo "[entrypoint] Running database migrations..."
+python manage.py migrate --noinput
 
-url = os.environ.get("DATABASE_URL", "")
-try:
-    parsed = urlparse(url)
-    host = parsed.hostname
-    port = parsed.port or 5432
-    if host:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(3.0)
-        s.connect((host, port))
-        s.close()
-        sys.exit(0)
-except Exception as e:
-    sys.stderr.write(f"[entrypoint] Database connection failed: {e}\n")
-    sys.exit(1)
-PYEOF
-    then
-        _db_reachable="true"
-    fi
-fi
-
-if [ "${_db_reachable}" = "true" ]; then
-    echo "[entrypoint] Running database migrations..."
-    python manage.py migrate --noinput
-
-    if [ "${AUTO_SEED_DEMO_DATA:-false}" = "true" ] || [ "${AUTO_SEED_DEMO_DATA:-0}" = "1" ]; then
-        echo "[entrypoint] Bootstrapping demo data..."
-        python manage.py bootstrap_demo_data
-    fi
-else
-    echo "[entrypoint] WARNING: database is not reachable. Skipping migrations and seeding."
+if [ "${AUTO_SEED_DEMO_DATA:-false}" = "true" ] || [ "${AUTO_SEED_DEMO_DATA:-0}" = "1" ]; then
+    echo "[entrypoint] Bootstrapping demo data..."
+    python manage.py bootstrap_demo_data
 fi
 
 echo "[entrypoint] Starting server: $*"

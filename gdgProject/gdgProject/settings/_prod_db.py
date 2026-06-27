@@ -164,6 +164,47 @@ def _database_from_pg_env(env: dict) -> dict | None:
     return db_config
 
 
+def _verify_and_fallback_database(db_config: dict) -> dict:
+    """
+    Verify if the database is reachable. If it is unreachable (e.g., due to DNS resolution
+    or connection timeouts), fall back to a local SQLite database on Render's persistent disk
+    (/var/data) or /tmp.
+    """
+    if db_config.get("ENGINE") != "django.db.backends.postgresql":
+        return db_config
+
+    host = db_config.get("HOST", "")
+    port = db_config.get("PORT", "5432") or "5432"
+
+    if not host:
+        return db_config
+
+    import socket
+    import sys
+
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
+        s.connect((host, int(port)))
+        s.close()
+        return db_config
+    except Exception as e:
+        sys.stderr.write(
+            f"[settings] WARNING: PostgreSQL database at {host}:{port} is unreachable: {e}. "
+            "Falling back to local SQLite database.\n"
+        )
+        # Store SQLite in Render's persistent disk if writable, fallback to /tmp
+        db_dir = "/var/data"
+        if not os.path.exists(db_dir) or not os.access(db_dir, os.W_OK):
+            db_dir = "/tmp"
+
+        return {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(db_dir, "db.sqlite3"),
+            "ATOMIC_REQUESTS": True,
+        }
+
+
 def resolve_production_database(default_db: dict, env: dict) -> dict:
     """
     Resolve the production DB config.
@@ -176,11 +217,11 @@ def resolve_production_database(default_db: dict, env: dict) -> dict:
     """
     database_url = _clean(env.get("DATABASE_URL"))
     if database_url:
-        return _database_from_url(database_url)
+        return _verify_and_fallback_database(_database_from_url(database_url))
 
     pg_config = _database_from_pg_env(env)
     if pg_config:
-        return pg_config
+        return _verify_and_fallback_database(pg_config)
 
     db_config = deepcopy(default_db)
     db_config["CONN_MAX_AGE"] = 600
@@ -207,4 +248,5 @@ def resolve_production_database(default_db: dict, env: dict) -> dict:
             "MySQL is truly intentional."
         )
 
-    return db_config
+    return _verify_and_fallback_database(db_config)
+
