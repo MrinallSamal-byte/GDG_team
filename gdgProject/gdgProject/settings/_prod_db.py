@@ -28,13 +28,50 @@ def _expand_render_postgres_host(host: str) -> str:
     short hostname to the full external form that public DNS can resolve:
 
         dpg-xxx-a  →  dpg-xxx-a.<region>-postgres.render.com
+
+    If ``RENDER_POSTGRES_REGION`` is not set, probe common Render regions
+    via public DNS to resolve the hostname automatically.
     """
-    if not _RENDER_SHORT_PG_HOST.match(host):
+    if not host or not _RENDER_SHORT_PG_HOST.match(host):
         return host
+
+    env_cache_key = f"RESOLVED_HOST_{host.replace('-', '_')}"
+    cached_val = os.environ.get(env_cache_key)
+    if cached_val:
+        return cached_val
+
     region = _clean(os.environ.get("RENDER_POSTGRES_REGION", ""))
-    if not region:
+    if region:
+        expanded = f"{host}.{region}-postgres.render.com"
+        os.environ[env_cache_key] = expanded
+        return expanded
+
+    import socket
+
+    # Try resolving short name first (in case we are in a non-Docker Render env
+    # that has private DNS resolver working).
+    try:
+        socket.getaddrinfo(host, 5432, type=socket.SOCK_STREAM)
+        os.environ[env_cache_key] = host
         return host
-    return f"{host}.{region}-postgres.render.com"
+    except OSError:
+        pass
+
+    # Probe common regions
+    regions = ["singapore", "oregon", "frankfurt", "ohio"]
+    for r in regions:
+        candidate = f"{host}.{r}-postgres.render.com"
+        try:
+            socket.getaddrinfo(candidate, 5432, type=socket.SOCK_STREAM)
+            os.environ[env_cache_key] = candidate
+            return candidate
+        except OSError:
+            continue
+
+    # Fallback to the original host
+    os.environ[env_cache_key] = host
+    return host
+
 
 PLACEHOLDER_MYSQL_DEFAULTS = {
     "ENGINE": "django.db.backends.mysql",

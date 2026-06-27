@@ -82,12 +82,21 @@ CSRF_TRUSTED_ORIGINS = [
 #
 _database_url = os.environ.get("DATABASE_URL", "")
 if _database_url:
-    DATABASES["default"] = dj_database_url.config(  # noqa: F405
+    db_config = dj_database_url.config(  # noqa: F405
         default=_database_url,
         conn_max_age=0,  # serverless: don't persist connections
         conn_health_checks=True,
         ssl_require=True,
     )
+    from ._prod_db import _expand_render_postgres_host
+    if db_config.get("HOST"):
+        original_host = db_config["HOST"]
+        expanded_host = _expand_render_postgres_host(original_host)
+        if expanded_host != original_host:
+            db_config["HOST"] = expanded_host
+            db_config.setdefault("OPTIONS", {})["sslmode"] = "require"
+    DATABASES["default"] = db_config
+
 
 # ── Cache — Upstash Redis (HTTP mode, works with serverless) ─────────────────
 _redis_url = os.environ.get("REDIS_URL", "")
