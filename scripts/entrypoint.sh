@@ -94,19 +94,30 @@ PY
     db_port="$(printf '%s\n' "${parsed_db}" | sed -n '2p')"
 fi
 
-# Wait for the database to be ready (simple TCP probe, max 60 s)
+# Wait for the database to be ready (TCP probe with detailed diagnostics, max 60 s)
 if [ -n "${db_host}" ] && [ -n "${db_port}" ]; then
     echo "[entrypoint] Waiting for database at ${db_host}:${db_port} ..."
     for i in $(seq 1 30); do
-        if bash -c "echo > /dev/tcp/${db_host}/${db_port}" 2>/dev/null; then
+        _probe_res="$(python3 -c "
+import socket, sys
+try:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(2.0)
+    s.connect(('${db_host}', ${db_port}))
+    s.close()
+    print('OK')
+except Exception as e:
+    print(f'ERROR: {e}')
+")"
+        if [ "${_probe_res}" = "OK" ]; then
             echo "[entrypoint] Database is reachable (attempt ${i})."
             break
         fi
+        echo "[entrypoint] Attempt ${i}/30 — ${_probe_res} — retrying in 2 s..."
         if [ "${i}" -eq 30 ]; then
             echo "[entrypoint] ERROR: database never became reachable. Aborting."
             exit 1
         fi
-        echo "[entrypoint] Attempt ${i}/30 — retrying in 2 s..."
         sleep 2
     done
 fi
