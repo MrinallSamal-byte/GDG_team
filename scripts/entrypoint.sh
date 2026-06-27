@@ -74,60 +74,44 @@ PYEOF
     unset _new_db_url
 fi
 
-db_host="${DB_HOST:-${PGHOST:-}}"
-db_port="${DB_PORT:-${PGPORT:-}}"
-
-if { [ -z "${db_host}" ] || [ -z "${db_port}" ]; } && [ -n "${DATABASE_URL:-}" ]; then
-    parsed_db="$(python3 - <<'PY'
-import os
+# Check if the database is reachable before running migrations
+_db_reachable="false"
+if [ -n "${DATABASE_URL:-}" ]; then
+    echo "[entrypoint] Checking database connection..."
+    if python3 - <<'PYEOF'
+import os, socket, sys
 from urllib.parse import urlparse
 
-parsed = urlparse(os.environ.get("DATABASE_URL", ""))
-print(parsed.hostname or "")
-port = parsed.port
-if not port and parsed.scheme in ("postgres", "postgresql"):
-    port = 5432
-print(port or "")
-PY
-)"
-    db_host="$(printf '%s\n' "${parsed_db}" | sed -n '1p')"
-    db_port="$(printf '%s\n' "${parsed_db}" | sed -n '2p')"
-fi
-
-# Wait for the database to be ready (TCP probe with detailed diagnostics, max 60 s)
-if [ -n "${db_host}" ] && [ -n "${db_port}" ]; then
-    echo "[entrypoint] Waiting for database at ${db_host}:${db_port} ..."
-    for i in $(seq 1 30); do
-        _probe_res="$(python3 -c "
-import socket, sys
+url = os.environ.get("DATABASE_URL", "")
 try:
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(2.0)
-    s.connect(('${db_host}', ${db_port}))
-    s.close()
-    print('OK')
+    parsed = urlparse(url)
+    host = parsed.hostname
+    port = parsed.port or 5432
+    if host:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(3.0)
+        s.connect((host, port))
+        s.close()
+        sys.exit(0)
 except Exception as e:
-    print(f'ERROR: {e}')
-")"
-        if [ "${_probe_res}" = "OK" ]; then
-            echo "[entrypoint] Database is reachable (attempt ${i})."
-            break
-        fi
-        echo "[entrypoint] Attempt ${i}/30 — ${_probe_res} — retrying in 2 s..."
-        if [ "${i}" -eq 30 ]; then
-            echo "[entrypoint] ERROR: database never became reachable. Aborting."
-            exit 1
-        fi
-        sleep 2
-    done
+    sys.stderr.write(f"[entrypoint] Database connection failed: {e}\n")
+    sys.exit(1)
+PYEOF
+    then
+        _db_reachable="true"
+    fi
 fi
 
-echo "[entrypoint] Running database migrations..."
-python manage.py migrate --noinput
+if [ "${_db_reachable}" = "true" ]; then
+    echo "[entrypoint] Running database migrations..."
+    python manage.py migrate --noinput
 
-if [ "${AUTO_SEED_DEMO_DATA:-false}" = "true" ] || [ "${AUTO_SEED_DEMO_DATA:-0}" = "1" ]; then
-    echo "[entrypoint] Bootstrapping demo data..."
-    python manage.py bootstrap_demo_data
+    if [ "${AUTO_SEED_DEMO_DATA:-false}" = "true" ] || [ "${AUTO_SEED_DEMO_DATA:-0}" = "1" ]; then
+        echo "[entrypoint] Bootstrapping demo data..."
+        python manage.py bootstrap_demo_data
+    fi
+else
+    echo "[entrypoint] WARNING: database is not reachable. Skipping migrations and seeding."
 fi
 
 echo "[entrypoint] Starting server: $*"
